@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/">
+  <channel>
+    <title>AI 超节点技术简报</title>
+    <link>https://github.com/YanLiang518/ai-supernode-rss</link>
+    <description>聚焦 AI 超节点、GPU/加速芯片、Scale-up 互联、NPO/CPO、液冷、供电与头部厂商架构动态。</description>
+    <language>zh-cn</language>
+    <lastBuildDate>Sat, 15 Aug 2026 08:15:00 +0800</lastBuildDate>
+    <ttl>60</ttl>
+    <atom:link href="https://raw.githubusercontent.com/YanLiang518/ai-supernode-rss/main/feed.xml" rel="self" type="application/rss+xml"/>
+    <item>
+      <title>AI 超节点技术简报｜2026年8月15日</title>
+      <link>https://github.com/YanLiang518/ai-supernode-rss</link>
+      <guid isPermaLink="false">ai-supernode-brief-2026-08-15</guid>
+      <pubDate>Sat, 15 Aug 2026 08:15:00 +0800</pubDate>
+      <description><![CDATA[
+        <p>过去24小时确认2条重要更新，其余3条扩展至近5日且此前未覆盖。今日未发现新的 SemiAnalysis 文章、独立超节点产品或240kW以上单柜液冷/供电新规格；Lumentum首次披露ELS订单和多项NPO项目，属于值得跟踪的产品化信号。</p>
+        <h2>1. 印度落地万颗NVIDIA B300 AI工厂，园区首期规划250MW</h2>
+        <p>L&amp;T旗下Vyoma.AI将为Together AI在Chennai建设单集群AI工厂，部署约10,000颗NVIDIA B300 GPU。所在园区首期规划250MW，当前就绪容量150MVA；公告未披露NVL72数量、网络选择、单柜功率和液冷配置。</p>
+        <p><b>影响判断：</b>这是B300进入万卡级商业算力池的明确案例；上线速度取决于电力扩建、液冷、存储和Scale-out网络同步交付。</p>
+        <h2>2. NVIDIA组织5000亿美元算力融资平台</h2>
+        <p>NVIDIA与Apollo、BlackRock、Blackstone、Brookfield、Goldman Sachs及KKR签署备忘录，计划调动超过5000亿美元第三方资本。潜在结构包括次级资本、私人信贷和债务发行。</p>
+        <p><b>影响判断：</b>超节点竞争开始延伸到融资成本和设备残值；若整柜可标准化评估、转租和证券化，NVIDIA将获得设备金融式销售杠杆。</p>
+        <h2>3. Lumentum取得首笔ELS订单，NPO开始进入机柜内互联</h2>
+        <p>Lumentum首次披露获得外置激光源模块订单，并参与多项NPO项目。公告没有公开ELS功率、波长数、冗余、连接器、客户和出货数量。</p>
+        <p><b>影响判断：</b>“光引擎与可维护光源分离”开始从参考设计进入采购阶段；后续重点是激光FRU冗余、保偏光纤、功率监测与故障域控制。</p>
+        <h2>4. Cisco全年AI基础设施订单达93亿美元</h2>
+        <p>Cisco第四财季来自超大规模客户的AI基础设施订单达到40亿美元，全年累计93亿美元，预计2027财年AI基础设施收入约75亿美元。</p>
+        <p><b>影响判断：</b>以太网AI Fabric已进入规模兑现期，但Scale-up路线仍需证明集合通信有效带宽、拥塞控制和故障恢复能力。</p>
+        <h2>5. Supermicro新增订单超过600亿美元</h2>
+        <p>Supermicro第四财季收入111亿美元，过去一年新增订单超过600亿美元，继续以Data Center Building Block Solutions交付服务器、机柜、网络和液冷基础设施。</p>
+        <p><b>影响判断：</b>工厂内完成母排、Manifold、布线、烧机和故障验证的能力，将直接决定GPU转化为在线Token产能的速度。</p>
+        <h2>今日最值得关注：Lumentum首次取得ELS模块订单</h2>
+        <p>这对应NPO架构核心维护边界的变化：激光器与光引擎解耦、ELS进入客户采购、多项NPO项目并行、超高功率激光器为CPO准备，光互联开始由机柜间向机柜内渗透。</p>
+      ]]></description>
+    </item>
+    <item>
+      <title>AI 超节点技术简报｜2026年8月14日</title>
+      <link>https://github.com/YanLiang518/ai-supernode-rss</link>
+      <guid isPermaLink="false">ai-supernode-brief-2026-08-14</guid>
+      <pubDate>Fri, 14 Aug 2026 08:15:00 +0800</pubDate>
+      <description><![CDATA[
+        <p>过去24小时确认1条高价值新增，另外4条扩展至近4日且此前未覆盖。OCP公布的800VDC固态变压器规范给出了目前较完整的开放供电参数。</p>
+        <h2>1. OCP明确800VDC供电规范：单套SST最高10MW</h2>
+        <p>OCP架构规定固态变压器可把13.8kV或34.5kV交流直接转换为标称800VDC；13.8kV型号额定5MW，34.5kV型号提供5MW和10MW两档，50%—100%负载下效率要求不低于98%。</p>
+        <p><b>影响判断：</b>240kW负载在800V下理想电流约300A，而54V下约4444A；800V可显著后移大电流铜排、连接器和配电损耗。</p>
+        <h2>2. AMD拟发债40亿—50亿美元</h2>
+        <p>AMD启动四档高级无担保债券发行，用于一般企业用途和偿债，未说明直接投入MI455X Helios或MI500。</p>
+        <p><b>影响判断：</b>融资增强系统级竞争弹性，但能否转化为HBM、先进封装、整柜产能与客户在线算力仍待观察。</p>
+        <h2>3. Cerebras云收入增至1.26亿美元</h2>
+        <p>Cerebras第二季度云服务收入同比接近四倍，硬件收入降至5410万美元；调整后毛利率受租回部署容量影响而承压。</p>
+        <p><b>影响判断：</b>Wafer-Scale路线由硬件销售转向云算力交付，同时承担机房、电力和利用率风险。</p>
+        <h2>4. 微软Maia 300据报秋季发布</h2>
+        <p>微软据报最早9月公布Maia 300，并洽谈2027年采购超过30万颗；微软未确认数量。制程、HBM、TDP、Scale-up协议和整柜拓扑尚未公开。</p>
+        <p><b>影响判断：</b>若达到数十万颗部署，竞争对象将是Google TPU和AWS Trainium的芯片—网络—软件—云闭环。</p>
+        <h2>5. CoreWeave把A100合同延长至2029年</h2>
+        <p>CoreWeave披露A100算力合同延续至2029年，旧代GPU利用率仍接近满载。A100风冷系统与新一代高密液冷整柜的基础设施条件差异明显。</p>
+        <p><b>影响判断：</b>超节点升级并非简单代际替换，现有风冷、电力和网络资产会延长旧GPU经济寿命。</p>
+        <h2>今日最值得关注：OCP 800VDC进入可采购产品阶段</h2>
+        <p>真正分水岭是断路保护、接地、预充电、直流拉弧、模块热插拔以及GPU功率阶跃能否形成统一规范。</p>
+      ]]></description>
+    </item>
+  </channel>
+</rss>
