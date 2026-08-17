@@ -5,9 +5,45 @@
     <link>https://github.com/YanLiang518/ai-supernode-rss</link>
     <description>聚焦 AI 超节点、GPU/加速芯片、Scale-up 互联、NPO/CPO、液冷、供电与头部厂商架构动态。</description>
     <language>zh-cn</language>
-    <lastBuildDate>Mon, 17 Aug 2026 08:15:00 +0800</lastBuildDate>
+    <lastBuildDate>Tue, 18 Aug 2026 04:58:00 +0800</lastBuildDate>
     <ttl>60</ttl>
     <atom:link href="https://raw.githubusercontent.com/YanLiang518/ai-supernode-rss/main/feed.xml" rel="self" type="application/rss+xml"/>
+    <item>
+      <title>AI 超节点技术简报｜2026年8月18日</title>
+      <link>https://github.com/YanLiang518/ai-supernode-rss</link>
+      <guid isPermaLink="false">ai-supernode-brief-2026-08-18</guid>
+      <pubDate>Tue, 18 Aug 2026 04:58:00 +0800</pubDate>
+      <description><![CDATA[
+        <p>过去24小时确认3条高价值进展，另补充2条近7日、此前未覆盖的信息。今日未发现新的SemiAnalysis文章、独立超节点新品或可信的NPO/CPO产品进展；液冷方面新增一套GB300 NVL72商业部署和一份行业渗透率更新，但没有新的240kW以上单柜工程规格。</p>
+        <h2>1. NVIDIA以最高1050亿美元担保OpenAI俄亥俄AI园区</h2>
+        <p><b>事件及发布时间：2026年8月17日｜类型：已签署基础设施与融资安排。</b></p>
+        <p>NVIDIA承诺为OpenAI在Ohio Pike County向SB Energy租用的数据中心提供最高1050亿美元担保，并向SB Energy投资15亿美元；担保针对20年租约中的部分机房及电力付款，而非替OpenAI承担全部项目成本。项目首期800MW计划2028年上线，长期可扩展至8GW，并将独家采用NVIDIA芯片；SB Energy与AEP Ohio另计划投入42亿美元升级电网并建设10GW新增电源。</p>
+        <p>NVIDIA管理层估算每轮平台升级可能带来1500亿—2000亿美元收入、到2030年累计最高约6000亿美元，但这属于商业预测，不是已确认采购承诺。<b>影响判断：</b>GPU供应商正把信用担保、股权投资、电力和长期租约打包成算力交付工具；它能加速超节点部署，也使芯片收入、客户偿付能力和基础设施残值形成更紧密的风险闭环。</p>
+        <p>来源：<a href="https://www.reuters.com/business/media-telecom/nvidia-invest-15-billion-sb-energy-under-openai-data-center-deal-2026-08-17/">Reuters详细报道</a>、<a href="https://www.ft.com/content/82a4b183-7201-4789-95b7-e39e81c827bc">Financial Times交叉核实</a></p>
+        <h2>2. HIVE签下3.5亿美元GB300合同：2,016卡、NVL72与闭环液冷</h2>
+        <p><b>事件及发布时间：2026年8月17日｜类型：正式五年期云服务合同。</b></p>
+        <p>HIVE旗下BUZZ HPC与一家未具名投资级企业签署五年GPU云服务协议，总合同额约3.5亿美元、对应7000万美元年化收入。专用集群包含2,016颗NVIDIA Blackwell Ultra GPU，即28套GB300 NVL72，并采用Quantum-X800 InfiniBand和VAST Data存储；计划2026年内在加拿大British Columbia Merritt的Bell AI Fabric上线。</p>
+        <p>园区使用100%水电和闭环液冷，厂商称冷却过程不持续消耗水，但未公开单柜功率、供回水温度、CDU容量及PUE。<b>影响判断：</b>这是GB300从产品路线图进入带明确卡数、网络和长期收入合同的生产部署；28柜规模也提供了观察NVL72液冷调试、X800拥塞控制和整群可用率的早期样本。</p>
+        <p>来源：<a href="https://www.hivedigitaltechnologies.com/news/hives-buzz-hpc-signs-350-million-ai-cloud-services-agreement-with-investment-grade-enterprise-customer/">HIVE官方公告</a></p>
+        <h2>3. TrendForce：高端AI芯片液冷渗透率2026年升至53%</h2>
+        <p><b>事件及发布时间：2026年8月17日｜类型：行业研究预测，并非厂商出货审计。</b></p>
+        <p>TrendForce预计，高端AI芯片液冷渗透率将由2025年的约33%升至2026年的53%，2027年接近60%；其依据是NVIDIA、AMD与Google的高端芯片TDP已超过1kW，整柜功率进入数百千瓦。该机构还预计NVIDIA GB/VR整柜2026年出货量翻倍、2027年即使Kyber NVL144可能延后，GPU整柜出货仍增长超过30%，并称Google已有超过80%的AI服务器采用液冷。</p>
+        <p>这些数字属于研究机构模型，厂商没有同步披露可核对的整柜基数。<b>影响判断：</b>冷板、歧管和CDU正从配套选件转为超节点标准BOM；采购重点将由额定冷量转向温度窗口、泵功、漏液隔离、维护旁路和多柜故障域。</p>
+        <p>来源：<a href="https://www.trendforce.com/presscenter/news/20260817-13183.html">TrendForce原始研究摘要</a></p>
+        <h2>4. Alpha Compute锁定宾州天然气资产，规划200MW自备电源园区</h2>
+        <p><b>事件及发布时间：2026年8月11日｜类型：有约束力条款书，项目尚待尽调、融资和审批。</b></p>
+        <p>Alpha Compute拟以5500万美元收购Pennsylvania土地、约1,800英亩Marcellus天然气矿权及孔隙空间，首期建设200MW燃气供电数据中心，远期可扩至1GW。第三方评估称现有气源可连续供应200MW约10年，综合电价约0.0585美元/kWh；整体电力基础设施建设成本预计约5亿美元，目标2027年第三季度投运。</p>
+        <p>这是一项绿地项目，当前没有可用IT容量，且最终交易受许可、融资和正式协议约束。<b>影响判断：</b>把燃料储量、发电与机房放在同一资产上可绕过排队接电，但超节点可用性将更依赖燃气处理、涡轮冗余、排放许可和黑启动能力。</p>
+        <p>来源：<a href="https://www.reuters.com/legal/litigation/alpha-compute-buy-pennsylvania-land-gas-rights-55-million-data-center-campus-2026-08-11/">Reuters报道</a>、<a href="https://markets.businessinsider.com/news/stocks/alpha-compute-signs-binding-term-sheet-for-planned-200-mw-natural-gas-powered-data-center-campus-in-pennsylvania-with-potential-expansion-to-1-gw-1036442279">公司条款书发布稿</a></p>
+        <h2>5. Intel把股票发行扩大至200亿美元</h2>
+        <p><b>事件及发布时间：2026年8月11日02:36 EDT｜类型：正式承销发行。</b></p>
+        <p>Intel把普通股发行规模由150亿美元上调至200亿美元，以每股95美元发行210,526,315股，并给予承销商30天额外购买最多31,578,947股的选择权；发行计划于8月12日完成。相对于发行前约50.43亿股，基础发行新增股份约4.2%，未计额外选择权。</p>
+        <p>公告只说明资金用于公司用途，没有把款项分配到Intel 14A、先进封装、Gaudi或机柜平台。<b>影响判断：</b>大额股权融资为晶圆厂爬坡和AI产品投入提供缓冲，但也显示先进制程与封装扩产的资本压力；能否改变超节点竞争格局，仍取决于外部代工客户、良率和可规模交付的加速器系统。</p>
+        <p>来源：<a href="https://www.intc.com/news-events/press-releases/detail/1779/intel-announces-upsize-and-pricing-of-20-billion-common">Intel官方公告</a>、<a href="https://www.intc.com/filings-reports/all-sec-filings/content/0001193125-26-341318/d98483d424b5.htm">Intel/SEC招股文件</a></p>
+        <h2>今日最值得关注：NVIDIA用1050亿美元担保锁定OpenAI的8GW园区</h2>
+        <p>这笔交易的关键不只是金额，而是NVIDIA同时扮演芯片供应商、信用增级方和SB Energy股东：OpenAI获得20年算力场地，SB Energy与AEP负责机房和电力，NVIDIA则以有限担保帮助项目融资并取得独家芯片需求。若首期800MW按计划在2028年上线，它会把“GPU整柜—电网—租约—资本市场”固化为可复制的AI工厂交付模式；下一步最需核实的是GPU代际、整柜数量、实际IT负载、液冷架构，以及担保在OpenAI违约时的具体触发与上限分配。</p>
+      ]]></description>
+    </item>
     <item>
       <title>AI 超节点技术简报｜2026年8月17日</title>
       <link>https://github.com/YanLiang518/ai-supernode-rss</link>
