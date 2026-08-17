@@ -5,9 +5,45 @@
     <link>https://github.com/YanLiang518/ai-supernode-rss</link>
     <description>聚焦 AI 超节点、GPU/加速芯片、Scale-up 互联、NPO/CPO、液冷、供电与头部厂商架构动态。</description>
     <language>zh-cn</language>
-    <lastBuildDate>Sat, 15 Aug 2026 08:15:00 +0800</lastBuildDate>
+    <lastBuildDate>Mon, 17 Aug 2026 08:15:00 +0800</lastBuildDate>
     <ttl>60</ttl>
     <atom:link href="https://raw.githubusercontent.com/YanLiang518/ai-supernode-rss/main/feed.xml" rel="self" type="application/rss+xml"/>
+    <item>
+      <title>AI 超节点技术简报｜2026年8月17日</title>
+      <link>https://github.com/YanLiang518/ai-supernode-rss</link>
+      <guid isPermaLink="false">ai-supernode-brief-2026-08-17</guid>
+      <pubDate>Mon, 17 Aug 2026 08:15:00 +0800</pubDate>
+      <description><![CDATA[
+        <p>过去24小时未出现足以进入榜单的独立硬件新品，本期扩展至近7日，并排除此前已报道内容。今日未发现新的SemiAnalysis文章、独立超节点新品、NPO/CPO技术规格或240kW以上单柜液冷与供电参数。</p>
+        <h2>1. xAI提出2027年底把数据中心容量扩至10GW</h2>
+        <p><b>事件及发布时间：2026年8月13日｜类型：企业高管内部讲话经媒体报道，尚非建设合同。</b></p>
+        <p>Elon Musk向SpaceX员工表示，xAI计划在2027年底把Memphis和Southaven等设施的铭牌电力容量由约1.4GW提高至10GW，并按每瓦30—50美元估算3000亿—5000亿美元年收入。现有Colossus公开规模为约20万颗H100；媒体根据Rubin约2.3kW Max-P功耗推算新容量可能容纳约210万—240万颗Rubin GPU，但这不是xAI确认的采购量。</p>
+        <p><b>影响判断：</b>10GW目标相当于同时建设电源、液冷、网络和供应链体系，而非简单增加GPU；其可信度应以已签电力、变电站、机房和GPU交付节点衡量，不能以远期收入估值代替工程进度。</p>
+        <p>来源：<a href="https://www.tomshardware.com/tech-industry/artificial-intelligence/elon-musk-says-xai-will-increase-data-center-capacity-7x-by-2027-targeting-10-gigawatts-of-compute-up-to-usd500-billion-in-revenue-by-the-end-of-next-year">Tom’s Hardware报道</a>、<a href="https://x.ai/colossus">xAI Colossus官方页面</a></p>
+        <h2>2. PJM提出50MW以上数据中心登记及紧急限电机制</h2>
+        <p><b>事件及发布时间：2026年8月13日｜类型：正式提交FERC的电网规则提案，尚待批准。</b></p>
+        <p>PJM拟建立Large Load Registry，登记单站累计峰值不低于50MW的大型负载，包括位置、容量、投运日期、备用发电及燃料类型。自2027年6月起，未自带新增电源、也未通过可靠性兜底采购获得容量的新负载，在供电紧张时可能先于居民和常规用户削减或转移负荷；PJM预计2024—2030年32GW新增需求中约30GW来自数据中心。</p>
+        <p><b>影响判断：</b>AI园区的可用功率将从“已接入电网”变成带中断条件的资源，超节点设计需把备用发电、BBU/UPS续航、作业暂停、功率封顶和快速恢复纳入同一可用性模型。</p>
+        <p>来源：<a href="https://insidelines.pjm.com/pjm-proposes-framework-to-connect-data-centers-without-compromising-reliability-affordability/">PJM官方说明</a>、<a href="https://www.pjm.com/-/media/DotCom/about-pjm/newsroom/fact-sheets/interim-resource-adequacy-service-proposal.pdf">PJM IRAS事实表</a>、<a href="https://www.reuters.com/business/energy/pjm-proposes-plan-buy-more-power-data-centers-2026-08-13/">Reuters交叉核实</a></p>
+        <h2>3. Heron Power建设5MW固态电力转换设备工厂</h2>
+        <p><b>事件及发布时间：2026年8月13日｜类型：正式建厂及产品计划。</b></p>
+        <p>Heron Power将在California Morgan Hill投资超过1亿美元，把28.6万平方英尺仓库改造成Heron Link工厂；Heron Link是面向大型能源与数据中心项目的5MW中压、软件控制、功率半导体式转换系统。工厂目标年产最高1万套、对应超过40GW名义容量，计划2027年底开始规模生产，但未披露输入电压、直流输出、电力链效率、过载曲线及客户。</p>
+        <p><b>影响判断：</b>该路线与OCP 5—10MW固态变压器方向一致，可缩短传统变压器最长约四年的交期；对800V AI电源架构的价值取决于它能否实现中压至直流母线的一体转换、快速故障隔离和模块化维护。</p>
+        <p>来源：<a href="https://heronpower.com/news-stories/press-release-heron-power-selects-first-factory-location-to-build-next-generation-power-electronics-in-the-united-states">Heron Power官方公告</a>、<a href="https://www.reuters.com/business/energy/heron-power-plans-100-million-factory-advanced-electric-grid-equipment-2026-08-13/">Reuters交叉核实</a></p>
+        <h2>4. 联想AI服务器订单池增至540亿美元</h2>
+        <p><b>事件及发布时间：2026年8月13日｜类型：正式季度财务披露。</b></p>
+        <p>联想第一财季基础设施方案业务收入达到85亿美元，同比增长98%，经营利润7.77亿美元、利润率9.1%；AI服务器订单池环比增长157%至540亿美元。集团AI相关收入为93亿美元，同比增长60%，但该口径同时包含AI设备、基础设施和服务，不能全部视为GPU服务器收入。</p>
+        <p><b>影响判断：</b>订单规模显示中国整机厂商已进入全球AI基础设施扩建主周期，但兑现能力取决于GPU、HBM、网络、液冷部件和机房电力能否同期交付；后续需要关注订单中整柜液冷系统和国产加速器平台的比例。</p>
+        <p>来源：<a href="https://news.lenovo.com/pressroom/press-releases/q1-fy-2026-27/">联想官方财报</a>、<a href="https://www.reuters.com/world/china/chinas-lenovo-posts-43-jump-q1-revenue-2026-08-13/">Reuters交叉核实</a></p>
+        <h2>5. IBM与Together AI签订2.4亿美元B300推理集群协议</h2>
+        <p><b>事件及发布时间：2026年8月11日｜类型：正式多年期部署协议。</b></p>
+        <p>IBM将在IBM Cloud部署NVIDIA HGX B300系统并采用Spectrum-X以太网，为Together AI构建首个专用大型推理集群，合同金额2.4亿美元，预计2027年第一季度上线。Reuters称初期约包含2000颗Blackwell GPU；官方没有披露HGX节点数、交换层级、单柜功率、液冷形式或存储架构。</p>
+        <p><b>影响判断：</b>这是B300针对开放模型推理而非训练的明确商业部署，说明高端GPU需求正延伸至Token服务；其真实竞争力需用有效Token/s、KV Cache复用、网络拥塞和每Token电力成本验证，而非沿用厂商所称相对前代30倍AI工厂产出。</p>
+        <p>来源：<a href="https://newsroom.ibm.com/2026-08-11-IBM-and-Together-AI-Sign-Multi-Year-Agreement-to-Scale-Open-Source-AI-Inference-with-NVIDIA-AI-Infrastructure-on-IBM-Cloud">IBM官方公告</a>、<a href="https://www.reuters.com/business/ibm-together-ai-ink-240-million-deal-nvidia-powered-ai-inference-cluster-2026-08-11/">Reuters交叉核实</a></p>
+        <h2>今日最值得关注：PJM把数据中心变成可中断大型负载</h2>
+        <p>PJM提案首次把50MW以上数据中心的接电条件、备用电源、负荷登记和紧急削减放入同一规则框架。对超节点而言，未来“可用性”不仅是GPU、网络与液冷的可靠性，还包括电网发出削减指令时能否在秒至分钟级降功率、保存Checkpoint、维持控制面，并在恢复后避免整群同步上电冲击。</p>
+      ]]></description>
+    </item>
     <item>
       <title>AI 超节点技术简报｜2026年8月15日</title>
       <link>https://github.com/YanLiang518/ai-supernode-rss</link>
