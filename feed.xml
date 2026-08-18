@@ -5,46 +5,118 @@
     <link>https://github.com/YanLiang518/ai-supernode-rss</link>
     <description>聚焦 AI 超节点、GPU/加速芯片、Scale-up 互联、NPO/CPO、液冷、供电与头部厂商架构动态。</description>
     <language>zh-cn</language>
-    <lastBuildDate>Tue, 18 Aug 2026 09:45:00 +0800</lastBuildDate>
+    <lastBuildDate>Tue, 18 Aug 2026 10:00:00 +0800</lastBuildDate>
     <ttl>15</ttl>
     <atom:link href="https://raw.githubusercontent.com/YanLiang518/ai-supernode-rss/main/feed.xml" rel="self" type="application/rss+xml"/>
     <item>
-      <title>AI 算力架构前沿简报｜2026年8月18日（新框架试运行）</title>
+      <title>AI算力架构前沿简报｜2026年8月18日</title>
       <link>https://raw.githubusercontent.com/YanLiang518/ai-supernode-rss/main/archive/2026-08-18.html</link>
       <guid isPermaLink="false">ai-supernode-brief-2026-08-18</guid>
-      <pubDate>Tue, 18 Aug 2026 09:45:00 +0800</pubDate>
+      <pubDate>Tue, 18 Aug 2026 10:00:00 +0800</pubDate>
       <description><![CDATA[
-        <p><b>本期结论：</b>今天真正值得追踪的不是又一批GPU订单，而是AI基础设施的三条上游变化：用户开始购买“思考速度”，企业Agent开始进入有状态、可审计的业务执行，算力建设则开始由芯片采购转向电力、租约与资本联合锁定。三者分别会改变推理集群的优化目标、系统瓶颈位置和超节点的产品边界。</p>
+        <div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;line-height:1.75;color:#202124">
+          <div style="padding:18px 20px;background:#f3f7ff;border-left:4px solid #315efb;border-radius:8px;margin:0 0 22px">
+            <div style="font-size:13px;color:#52606d;margin-bottom:6px">今日判断</div>
+            <p style="margin:0"><strong>AI基础设施的产品单位，正在从“提供多少Token”转向“多快、以多低风险完成一个可执行任务”。</strong>低时延推理改变计算调度，企业Agent改变状态与数据流，长期园区合约则改变硬件的生命周期。三条信号共同指向：超节点将从GPU互联设备，演进为按SLA交付计算、状态、数据移动和电力容量的系统。</p>
+          </div>
         
-        <h2>1. 低时延成为独立可售业务等级：推理优化目标由吞吐量转向任务闭环时间</h2>
-        <p><b>变化信号｜产品已发布、容量有限。</b> OpenAI于8月13日预览GPT-5.6 Sol Ultrafast，最高约750输出token/s、速度最高为标准模式的14倍，由Cerebras承载；当前仅向部分客户开放。官方给出的内部用例是研究人员把“隔夜批量实验”压缩为工作日内多轮迭代。这不是单纯的芯片跑分，而是头部模型厂商把低时延包装成独立服务等级。</p>
-        <p><b>业务为什么变化。</b> 当AI从一次性问答进入研究、编程、交易决策和Agent工具循环后，用户衡量的是任务完成时间，而非单次调用吞吐。每一步更快会缩短“推理—调用工具—读取结果—再次推理”的串行闭环，并允许人在同一天增加实验轮次。其价值来自新场景和生产率提升，成本并非唯一驱动力；愿意为响应速度付费的交互型工作负载开始与价格敏感的批处理负载分层。</p>
-        <p><b>负载与数据流变化。</b> 高优先级、小批量、Decode占比较高的请求增多；多轮工具调用使负载呈现短突发和强串行依赖，P99延迟比平均token/s更重要。若检索、工具网络或状态存储仍然很慢，单颗加速器的速度优势会被端到端链路吞掉。</p>
-        <p><b>软件与硬件架构影响（分析判断）。</b> 单一GPU池用大批处理追求利用率的假设开始失效。推理平台需要按SLA分成低时延池与经济型吞吐池，并建立优先级调度、准入控制、端到端P99观测和可能的Prefill/Decode分离。硬件侧值得验证大容量片上SRAM/晶圆级计算对低批量Decode的价值，同时独立规划低时延网络、KV/状态存储路径；不能只比较芯片峰值token/s。</p>
-        <p><b>建议动作：</b>立即建立“任务闭环时间”基准，分别测量模型生成、KV访问、检索、工具调用和排队时延；对现有GPU池做低时延专池小规模验证，再决定是否引入异构推理节点。</p>
-        <p>来源：<a href="https://openai.com/index/previewing-ultrafast/">OpenAI官方发布</a>；<a href="https://www.cerebras.ai/blog/accelerating-gpt-5-6-sol-ultrafast-with-openai">Cerebras技术说明</a></p>
+          <h2 style="font-size:20px;margin:26px 0 12px;border-bottom:1px solid #dfe3e8;padding-bottom:8px">信号总览</h2>
+          <ul style="padding-left:22px;margin:0 0 24px">
+            <li style="margin:8px 0"><strong>低时延推理成为独立服务等级</strong>｜业务/推理｜有限预览｜影响调度、存储与异构计算</li>
+            <li style="margin:8px 0"><strong>企业Agent进入受治理执行</strong>｜业务/软件｜正式产品化｜影响状态、IO、控制面与安全隔离</li>
+            <li style="margin:8px 0"><strong>算力采购与电力、租约和资本绑定</strong>｜部署/商业｜已签安排｜影响超节点接口与跨代生命周期</li>
+          </ul>
         
-        <h2>2. 企业Agent从“生成答案”转向受治理执行：瓶颈由纯算力扩展到状态、数据与控制面</h2>
-        <p><b>变化信号｜正式产品化。</b> Oracle本周宣布AI Data Platform Agents正式可用，并在8月17日发布企业Agent架构蓝图：AI数据平台负责可信数据、检索和推理，Oracle Integration负责跨业务系统的异步执行、审批、审计与人工监督。厂商明确指出，企业难点正从“做出Agent”转向“让洞察安全地变成业务动作”。</p>
-        <p><b>业务为什么变化。</b> 聊天式AI只有建议价值；真正的ROI来自修改订单、触发供应链流程、更新客户记录等可执行结果。但企业系统包含权限、合规、审批和失败补偿，模型不能直接越过这些边界。因此业务需求推动Agent从无状态问答升级为跨系统、长生命周期且可追责的执行主体。</p>
-        <p><b>负载与数据流变化。</b> 一个业务任务将拆成多次短模型调用、检索、API事务、异步等待和人工审批；状态需要跨分钟甚至跨天保存。流量更突发，CPU编排、消息队列、元数据、低时延小IO和审计写入占比上升，GPU平均利用率可能下降，但系统必须长期在线并支持失败恢复。</p>
-<p><b>外部校验。</b> Cisco基于真实广域网流量和Agent实验的2026年研究也识别出一种不同于传统人类网页/视频访问的新型流量：Agent会在模型与互联网服务之间连续交换数据，当前规模仍小但增长较快。这支持“Agent首先改变端到端数据流，而非只增加GPU负载”的判断，但尚不足以直接推导机房内带宽扩容比例。</p>
-<p>校验来源：<a href="https://www.cisco.com/c/dam/en/us/solutions/collateral/artificial-intelligence/mass-scale-infrastructure/ai-network-traffic-report.pdf">Cisco《AI Impact on Wide Area Networks》</a></p>
-        <p><b>软件与硬件架构影响（分析判断）。</b> “无状态请求进入GPU、结果直接返回”的服务模型不再充分。平台需要独立的Agent控制面、持久状态层、事件总线、身份与策略执行点，并对推理、工具和数据访问形成统一追踪。硬件侧的新增重点可能不是更多GPU，而是高可靠CPU/DPU控制节点、低时延持久存储、隔离网络和更细粒度的安全故障域；超节点产品若只交付计算与Scale-up互联，将覆盖不了Agent生产系统的关键瓶颈。</p>
-        <p><b>建议动作：</b>先采集真实Agent轨迹，量化每个任务的模型调用次数、思考/执行时间比、状态大小、工具扇出和审计写入量；在这些数据出现前，不宜简单按传统在线推理QPS外推GPU与存储容量。</p>
-        <p>来源：<a href="https://blogs.oracle.com/integration/from-data-to-action-a-blueprint-for-enterprise-ai-agents-with-oracle-ai-data-platform-and-oracle-integration">Oracle企业Agent架构蓝图</a>；<a href="https://blogs.oracle.com/ai-data-platform/your-data-already-knows-the-answer-now-it-can-act-on-it">Oracle AIDP Agents GA公告</a></p>
+          <h2 style="font-size:23px;line-height:1.4;margin:34px 0 16px;color:#172b4d">01｜低时延成为独立服务等级：推理优化目标转向任务闭环时间</h2>
         
-        <h2>3. 算力采购转向“电力＋租约＋资本”联合锁定：硬件必须跨代、可融资、可验收</h2>
-        <p><b>变化信号｜已签署安排，远期容量仍待建设。</b> Reuters 8月17日报道，NVIDIA拟向SB Energy投资15亿美元，并为OpenAI在俄亥俄州Pike County的20年数据中心租约提供最高1050亿美元的部分付款担保。项目首期800MW目标在2028年上线，长期上限8GW，并计划使用NVIDIA芯片。已确认的是投资、担保与租约框架；8GW并不等于已上线算力，未来GPU代际、机房和电源仍存在交付风险。</p>
-        <p><b>业务为什么变化。</b> AI需求增长速度超过电网接入和数据中心融资速度。客户需要提前多年锁定电力与土地，基础设施方则需要信用增级才能为超大园区融资；芯片供应商因此从设备销售方延伸为资本与需求的组织者。约束源已经由“买到GPU”前移到“获得可融资、可持续交付的电力容量”。</p>
-        <p><b>部署与架构变化。</b> 20年租约会跨越多代加速器，而电力、冷却和建筑寿命远长于单代GPU。园区必须分期建设，先确定功率与水冷边界，再在投运时装入当代计算平台；验收指标也会从卡数转向可用MW、有效token产能和持续服务能力。</p>
-        <p><b>硬件架构影响（分析判断）。</b> 超节点和机房接口需要代际可替换：标准化高压直流/交流输入、冷却水温与压差窗口、机柜重量和网络光纤边界，避免每轮GPU升级重做基础设施。供应商还需要可度量的性能衰减、能效、残值和迁移方案，使整柜成为可融资资产。反面风险是芯片独家绑定会降低异构选择权，并把客户信用、园区残值和供应商收入绑在同一风险闭环。</p>
-        <p><b>建议动作：</b>把“跨三代加速器不改动园区主基础设施”设为架构评审目标；针对首期800MW追踪已签电源、变电站、冷却方案、GPU代际和担保触发条件，而不是用8GW远期上限代替工程进度。</p>
-        <p>来源：<a href="https://www.reuters.com/business/media-telecom/nvidia-invest-15-billion-sb-energy-under-openai-data-center-deal-2026-08-17/">Reuters交易与建设安排</a></p>
+          <h3 style="font-size:17px;margin:20px 0 6px;color:#315efb">① 新变化是什么</h3>
+          <p style="margin:6px 0 14px">OpenAI于8月13日预览GPT-5.6 Sol Ultrafast，最高约750输出Token/s、最高达到标准模式的14倍，由Cerebras承载，目前仅向部分客户开放。相对过去单纯公布模型速度，真正的新变化是：<strong>头部模型厂商开始把低时延包装成独立、可售的服务等级</strong>。官方给出的内部场景是把隔夜批量研究压缩为工作日内的多轮迭代。</p>
         
-        <h2>今日架构判断</h2>
-        <p>最重要的变化是：<b>推理系统的产品单位正在从“每秒多少token”转向“多快完成一个可执行任务”。</b> 低时延服务解决思考速度，企业Agent架构解决行动与治理，长期园区融资解决规模化供给。对应的超节点不应再被定义为GPU与Scale-up网络的集合，而应被评估为一套能按不同SLA交付计算、状态、数据移动、控制与电力容量的系统。</p>
-        <p><b>需继续验证：</b>Ultrafast的价格、并发与P99；企业Agent真实轨迹中存储/网络/CPU占比；800MW项目的实际电源、冷却和计算平台接口。上述三项数据将决定是否需要新硬件形态，还是先通过调度、状态层和园区标准化解决。</p>
+          <h3 style="font-size:17px;margin:20px 0 6px;color:#315efb">② 为什么发生</h3>
+          <p style="margin:6px 0 14px">AI正在从一次性问答进入研究、编程和Agent工具循环。用户真正购买的不再只是Token，而是更短的任务完成时间：模型每快一步，“推理—调用工具—读取结果—继续推理”的串行闭环就能更快完成。这一变化主要由新场景和生产率驱动，而不是简单降成本；交互型工作负载开始与价格敏感的批处理负载分层。</p>
+        
+          <h3 style="font-size:17px;margin:20px 0 6px;color:#315efb">③ 改变了什么计算或数据特征</h3>
+          <ul style="padding-left:22px;margin:6px 0 14px">
+            <li>高优先级、小Batch、Decode占比较高的请求增加；</li>
+            <li>多轮工具调用形成短突发、强串行依赖的负载；</li>
+            <li>P99端到端时延的重要性超过平均Token/s；</li>
+            <li>KV访问、检索、工具网络与排队时间开始决定最终体验。</li>
+          </ul>
+        
+          <h3 style="font-size:17px;margin:20px 0 6px;color:#315efb">④ 触碰了哪个技术边界</h3>
+          <p style="margin:6px 0 14px"><strong>首先触碰的是“利用大Batch换取GPU高利用率”的调度边界。</strong>低时延服务要求减少排队和Batch等待，而这与吞吐率、利用率和单位Token成本存在直接冲突。若模型侧达到数百Token/s，瓶颈还可能外移到KV Cache、状态存储、检索网络和工具响应，单颗加速器的速度优势会被系统链路抵消。目前已验证的是模型服务速度，完整并发、价格和端到端P99仍待验证。</p>
+        
+          <h3 style="font-size:17px;margin:20px 0 6px;color:#315efb">⑤ 可能催生什么硬件架构、新的技术需要</h3>
+          <p style="margin:6px 0 10px"><strong>高概率方向：</strong>推理平台分化为低时延专池与经济型吞吐池，配套优先级调度、准入控制和端到端遥测；Prefill与Decode可能进一步解耦，分别配置适合计算密集和带宽/容量敏感阶段的节点。</p>
+          <p style="margin:6px 0 14px"><strong>可能的新硬件需要：</strong>大容量片上SRAM或晶圆级计算、低时延KV存储层、可池化内存、低抖动网络，以及面向任务闭环而非单芯片Token/s的系统基准。是否需要大规模替换GPU架构，仍取决于价格、并发和P99数据。</p>
+        
+          <div style="padding:14px 16px;background:#f7f8fa;border-radius:8px;margin:16px 0">
+            <strong>架构师结论：</strong>低时延不是普通性能升级，而是在制造新的推理服务等级；系统设计目标必须从峰值吞吐扩展到端到端任务完成时间。<br>
+            <strong>建议跟踪：</strong>价格与并发上限；不同Batch下的P99；模型生成、KV访问、检索、工具调用和排队的时延分解。
+          </div>
+          <p style="font-size:14px;color:#52606d">来源：<a href="https://openai.com/index/previewing-ultrafast/">OpenAI官方发布</a>｜<a href="https://www.cerebras.ai/blog/accelerating-gpt-5-6-sol-ultrafast-with-openai">Cerebras技术说明</a></p>
+        
+          <h2 style="font-size:23px;line-height:1.4;margin:38px 0 16px;color:#172b4d">02｜企业Agent进入受治理执行：系统瓶颈从GPU扩展到状态、数据与控制面</h2>
+        
+          <h3 style="font-size:17px;margin:20px 0 6px;color:#315efb">① 新变化是什么</h3>
+          <p style="margin:6px 0 14px">Oracle宣布AI Data Platform Agents正式可用，并在8月17日给出企业Agent架构蓝图：AI数据平台承担可信数据、检索与推理，Oracle Integration承担跨业务系统的异步执行、审批、审计和人工监督。新增之处不是又一个聊天机器人，而是<strong>Agent开始以受治理的业务执行主体进入生产系统</strong>。</p>
+        
+          <h3 style="font-size:17px;margin:20px 0 6px;color:#315efb">② 为什么发生</h3>
+          <p style="margin:6px 0 14px">聊天式AI只能产生建议，企业真正的ROI来自修改订单、触发供应链流程或更新客户记录等可执行结果。但核心业务系统存在权限、合规、审批、幂等和失败补偿要求，模型不能直接越过这些边界。因此，业务需求推动Agent从无状态问答升级为跨系统、长生命周期、可审计和可追责的执行主体。</p>
+        
+          <h3 style="font-size:17px;margin:20px 0 6px;color:#315efb">③ 改变了什么计算或数据特征</h3>
+          <ul style="padding-left:22px;margin:6px 0 14px">
+            <li>一个任务拆成多次短模型调用、检索、API事务和人工审批；</li>
+            <li>状态生命周期从一次请求延长到分钟、小时甚至数天；</li>
+            <li>负载更突发，GPU计算与异步等待交替出现；</li>
+            <li>低时延小IO、元数据、消息队列和审计写入占比提高；</li>
+            <li>CPU编排、外部网络和存储的重要性上升，GPU平均利用率可能下降。</li>
+          </ul>
+          <p style="margin:6px 0 14px">Cisco基于真实广域网流量和Agent实验的研究，也观察到不同于传统网页与视频访问的新型流量：Agent在模型与互联网服务之间连续交换数据。当前流量规模仍小，但这一结果支持“Agent首先改变端到端数据流，而不只是增加GPU负载”的判断。</p>
+        
+          <h3 style="font-size:17px;margin:20px 0 6px;color:#315efb">④ 触碰了哪个技术边界</h3>
+          <p style="margin:6px 0 14px"><strong>首先失效的是“推理请求无状态、GPU是主要瓶颈”的假设。</strong>当任务包含长期状态、外部工具和审批时，系统边界转移到状态一致性、低时延小IO、身份权限、消息可靠性和失败恢复。现有证据已经验证软件与业务架构变化，但存储、网络和CPU负载占比仍缺少公开的大规模生产数据。</p>
+        
+          <h3 style="font-size:17px;margin:20px 0 6px;color:#315efb">⑤ 可能催生什么硬件架构、新的技术需要</h3>
+          <p style="margin:6px 0 10px"><strong>已出现的解法：</strong>独立的数据/智能层与执行/编排层，持续索引的AI数据平台，以及DPU参与的安全数据路径。</p>
+          <p style="margin:6px 0 14px"><strong>高概率方向：</strong>超节点外增加Agent控制面、持久状态层、事件总线和统一遥测；硬件配置从GPU中心化转向GPU、CPU/DPU、低时延存储和隔离网络的异构组合。新的技术需求包括状态分级、可持久化上下文、细粒度零信任、事务回滚以及跨模型和工具的故障追踪。</p>
+        
+          <div style="padding:14px 16px;background:#f7f8fa;border-radius:8px;margin:16px 0">
+            <strong>架构师结论：</strong>Agent可能先扩大CPU、存储、网络和控制面的价值，而不是同比例扩大GPU需求；“Agent超节点”应以完整任务轨迹而非传统QPS建模。<br>
+            <strong>建议跟踪：</strong>每任务模型调用次数；思考/执行时间比；状态大小与生命周期；工具扇出；审计IO与失败重试率。
+          </div>
+          <p style="font-size:14px;color:#52606d">来源：<a href="https://blogs.oracle.com/integration/from-data-to-action-a-blueprint-for-enterprise-ai-agents-with-oracle-ai-data-platform-and-oracle-integration">Oracle企业Agent架构蓝图</a>｜<a href="https://blogs.oracle.com/ai-data-platform/your-data-already-knows-the-answer-now-it-can-act-on-it">Oracle AIDP Agents GA</a>｜<a href="https://www.cisco.com/c/dam/en/us/solutions/collateral/artificial-intelligence/mass-scale-infrastructure/ai-network-traffic-report.pdf">Cisco AI网络流量研究</a></p>
+        
+          <h2 style="font-size:23px;line-height:1.4;margin:38px 0 16px;color:#172b4d">03｜算力采购绑定电力、租约与资本：硬件生命周期开始跨越多个GPU代际</h2>
+        
+          <h3 style="font-size:17px;margin:20px 0 6px;color:#315efb">① 新变化是什么</h3>
+          <p style="margin:6px 0 14px">Reuters 8月17日报道，NVIDIA拟向SB Energy投资15亿美元，并为OpenAI在俄亥俄州Pike County的20年数据中心租约提供最高1050亿美元的部分付款担保。首期800MW目标在2028年上线，远期上限8GW，并计划使用NVIDIA芯片。已确认的是投资、担保和租约框架；<strong>8GW是远期上限，不是已经上线或完成采购的算力</strong>。</p>
+        
+          <h3 style="font-size:17px;margin:20px 0 6px;color:#315efb">② 为什么发生</h3>
+          <p style="margin:6px 0 14px">AI需求增长速度超过电网接入和数据中心融资速度。客户必须提前多年锁定土地、电力与建设能力，基础设施方则需要信用增级才能为超大园区融资。芯片供应商因此从设备销售者延伸为资本与需求的组织者。真正的稀缺资源已从“GPU现货”前移到“可融资、可按期交付的电力容量”。</p>
+        
+          <h3 style="font-size:17px;margin:20px 0 6px;color:#315efb">③ 改变了什么计算或数据特征</h3>
+          <p style="margin:6px 0 14px">这条变化不直接改变算法，却改变算力的部署颗粒度和时间特征：容量以数百MW分期上线，20年租约覆盖多个GPU代际，建设决策早于具体计算平台定型。系统验收也将从GPU卡数转向可用MW、有效Token产能、单位Token能耗和持续服务能力。</p>
+        
+          <h3 style="font-size:17px;margin:20px 0 6px;color:#315efb">④ 触碰了哪个技术边界</h3>
+          <p style="margin:6px 0 14px"><strong>首先触碰的是电力交付、资本期限与硬件迭代周期不匹配的边界。</strong>建筑、电力和冷却资产寿命可达十年以上，而GPU平台约数年就会换代。如果机房接口与某代整柜强绑定，后续升级将产生巨额改造和资产减值。首期800MW的电源、变电站、冷却及GPU代际仍待持续验证。</p>
+        
+          <h3 style="font-size:17px;margin:20px 0 6px;color:#315efb">⑤ 可能催生什么硬件架构、新的技术需要</h3>
+          <p style="margin:6px 0 10px"><strong>高概率方向：</strong>数据中心先定义稳定的电力、冷却、承载和光纤边界，计算Tray与交换Tray按代际替换；超节点从一次性交付设备转向可升级、可测量、可融资的标准化算力模块。</p>
+          <p style="margin:6px 0 14px"><strong>新的技术需要：</strong>跨代兼容的800VDC或高压交流接口、统一水温/压差/水质窗口、模块化Manifold和Busbar、光纤化机柜边界、设备健康与性能衰减遥测，以及面向残值评估的整柜验收标准。芯片独家绑定同时会降低异构选择权。</p>
+        
+          <div style="padding:14px 16px;background:#f7f8fa;border-radius:8px;margin:16px 0">
+            <strong>架构师结论：</strong>未来超节点竞争不仅是当代性能竞争，也包括能否跨代接入长期电力资产；硬件接口标准化将直接影响融资成本和设备残值。<br>
+            <strong>建议跟踪：</strong>首期800MW的已签电源、变电站与冷却方案；实际GPU代际和机柜数量；担保触发条件；跨代基础设施改造比例。
+          </div>
+          <p style="font-size:14px;color:#52606d">来源：<a href="https://www.reuters.com/business/media-telecom/nvidia-invest-15-billion-sb-energy-under-openai-data-center-deal-2026-08-17/">Reuters交易与建设安排</a></p>
+        
+          <h2 style="font-size:20px;margin:34px 0 12px;border-bottom:1px solid #dfe3e8;padding-bottom:8px">今日架构主线</h2>
+          <p><strong>业务正在同时要求更快完成任务、更安全地执行任务，以及更大规模地供应任务所需算力。</strong>这使推理资源池发生SLA分化，使数据与状态成为Agent系统的核心部件，也使电力和基础设施成为跨代硬件平台。对应的系统机会不是单一地增加GPU，而是重构计算、状态、互联、供电和冷却之间的边界。</p>
+        
+          <h2 style="font-size:20px;margin:30px 0 12px;border-bottom:1px solid #dfe3e8;padding-bottom:8px">未发现可信新增</h2>
+          <p style="color:#52606d">截至本期扫描时间，未发现新的SemiAnalysis文章、独立超节点新品、可信NPO/CPO量产规格，或240kW以上机柜液冷与供电的新工程参数。相关专题继续跟踪，不以旧闻补足数量。</p>
+        </div>
       ]]></description>
     </item>
     <item>
