@@ -5,9 +5,112 @@
     <link>https://github.com/YanLiang518/ai-supernode-rss</link>
     <description>聚焦 AI 超节点、GPU/加速芯片、Scale-up 互联、NPO/CPO、液冷、供电与头部厂商架构动态。</description>
     <language>zh-cn</language>
-    <lastBuildDate>Wed, 19 Aug 2026 05:00:00 +0800</lastBuildDate>
+    <lastBuildDate>Thu, 20 Aug 2026 05:00:00 +0800</lastBuildDate>
     <ttl>15</ttl>
     <atom:link href="https://raw.githubusercontent.com/YanLiang518/ai-supernode-rss/main/feed.xml" rel="self" type="application/rss+xml"/>
+    <item>
+      <title>AI算力架构前沿简报｜2026年8月20日</title>
+      <link>https://raw.githubusercontent.com/YanLiang518/ai-supernode-rss/main/archive/2026-08-20.html</link>
+      <guid isPermaLink="false">ai-supernode-brief-2026-08-20</guid>
+      <pubDate>Thu, 20 Aug 2026 05:00:00 +0800</pubDate>
+      <description><![CDATA[
+
+<div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;line-height:1.75;color:#202124;max-width:900px;margin:0 auto">
+  <h1 style="font-size:28px;line-height:1.3;margin:0 0 20px;color:#14213d">AI算力架构前沿简报｜2026年8月20日</h1>
+
+  <div style="padding:18px 20px;background:#f3f7ff;border-left:4px solid #315efb;border-radius:8px;margin:0 0 22px">
+    <h2 style="font-size:19px;margin:0 0 8px;color:#193a8a">今日判断</h2>
+    <p style="margin:0 0 8px"><strong>今天的主线是推理基础设施从“统一GPU池”分化为按阶段、SLA和经济目标组织的异构系统。</strong>Cerebras把Prefill交给GPU或ASIC、把低时延Decode放到晶圆级引擎；OpenRouter则把每次请求按任务、价格、速度和可靠性动态分流。</p>
+    <p style="margin:0">与此同时，Google把定制芯片合作从单一XPU扩展到存储、网络、内存接口和近存计算，并以采购挂钩股权锁定第二供应源；AMD则把能效考核单位正式上移到整柜。共同含义是：<strong>竞争边界正在从芯片峰值，扩展到整条Token生产链的协同效率、可部署性与供应确定性。</strong></p>
+  </div>
+
+  <h2 style="font-size:21px;margin:26px 0 12px;color:#14213d">信号总览</h2>
+  <ul style="margin:0 0 24px;padding-left:22px">
+    <li><strong>Cerebras CS-4原生支持Prefill/Decode解耦</strong>｜系统/产品｜本季度开始出货｜影响异构推理、Scale-up、供电液冷和可维护性</li>
+    <li><strong>Google—Marvell合作扩展至TPU周边整条数据路径</strong>｜采购/供应链｜已签协议并披露8-K｜影响定制XPU、NIC、存储与近存计算</li>
+    <li><strong>Stripe收购OpenRouter</strong>｜商业/软件控制面｜已宣布、待交割｜影响跨模型路由、缓存、异构资源池和Token计费</li>
+    <li><strong>AMD以整柜而非单芯片衡量AI能效</strong>｜方法/路线图｜2026年估算值｜影响系统协同设计、电力冷却和验收指标</li>
+  </ul>
+
+  <hr style="border:0;border-top:1px solid #e3e7ee;margin:28px 0">
+  <h2 style="font-size:23px;line-height:1.4;margin:0 0 16px;color:#14213d">01｜CS-4把Prefill与Decode拆到异构平台：推理超节点开始按阶段优化</h2>
+  <p><strong>① 新变化是什么</strong></p>
+  <p>事件日期：2026年8月18日；Reuters于8月19日00:01 UTC报道。Cerebras发布CS-4，这是首款采用Nexus模块化机架架构的正式产品，三个WSE-3 Turbo合计提供750 PFLOPS AI算力、129.6 PB/s片上内存带宽和7.2 Tb/s系统I/O；首批计划本季度出货。每个Wafer-Scale Backpack把晶圆、近端电源转换、直接液冷、I/O和控制电子集成成可插拔模块，组件数较上代减少50%，制造自动化提高60%。</p>
+  <p><strong>② 为什么发生</strong></p>
+  <p>Agent和推理型产品同时追求两个以前相互冲突的目标：单用户低时延，以及每瓦高Token吞吐。Cerebras的业务判断是“快Token”可支持更多串行推理、验证和工具调用，价值高于单纯扩大Batch；运营商还要求系统能按GW规模快速制造、安装和升级。厂商声称最高30倍GPU推理速度和10倍于CS-3的每瓦吞吐，但这些数字混合第三方基准、内部测试及推算，不能视为跨所有模型的普遍结果。</p>
+  <p><strong>③ 改变了什么计算或数据特征</strong></p>
+  <p>CS-4原生支持解耦推理：GPU或ASIC处理并行度更高、算力密集的Prefill，再把模型状态交给CS-4执行低Batch、强时延敏感的Decode。WSE间最低2微秒链路和Direct Wafer Links用于维持跨晶圆自回归生成；标准RoCE v2则连接AMD Helios、AWS Trainium等异构Prefill平台。负载因此从单一集群内连续执行，变成跨加速器迁移KV/状态、按阶段调度并分别核算SLA。</p>
+  <p><strong>④ 触碰了哪个技术边界</strong></p>
+  <p><strong>失效的假设是：同一种加速器、同一套互联可以同时把Prefill吞吐和Decode尾时延做到最优。</strong>首先触碰的是跨平台状态传输时延、格式兼容、KV搬移带宽和故障恢复；其次是晶圆级器件的近端供电、液冷和更换时间。公开资料给出了2微秒链路和模块化结构，但尚未公布异构交接的实际KV大小、端到端P99、功耗、整柜水力参数和故障域。</p>
+  <p><strong>⑤ 可能催生什么硬件架构、新的技术需要</strong></p>
+  <p><strong>已出现的解法：</strong>CS-4 Decode机架、GPU/Trainium Prefill池、RoCE v2异构接入、无交换Direct Wafer Links，以及基础设施先验收、计算Backpack后插入的部署方式。</p>
+  <p><strong>高概率方向：</strong>推理中心将形成Prefill池、Decode池与KV/上下文存储池，调度器按上下文长度、Batch、首Token与每Token时延选择硬件；机柜稳定层保留电力、冷却和网络，计算模块按代际替换。</p>
+  <p><strong>尚待验证：</strong>晶圆级Decode的成本优势能否覆盖状态搬移和资源碎片，以及模块化Backpack在高功率环境中的MTTR、冗余与热插拔边界。</p>
+  <div style="padding:14px 16px;background:#f8f9fb;border-radius:8px;margin:16px 0"><p style="margin:0 0 6px"><strong>架构师结论：</strong>CS-4的重要性不是又一项峰值参数，而是把推理阶段拆分、近端供电液冷和模块化维护放进同一产品；这使“按Token阶段组装超节点”成为可交付路线。</p><p style="margin:0"><strong>建议跟踪：</strong>Prefill—Decode状态传输P99与带宽；CS-4整柜功耗、流量和供回水温；Backpack更换时间及故障隔离；厂商基准的模型、精度和Batch条件。</p></div>
+  <p><strong>来源：</strong><a href="https://www.cerebras.ai/blog/introducing-cerebras-cs-4">Cerebras技术说明</a>｜<a href="https://investors.cerebras.ai/news-releases/news-release-details/cerebras-unveils-cs-4-30-times-faster-gpu-based-solutions">Cerebras正式发布与规格</a>｜<a href="https://www.reuters.com/technology/cerebras-launches-new-server-chip-system-designed-speed-ai-chatbots-2026-08-19/">Reuters交叉核实</a></p>
+
+  <hr style="border:0;border-top:1px solid #e3e7ee;margin:28px 0">
+  <h2 style="font-size:23px;line-height:1.4;margin:0 0 16px;color:#14213d">02｜Google把第二供应源扩展到TPU周边整条数据路径：定制芯片转向系统级共研</h2>
+  <p><strong>① 新变化是什么</strong></p>
+  <p>Marvell于2026年7月29日与Google签署定制半导体商业协议，并在8月18日发行认股权证、8月19日通过8-K披露。合作范围不只是一颗TPU，而包括AI推理加速器、存储控制器、网络接口控制器、内存接口控制器和近存计算；Google可按每股206.58美元购买最多58,970,907股Marvell股票。</p>
+  <p>其中约136万股按时间归属，其余主要与Google从Marvell采购定制产品的收入挂钩；完整归属对应的极端收入上限约1200亿美元至Marvell 2033财年。这个金额是条件上限，不是已下订单或已确认收入。</p>
+  <p><strong>② 为什么发生</strong></p>
+  <p>Google需要用TPU降低对通用GPU的成本依赖，并为Cloud外部客户提供足够产能；同时，单一设计伙伴和单一供应链会放大路线、交付及议价风险。股权随采购量归属，把Marvell的研发和产能投入与Google的长期采购直接绑定；本简报判断，这更像扩大第二来源和增加系统共研能力，而非已经替代Broadcom。</p>
+  <p><strong>③ 改变了什么计算或数据特征</strong></p>
+  <p>合作清单说明Google优化对象已从矩阵计算Die扩展到数据入口、内存访问、KV/存储路径和Scale-out网络。推理负载需要同时处理权重、长上下文、KV状态、Checkpoint和多租户网络流量，系统瓶颈会随阶段在XPU、NIC、内存控制器和存储之间移动；把这些器件纳入同一共研计划，可以按Google实际流量共同定义队列、带宽、缓存和功耗。</p>
+  <p><strong>④ 触碰了哪个技术边界</strong></p>
+  <p><strong>失效的假设是：更换或升级计算ASIC即可获得主要系统收益，其余I/O部件可以从通用市场独立采购。</strong>当数据移动能耗、内存容量和网络拥塞占比上升，通用NIC/控制器的协议与功耗开销会吃掉定制XPU收益。协议确认了边界存在，但没有披露产品代际、制程、HBM、Scale-up拓扑、光互联或量产时间，技术结果仍待验证。</p>
+  <p><strong>⑤ 可能催生什么硬件架构、新的技术需要</strong></p>
+  <p><strong>已出现的解法：</strong>覆盖推理XPU、NIC、存储、内存接口和近存计算的长期定制硅计划，以及采购挂钩的资本激励。</p>
+  <p><strong>高概率方向：</strong>云商超节点会采用一组协同设计的Chiplet/ASIC，而不是一颗主芯片加通用外围；Marvell既有高速SerDes、交换、存储和Photonic Fabric资产可能成为组合基础，但本协议未确认CPO/NPO或Celestial AI光互联已被Google采用。</p>
+  <p><strong>尚待验证：</strong>Marvell承担的是主TPU、辅助推理ASIC还是外围控制器；与Broadcom项目的边界；以及多供应商设计能否在保持软件兼容的同时减少重复验证。</p>
+  <div style="padding:14px 16px;background:#f8f9fb;border-radius:8px;margin:16px 0"><p style="margin:0 0 6px"><strong>架构师结论：</strong>Google正在把“自研芯片”升级为“自定义整条数据路径”。未来云商差异化将更多来自XPU、内存、网络与存储共同定义，而不是单颗ASIC的TOPS。</p><p style="margin:0"><strong>建议跟踪：</strong>各类产品对应的采购归属；首个量产代际与HBM/SerDes规格；Broadcom与Marvell分工；是否使用Photonic Fabric或其他Scale-up光互联。</p></div>
+  <p><strong>来源：</strong><a href="https://www.sec.gov/Archives/edgar/data/1835632/000119312526356217/d412696d8k.htm">Marvell 8-K监管披露</a>｜<a href="https://www.reuters.com/technology/marvell-grants-google-122-billion-stock-warrant-custom-chip-deal-2026-08-19/">Reuters报道与金额核实</a></p>
+
+  <hr style="border:0;border-top:1px solid #e3e7ee;margin:28px 0">
+  <h2 style="font-size:23px;line-height:1.4;margin:0 0 16px;color:#14213d">03｜Stripe收购OpenRouter：模型路由从开发工具升级为Token经济控制面</h2>
+  <p><strong>① 新变化是什么</strong></p>
+  <p>事件及发布时间：2026年8月19日；成熟度为已宣布收购、仍待交割。Stripe同意收购OpenRouter，后者通过单一网关连接80多家提供商的400多个模型，并按任务复杂度、价格、速度和可靠性动态路由请求。Reuters称OpenRouter每天处理超过10万亿Token、服务逾1000万开发者和企业；交易价格未由双方披露，媒体估值不视为确认事实。</p>
+  <p><strong>② 为什么发生</strong></p>
+  <p>AI应用的主要可变成本已从传统云资源逐渐变成Token，且模型价格、能力和可用性快速变化。固定绑定单一模型会在简单任务上过度付费，也会在故障或拥塞时失去服务；Stripe试图把Token计量、计费和路由连成一条利润控制链，使企业可在每次请求上实时权衡收入、质量与成本。</p>
+  <p><strong>③ 改变了什么计算或数据特征</strong></p>
+  <p>路由器会把同一应用的请求分散到不同模型、云和加速器，使负载更加异构、短时迁移更频繁。请求分类、回退、重试和A/B评估增加控制面流量；跨模型切换可能破坏Prompt/KV缓存局部性，长会话则需要“粘性路由”或状态转换。10万亿Token/日表明这一层已经具备基础设施规模，而非只用于实验。</p>
+  <p><strong>④ 触碰了哪个技术边界</strong></p>
+  <p><strong>失效的假设是：应用只需选择一次模型，随后按固定API和固定成本运行。</strong>新边界是跨提供商P99、语义一致性、缓存命中、数据驻留、限流与故障回退；如果只按单次价格路由，重建缓存和重复上下文可能使总成本反而上升。现有披露证明动态路由需求，但没有公开路由命中、缓存损失、质量回归和尾时延数据。</p>
+  <p><strong>⑤ 可能催生什么硬件架构、新的技术需要</strong></p>
+  <p><strong>已出现的解法：</strong>统一模型网关、Token计量、按任务/价格/速度/可靠性路由。</p>
+  <p><strong>高概率方向：</strong>推理云会形成多模型、多代际GPU/ASIC的分层资源池；DPU或高性能CPU承担路由、配额、加密和遥测，KV/Prompt缓存成为跨模型选择的一等约束。资源调度可能从“哪张卡空闲”转为“哪个模型—硬件—缓存组合的单位成功任务成本最低”。</p>
+  <p><strong>尚待验证：</strong>跨模型状态是否能标准化迁移，以及支付公司拥有路由层后能否维持模型选择中立和数据隔离。</p>
+  <div style="padding:14px 16px;background:#f8f9fb;border-radius:8px;margin:16px 0"><p style="margin:0 0 6px"><strong>架构师结论：</strong>OpenRouter把模型差异转化为实时调度问题；一旦路由与计费结合，硬件利用率、缓存位置和服务质量将直接参与商业决策。</p><p style="margin:0"><strong>建议跟踪：</strong>每类任务的模型分布；回退与重试率；跨模型缓存损失；P99与单位成功任务成本；数据驻留和路由中立性政策。</p></div>
+  <p><strong>来源：</strong><a href="https://stripe.com/newsroom/news/stripe-agrees-to-acquire-openrouter">Stripe官方公告</a>｜<a href="https://www.reuters.com/technology/payments-firm-stripe-buy-ai-developer-platform-openrouter-2026-08-19/">Reuters规模数据与交易核实</a></p>
+
+  <hr style="border:0;border-top:1px solid #e3e7ee;margin:28px 0">
+  <h2 style="font-size:23px;line-height:1.4;margin:0 0 16px;color:#14213d">04｜AMD把AI能效考核上移到整柜：数据移动与基础设施损耗进入路线图</h2>
+  <p><strong>① 新变化是什么</strong></p>
+  <p>事件日期：2026年8月18日；成熟度为厂商估算和路线图进展，而非独立实测。AMD称其2026年AI整柜相对2024基线的性能/瓦提升约4倍，高于同期3倍路线目标，并继续追求2030年20倍整柜能效。指标覆盖CPU、GPU、内存、网络、存储、软件与系统设计，而不是只报告加速器芯片能效。</p>
+  <p><strong>② 为什么发生</strong></p>
+  <p>客户面临的是可接入MW、每Token电费、机房空间和冷却容量，而不是单芯片TDP。随着HBM、Retimer、交换、存储和泵功占比上升，芯片级性能/瓦无法代表可上线算力；将指标上移到整柜，是为了在固定电力下交付更多训练或推理工作，并降低数据移动和转换损耗。</p>
+  <p><strong>③ 改变了什么计算或数据特征</strong></p>
+  <p>该变化本身不改变模型，但改变优化对象和测量方法：系统需要对计算、内存带宽、互联利用率、软件效率和作业完成时间联合建模。更大缓存、更紧密内存—计算集成和高速低能耗互联旨在减少无效数据搬移；训练与推理必须用完整任务或Token产出归一化，而不能用峰值FLOPS替代。</p>
+  <p><strong>④ 触碰了哪个技术边界</strong></p>
+  <p><strong>失效的假设是：芯片效率提升会近似等比例转化为数据中心效率。</strong>机柜电源转换、网络、内存、冷却和低利用率会稀释硅片收益。AMD的4倍为内部估算，尚未公开完整基准配置、工作负载、设施边界及是否计入CDU/冷机功率；因此它验证了评价框架的迁移，但没有独立证明实际机房已实现4倍。</p>
+  <p><strong>⑤ 可能催生什么硬件架构、新的技术需要</strong></p>
+  <p><strong>已出现的解法：</strong>把CPU、GPU、HBM、网络、存储和软件纳入整柜性能/瓦目标。</p>
+  <p><strong>高概率方向：</strong>超节点验收将从芯片TDP与峰值算力转向有效Token/W、任务/J、设施侧kW与水耗；电源、液冷和互联必须与运行时共同遥测，调度器按能效和热余量放置作业。800VDC、液冷、短距铜/光混合互联是否采用，应以系统净收益决定。</p>
+  <p><strong>尚待验证：</strong>20倍目标中硬件、软件、利用率和模型变化各自贡献，以及跨代比较能否保持模型、精度和完成质量一致。</p>
+  <div style="padding:14px 16px;background:#f8f9fb;border-radius:8px;margin:16px 0"><p style="margin:0 0 6px"><strong>架构师结论：</strong>能效指标上移意味着电源、冷却、网络和软件不再是“平台配套”，而是算力产品本身；采购和验收也需要转向端到端任务产出。</p><p style="margin:0"><strong>建议跟踪：</strong>4倍估算的基准配置与计量边界；IT侧和设施侧Token/W；网络/内存/冷却功耗占比；Helios实机利用率及PUE/WUE。</p></div>
+  <p><strong>来源：</strong><a href="https://newsroom.amd.com/news/amd-tracks-ahead-of-rack-scale-ai-energy-efficiency-goal/">AMD官方进展</a>｜<a href="https://www.amd.com/en/blogs/2025/amd-surpasses-30x25-goal-sets-ambitious-new-20x-rack-scale-energy-efficiency-target-for-ai-systems-by-2030.html">AMD 20×2030方法与基线</a></p>
+
+  <h2 style="font-size:21px;margin:32px 0 12px;color:#14213d">今日架构主线</h2>
+  <p><strong>Token生产链正在分层：</strong>OpenRouter在请求入口选择模型与成本，异构Prefill/Decode平台按计算阶段选择硬件，Google—Marvell把XPU周边的数据路径共同定制，AMD再以整柜性能/瓦统一衡量结果。未来超节点不再是固定GPU数量的封闭设备，而更像由路由控制面、阶段化计算池、可迁移状态层、协同定制I/O以及可测量电力冷却边界组成的系统。</p>
+  <p>最值得警惕的是各层优化彼此冲突：动态换模型会损失缓存，Prefill/Decode拆分会增加状态搬移，定制外围会增加供应商耦合，整柜能效也可能被选定基准夸大。架构判断应以<strong>单位成功任务成本、端到端P99、有效Token/W和故障恢复时间</strong>为共同验收口径。</p>
+
+  <h2 style="font-size:21px;margin:30px 0 12px;color:#14213d">未发现可信新增</h2>
+  <p style="color:#52606d">截至本期扫描时间，未发现新的SemiAnalysis文章；未发现除CS-4外的独立超节点新品；未发现可信的NPO/CPO/OCS量产或规格新增；也未发现240kW以上单柜液冷、供电的新工程参数。Marvell—Google协议覆盖网络与近存计算，但没有确认采用CPO/NPO，不据此推断光互联订单。</p>
+</div>
+      ]]></description>
+    </item>
+
     <item>
       <title>AI算力架构前沿简报｜2026年8月19日</title>
       <link>https://raw.githubusercontent.com/YanLiang518/ai-supernode-rss/main/archive/2026-08-19.html</link>
