@@ -106,7 +106,7 @@
   <p>最值得警惕的是各层优化彼此冲突：动态换模型会损失缓存，Prefill/Decode拆分会增加状态搬移，定制外围会增加供应商耦合，整柜能效也可能被选定基准夸大。架构判断应以<strong>单位成功任务成本、端到端P99、有效Token/W和故障恢复时间</strong>为共同验收口径。</p>
 
   <h2 style="font-size:21px;margin:30px 0 12px;">未发现可信新增</h2>
-  <p style="color:#52606d">截至本期扫描时间，未发现新的SemiAnalysis文章；未发现除CS-4外的独立超节点新品；未发现可信的NPO/CPO/OCS量产或规格新增；也未发现240kW以上单柜液冷、供电的新工程参数。Marvell—Google协议覆盖网络与近存计算，但没有确认采用CPO/NPO，不据此推断光互联订单。</p>
+  <p>截至本期扫描时间，未发现新的SemiAnalysis文章；未发现除CS-4外的独立超节点新品；未发现可信的NPO/CPO/OCS量产或规格新增；也未发现240kW以上单柜液冷、供电的新工程参数。Marvell—Google协议覆盖网络与近存计算，但没有确认采用CPO/NPO，不据此推断光互联订单。</p>
 </div>
       ]]></description>
     </item>
@@ -397,7 +397,7 @@
           <p><strong>业务正在同时要求更快完成任务、更安全地执行任务，以及更大规模地供应任务所需算力。</strong>这使推理资源池发生SLA分化，使数据与状态成为Agent系统的核心部件，也使电力和基础设施成为跨代硬件平台。对应的系统机会不是单一地增加GPU，而是重构计算、状态、互联、供电和冷却之间的边界。</p>
         
           <h2 style="font-size:20px;margin:30px 0 12px;border-bottom:1px solid currentColor;padding-bottom:8px">未发现可信新增</h2>
-          <p style="color:#52606d">截至本期扫描时间，未发现新的SemiAnalysis文章、独立超节点新品、可信NPO/CPO量产规格，或240kW以上机柜液冷与供电的新工程参数。相关专题继续跟踪，不以旧闻补足数量。</p>
+          <p>截至本期扫描时间，未发现新的SemiAnalysis文章、独立超节点新品、可信NPO/CPO量产规格，或240kW以上机柜液冷与供电的新工程参数。相关专题继续跟踪，不以旧闻补足数量。</p>
         </div>
       ]]></description>
     </item>
