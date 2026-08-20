@@ -5,7 +5,7 @@
     <link>https://github.com/YanLiang518/ai-supernode-rss</link>
     <description>聚焦 AI 超节点、GPU/加速芯片、Scale-up 互联、NPO/CPO、液冷、供电与头部厂商架构动态。</description>
     <language>zh-cn</language>
-    <lastBuildDate>Thu, 20 Aug 2026 05:00:00 +0800</lastBuildDate>
+    <lastBuildDate>Thu, 20 Aug 2026 20:35:00 +0800</lastBuildDate>
     <ttl>15</ttl>
     <atom:link href="https://raw.githubusercontent.com/YanLiang518/ai-supernode-rss/main/feed.xml" rel="self" type="application/rss+xml"/>
     <item>
@@ -15,16 +15,16 @@
       <pubDate>Thu, 20 Aug 2026 05:00:00 +0800</pubDate>
       <description><![CDATA[
 
-<div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;line-height:1.75;color:#202124;max-width:900px;margin:0 auto">
-  <h1 style="font-size:28px;line-height:1.3;margin:0 0 20px;color:#14213d">AI算力架构前沿简报｜2026年8月20日</h1>
+<div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;line-height:1.75;max-width:900px;margin:0 auto">
+  <h1 style="font-size:28px;line-height:1.3;margin:0 0 20px;">AI算力架构前沿简报｜2026年8月20日</h1>
 
-  <div style="padding:18px 20px;background:#f3f7ff;border-left:4px solid #315efb;border-radius:8px;margin:0 0 22px">
-    <h2 style="font-size:19px;margin:0 0 8px;color:#193a8a">今日判断</h2>
+  <div style="padding:18px 20px;border-left:4px solid currentColor;border-radius:8px;margin:0 0 22px">
+    <h2 style="font-size:19px;margin:0 0 8px;">今日判断</h2>
     <p style="margin:0 0 8px"><strong>今天的主线是推理基础设施从“统一GPU池”分化为按阶段、SLA和经济目标组织的异构系统。</strong>Cerebras把Prefill交给GPU或ASIC、把低时延Decode放到晶圆级引擎；OpenRouter则把每次请求按任务、价格、速度和可靠性动态分流。</p>
     <p style="margin:0">与此同时，Google把定制芯片合作从单一XPU扩展到存储、网络、内存接口和近存计算，并以采购挂钩股权锁定第二供应源；AMD则把能效考核单位正式上移到整柜。共同含义是：<strong>竞争边界正在从芯片峰值，扩展到整条Token生产链的协同效率、可部署性与供应确定性。</strong></p>
   </div>
 
-  <h2 style="font-size:21px;margin:26px 0 12px;color:#14213d">信号总览</h2>
+  <h2 style="font-size:21px;margin:26px 0 12px;">信号总览</h2>
   <ul style="margin:0 0 24px;padding-left:22px">
     <li><strong>Cerebras CS-4原生支持Prefill/Decode解耦</strong>｜系统/产品｜本季度开始出货｜影响异构推理、Scale-up、供电液冷和可维护性</li>
     <li><strong>Google—Marvell合作扩展至TPU周边整条数据路径</strong>｜采购/供应链｜已签协议并披露8-K｜影响定制XPU、NIC、存储与近存计算</li>
@@ -32,8 +32,8 @@
     <li><strong>AMD以整柜而非单芯片衡量AI能效</strong>｜方法/路线图｜2026年估算值｜影响系统协同设计、电力冷却和验收指标</li>
   </ul>
 
-  <hr style="border:0;border-top:1px solid #e3e7ee;margin:28px 0">
-  <h2 style="font-size:23px;line-height:1.4;margin:0 0 16px;color:#14213d">01｜CS-4把Prefill与Decode拆到异构平台：推理超节点开始按阶段优化</h2>
+  <hr style="border:0;border-top:1px solid currentColor;margin:28px 0">
+  <h2 style="font-size:23px;line-height:1.4;margin:0 0 16px;">01｜CS-4把Prefill与Decode拆到异构平台：推理超节点开始按阶段优化</h2>
   <p><strong>① 新变化是什么</strong></p>
   <p>事件日期：2026年8月18日；Reuters于8月19日00:01 UTC报道。Cerebras发布CS-4，这是首款采用Nexus模块化机架架构的正式产品，三个WSE-3 Turbo合计提供750 PFLOPS AI算力、129.6 PB/s片上内存带宽和7.2 Tb/s系统I/O；首批计划本季度出货。每个Wafer-Scale Backpack把晶圆、近端电源转换、直接液冷、I/O和控制电子集成成可插拔模块，组件数较上代减少50%，制造自动化提高60%。</p>
   <p><strong>② 为什么发生</strong></p>
@@ -46,11 +46,11 @@
   <p><strong>已出现的解法：</strong>CS-4 Decode机架、GPU/Trainium Prefill池、RoCE v2异构接入、无交换Direct Wafer Links，以及基础设施先验收、计算Backpack后插入的部署方式。</p>
   <p><strong>高概率方向：</strong>推理中心将形成Prefill池、Decode池与KV/上下文存储池，调度器按上下文长度、Batch、首Token与每Token时延选择硬件；机柜稳定层保留电力、冷却和网络，计算模块按代际替换。</p>
   <p><strong>尚待验证：</strong>晶圆级Decode的成本优势能否覆盖状态搬移和资源碎片，以及模块化Backpack在高功率环境中的MTTR、冗余与热插拔边界。</p>
-  <div style="padding:14px 16px;background:#f8f9fb;border-radius:8px;margin:16px 0"><p style="margin:0 0 6px"><strong>架构师结论：</strong>CS-4的重要性不是又一项峰值参数，而是把推理阶段拆分、近端供电液冷和模块化维护放进同一产品；这使“按Token阶段组装超节点”成为可交付路线。</p><p style="margin:0"><strong>建议跟踪：</strong>Prefill—Decode状态传输P99与带宽；CS-4整柜功耗、流量和供回水温；Backpack更换时间及故障隔离；厂商基准的模型、精度和Batch条件。</p></div>
+  <div style="padding:14px 16px;border-radius:8px;margin:16px 0"><p style="margin:0 0 6px"><strong>架构师结论：</strong>CS-4的重要性不是又一项峰值参数，而是把推理阶段拆分、近端供电液冷和模块化维护放进同一产品；这使“按Token阶段组装超节点”成为可交付路线。</p><p style="margin:0"><strong>建议跟踪：</strong>Prefill—Decode状态传输P99与带宽；CS-4整柜功耗、流量和供回水温；Backpack更换时间及故障隔离；厂商基准的模型、精度和Batch条件。</p></div>
   <p><strong>来源：</strong><a href="https://www.cerebras.ai/blog/introducing-cerebras-cs-4">Cerebras技术说明</a>｜<a href="https://investors.cerebras.ai/news-releases/news-release-details/cerebras-unveils-cs-4-30-times-faster-gpu-based-solutions">Cerebras正式发布与规格</a>｜<a href="https://www.reuters.com/technology/cerebras-launches-new-server-chip-system-designed-speed-ai-chatbots-2026-08-19/">Reuters交叉核实</a></p>
 
-  <hr style="border:0;border-top:1px solid #e3e7ee;margin:28px 0">
-  <h2 style="font-size:23px;line-height:1.4;margin:0 0 16px;color:#14213d">02｜Google把第二供应源扩展到TPU周边整条数据路径：定制芯片转向系统级共研</h2>
+  <hr style="border:0;border-top:1px solid currentColor;margin:28px 0">
+  <h2 style="font-size:23px;line-height:1.4;margin:0 0 16px;">02｜Google把第二供应源扩展到TPU周边整条数据路径：定制芯片转向系统级共研</h2>
   <p><strong>① 新变化是什么</strong></p>
   <p>Marvell于2026年7月29日与Google签署定制半导体商业协议，并在8月18日发行认股权证、8月19日通过8-K披露。合作范围不只是一颗TPU，而包括AI推理加速器、存储控制器、网络接口控制器、内存接口控制器和近存计算；Google可按每股206.58美元购买最多58,970,907股Marvell股票。</p>
   <p>其中约136万股按时间归属，其余主要与Google从Marvell采购定制产品的收入挂钩；完整归属对应的极端收入上限约1200亿美元至Marvell 2033财年。这个金额是条件上限，不是已下订单或已确认收入。</p>
@@ -64,11 +64,11 @@
   <p><strong>已出现的解法：</strong>覆盖推理XPU、NIC、存储、内存接口和近存计算的长期定制硅计划，以及采购挂钩的资本激励。</p>
   <p><strong>高概率方向：</strong>云商超节点会采用一组协同设计的Chiplet/ASIC，而不是一颗主芯片加通用外围；Marvell既有高速SerDes、交换、存储和Photonic Fabric资产可能成为组合基础，但本协议未确认CPO/NPO或Celestial AI光互联已被Google采用。</p>
   <p><strong>尚待验证：</strong>Marvell承担的是主TPU、辅助推理ASIC还是外围控制器；与Broadcom项目的边界；以及多供应商设计能否在保持软件兼容的同时减少重复验证。</p>
-  <div style="padding:14px 16px;background:#f8f9fb;border-radius:8px;margin:16px 0"><p style="margin:0 0 6px"><strong>架构师结论：</strong>Google正在把“自研芯片”升级为“自定义整条数据路径”。未来云商差异化将更多来自XPU、内存、网络与存储共同定义，而不是单颗ASIC的TOPS。</p><p style="margin:0"><strong>建议跟踪：</strong>各类产品对应的采购归属；首个量产代际与HBM/SerDes规格；Broadcom与Marvell分工；是否使用Photonic Fabric或其他Scale-up光互联。</p></div>
+  <div style="padding:14px 16px;border-radius:8px;margin:16px 0"><p style="margin:0 0 6px"><strong>架构师结论：</strong>Google正在把“自研芯片”升级为“自定义整条数据路径”。未来云商差异化将更多来自XPU、内存、网络与存储共同定义，而不是单颗ASIC的TOPS。</p><p style="margin:0"><strong>建议跟踪：</strong>各类产品对应的采购归属；首个量产代际与HBM/SerDes规格；Broadcom与Marvell分工；是否使用Photonic Fabric或其他Scale-up光互联。</p></div>
   <p><strong>来源：</strong><a href="https://www.sec.gov/Archives/edgar/data/1835632/000119312526356217/d412696d8k.htm">Marvell 8-K监管披露</a>｜<a href="https://www.reuters.com/technology/marvell-grants-google-122-billion-stock-warrant-custom-chip-deal-2026-08-19/">Reuters报道与金额核实</a></p>
 
-  <hr style="border:0;border-top:1px solid #e3e7ee;margin:28px 0">
-  <h2 style="font-size:23px;line-height:1.4;margin:0 0 16px;color:#14213d">03｜Stripe收购OpenRouter：模型路由从开发工具升级为Token经济控制面</h2>
+  <hr style="border:0;border-top:1px solid currentColor;margin:28px 0">
+  <h2 style="font-size:23px;line-height:1.4;margin:0 0 16px;">03｜Stripe收购OpenRouter：模型路由从开发工具升级为Token经济控制面</h2>
   <p><strong>① 新变化是什么</strong></p>
   <p>事件及发布时间：2026年8月19日；成熟度为已宣布收购、仍待交割。Stripe同意收购OpenRouter，后者通过单一网关连接80多家提供商的400多个模型，并按任务复杂度、价格、速度和可靠性动态路由请求。Reuters称OpenRouter每天处理超过10万亿Token、服务逾1000万开发者和企业；交易价格未由双方披露，媒体估值不视为确认事实。</p>
   <p><strong>② 为什么发生</strong></p>
@@ -81,11 +81,11 @@
   <p><strong>已出现的解法：</strong>统一模型网关、Token计量、按任务/价格/速度/可靠性路由。</p>
   <p><strong>高概率方向：</strong>推理云会形成多模型、多代际GPU/ASIC的分层资源池；DPU或高性能CPU承担路由、配额、加密和遥测，KV/Prompt缓存成为跨模型选择的一等约束。资源调度可能从“哪张卡空闲”转为“哪个模型—硬件—缓存组合的单位成功任务成本最低”。</p>
   <p><strong>尚待验证：</strong>跨模型状态是否能标准化迁移，以及支付公司拥有路由层后能否维持模型选择中立和数据隔离。</p>
-  <div style="padding:14px 16px;background:#f8f9fb;border-radius:8px;margin:16px 0"><p style="margin:0 0 6px"><strong>架构师结论：</strong>OpenRouter把模型差异转化为实时调度问题；一旦路由与计费结合，硬件利用率、缓存位置和服务质量将直接参与商业决策。</p><p style="margin:0"><strong>建议跟踪：</strong>每类任务的模型分布；回退与重试率；跨模型缓存损失；P99与单位成功任务成本；数据驻留和路由中立性政策。</p></div>
+  <div style="padding:14px 16px;border-radius:8px;margin:16px 0"><p style="margin:0 0 6px"><strong>架构师结论：</strong>OpenRouter把模型差异转化为实时调度问题；一旦路由与计费结合，硬件利用率、缓存位置和服务质量将直接参与商业决策。</p><p style="margin:0"><strong>建议跟踪：</strong>每类任务的模型分布；回退与重试率；跨模型缓存损失；P99与单位成功任务成本；数据驻留和路由中立性政策。</p></div>
   <p><strong>来源：</strong><a href="https://stripe.com/newsroom/news/stripe-agrees-to-acquire-openrouter">Stripe官方公告</a>｜<a href="https://www.reuters.com/technology/payments-firm-stripe-buy-ai-developer-platform-openrouter-2026-08-19/">Reuters规模数据与交易核实</a></p>
 
-  <hr style="border:0;border-top:1px solid #e3e7ee;margin:28px 0">
-  <h2 style="font-size:23px;line-height:1.4;margin:0 0 16px;color:#14213d">04｜AMD把AI能效考核上移到整柜：数据移动与基础设施损耗进入路线图</h2>
+  <hr style="border:0;border-top:1px solid currentColor;margin:28px 0">
+  <h2 style="font-size:23px;line-height:1.4;margin:0 0 16px;">04｜AMD把AI能效考核上移到整柜：数据移动与基础设施损耗进入路线图</h2>
   <p><strong>① 新变化是什么</strong></p>
   <p>事件日期：2026年8月18日；成熟度为厂商估算和路线图进展，而非独立实测。AMD称其2026年AI整柜相对2024基线的性能/瓦提升约4倍，高于同期3倍路线目标，并继续追求2030年20倍整柜能效。指标覆盖CPU、GPU、内存、网络、存储、软件与系统设计，而不是只报告加速器芯片能效。</p>
   <p><strong>② 为什么发生</strong></p>
@@ -98,14 +98,14 @@
   <p><strong>已出现的解法：</strong>把CPU、GPU、HBM、网络、存储和软件纳入整柜性能/瓦目标。</p>
   <p><strong>高概率方向：</strong>超节点验收将从芯片TDP与峰值算力转向有效Token/W、任务/J、设施侧kW与水耗；电源、液冷和互联必须与运行时共同遥测，调度器按能效和热余量放置作业。800VDC、液冷、短距铜/光混合互联是否采用，应以系统净收益决定。</p>
   <p><strong>尚待验证：</strong>20倍目标中硬件、软件、利用率和模型变化各自贡献，以及跨代比较能否保持模型、精度和完成质量一致。</p>
-  <div style="padding:14px 16px;background:#f8f9fb;border-radius:8px;margin:16px 0"><p style="margin:0 0 6px"><strong>架构师结论：</strong>能效指标上移意味着电源、冷却、网络和软件不再是“平台配套”，而是算力产品本身；采购和验收也需要转向端到端任务产出。</p><p style="margin:0"><strong>建议跟踪：</strong>4倍估算的基准配置与计量边界；IT侧和设施侧Token/W；网络/内存/冷却功耗占比；Helios实机利用率及PUE/WUE。</p></div>
+  <div style="padding:14px 16px;border-radius:8px;margin:16px 0"><p style="margin:0 0 6px"><strong>架构师结论：</strong>能效指标上移意味着电源、冷却、网络和软件不再是“平台配套”，而是算力产品本身；采购和验收也需要转向端到端任务产出。</p><p style="margin:0"><strong>建议跟踪：</strong>4倍估算的基准配置与计量边界；IT侧和设施侧Token/W；网络/内存/冷却功耗占比；Helios实机利用率及PUE/WUE。</p></div>
   <p><strong>来源：</strong><a href="https://newsroom.amd.com/news/amd-tracks-ahead-of-rack-scale-ai-energy-efficiency-goal/">AMD官方进展</a>｜<a href="https://www.amd.com/en/blogs/2025/amd-surpasses-30x25-goal-sets-ambitious-new-20x-rack-scale-energy-efficiency-target-for-ai-systems-by-2030.html">AMD 20×2030方法与基线</a></p>
 
-  <h2 style="font-size:21px;margin:32px 0 12px;color:#14213d">今日架构主线</h2>
+  <h2 style="font-size:21px;margin:32px 0 12px;">今日架构主线</h2>
   <p><strong>Token生产链正在分层：</strong>OpenRouter在请求入口选择模型与成本，异构Prefill/Decode平台按计算阶段选择硬件，Google—Marvell把XPU周边的数据路径共同定制，AMD再以整柜性能/瓦统一衡量结果。未来超节点不再是固定GPU数量的封闭设备，而更像由路由控制面、阶段化计算池、可迁移状态层、协同定制I/O以及可测量电力冷却边界组成的系统。</p>
   <p>最值得警惕的是各层优化彼此冲突：动态换模型会损失缓存，Prefill/Decode拆分会增加状态搬移，定制外围会增加供应商耦合，整柜能效也可能被选定基准夸大。架构判断应以<strong>单位成功任务成本、端到端P99、有效Token/W和故障恢复时间</strong>为共同验收口径。</p>
 
-  <h2 style="font-size:21px;margin:30px 0 12px;color:#14213d">未发现可信新增</h2>
+  <h2 style="font-size:21px;margin:30px 0 12px;">未发现可信新增</h2>
   <p style="color:#52606d">截至本期扫描时间，未发现新的SemiAnalysis文章；未发现除CS-4外的独立超节点新品；未发现可信的NPO/CPO/OCS量产或规格新增；也未发现240kW以上单柜液冷、供电的新工程参数。Marvell—Google协议覆盖网络与近存计算，但没有确认采用CPO/NPO，不据此推断光互联订单。</p>
 </div>
       ]]></description>
@@ -117,16 +117,16 @@
       <guid isPermaLink="false">ai-supernode-brief-2026-08-19</guid>
       <pubDate>Wed, 19 Aug 2026 05:00:00 +0800</pubDate>
       <description><![CDATA[
-<div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;line-height:1.75;color:#202124;max-width:900px;margin:0 auto">
-  <h1 style="font-size:28px;line-height:1.3;margin:0 0 20px;color:#14213d">AI算力架构前沿简报｜2026年8月19日</h1>
+<div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;line-height:1.75;max-width:900px;margin:0 auto">
+  <h1 style="font-size:28px;line-height:1.3;margin:0 0 20px;">AI算力架构前沿简报｜2026年8月19日</h1>
 
-  <div style="padding:18px 20px;background:#f3f7ff;border-left:4px solid #315efb;border-radius:8px;margin:0 0 22px">
-    <h2 style="font-size:19px;margin:0 0 8px;color:#193a8a">今日判断</h2>
+  <div style="padding:18px 20px;border-left:4px solid currentColor;border-radius:8px;margin:0 0 22px">
+    <h2 style="font-size:19px;margin:0 0 8px;">今日判断</h2>
     <p style="margin:0 0 8px"><strong>今天最重要的变化，是前沿AI的扩展边界开始从“能否继续增加计算”转向“能否在受控环境中安全地增加计算”。</strong>OpenAI因模型可能达到关键网络安全能力门槛而暂停最大规模RL训练，说明安全隔离、行为监测和研究环境本身已经进入训练关键路径。</p>
     <p style="margin:0">与此同时，A2A标准化、软件工程Agent的规模化执行和DeepSeek分时定价分别表明：Agent流量正在跨组织互联，长期任务正在变成可计算负载，推理容量也开始通过价格主动削峰填谷。</p>
   </div>
 
-  <h2 style="font-size:21px;margin:26px 0 12px;color:#14213d">信号总览</h2>
+  <h2 style="font-size:21px;margin:26px 0 12px;">信号总览</h2>
   <ul style="margin:0 0 24px;padding-left:22px">
     <li><strong>前沿RL训练因网络安全能力暂停</strong>｜模型/训练｜已实施控制｜影响安全域、监测计算与训练交付节奏</li>
     <li><strong>A2A进入统一开放Agent协议栈</strong>｜软件/标准｜稳定规范＋生产采用｜影响Agent东西向流量、身份和控制面</li>
@@ -134,9 +134,9 @@
     <li><strong>DeepSeek启用峰谷API定价</strong>｜商业/调度｜正式生效｜影响推理需求时移与资源池利用率</li>
   </ul>
 
-  <hr style="border:0;border-top:1px solid #e3e7ee;margin:28px 0">
+  <hr style="border:0;border-top:1px solid currentColor;margin:28px 0">
 
-  <h2 style="font-size:23px;line-height:1.4;margin:0 0 16px;color:#14213d">01｜前沿RL训练因网络安全能力暂停：安全基础设施进入训练关键路径</h2>
+  <h2 style="font-size:23px;line-height:1.4;margin:0 0 16px;">01｜前沿RL训练因网络安全能力暂停：安全基础设施进入训练关键路径</h2>
 
   <p><strong>① 新变化是什么</strong></p>
   <p>OpenAI于8月18日披露，初步证据显示其待发布模型Astra可能达到Preparedness Framework中的“Critical cybersecurity capability”门槛。公司此前暂停了面向部署模型的RL训练两周，目前最大规模前沿RL运行仍未恢复；在OpenAI与Hugging Face相关安全事件后，能够执行代码或通过工具访问互联网的研究集群推理也曾被暂停。</p>
@@ -164,15 +164,15 @@
   <p><strong>高概率架构方向：</strong>前沿训练集群将分化为计算域、受控代码执行域、数据域和互联网代理域，跨域访问通过DPU/SmartNIC、硬件根信任、策略网关和不可篡改日志完成；高风险模型评测可能使用物理或强逻辑隔离的“AI安全舱”。</p>
   <p><strong>尚待验证：</strong>是否需要把监测模型放入独立加速器池，以及安全检查能否在不明显降低RL有效吞吐的情况下覆盖完整Token和工具轨迹。</p>
 
-  <div style="padding:14px 16px;background:#f8f9fb;border-radius:8px;margin:16px 0">
+  <div style="padding:14px 16px;border-radius:8px;margin:16px 0">
     <p style="margin:0 0 6px"><strong>架构师结论：</strong>前沿训练的下一项稀缺资源可能不是GPU，而是能够容纳高能力模型、同时保留可审计工具访问的安全计算环境。</p>
     <p style="margin:0"><strong>建议跟踪：</strong>安全监测算力占比、沙箱启动与Checkpoint恢复开销、跨域带宽、日志量，以及被暂停工作负载的迁移完成率。</p>
   </div>
   <p><strong>来源：</strong><a href="https://openai.com/index/pacing-model-development-cyber-capabilities/">OpenAI官方披露</a></p>
 
-  <hr style="border:0;border-top:1px solid #e3e7ee;margin:28px 0">
+  <hr style="border:0;border-top:1px solid currentColor;margin:28px 0">
 
-  <h2 style="font-size:23px;line-height:1.4;margin:0 0 16px;color:#14213d">02｜A2A进入统一开放Agent协议栈：Agent东西向通信成为独立基础设施层</h2>
+  <h2 style="font-size:23px;line-height:1.4;margin:0 0 16px;">02｜A2A进入统一开放Agent协议栈：Agent东西向通信成为独立基础设施层</h2>
 
   <p><strong>① 新变化是什么</strong></p>
   <p>Google发起的Agent2Agent协议于8月17日加入Linux Foundation旗下Agentic AI Foundation，与MCP、agentgateway、goose和AGENTS.md进入同一开放治理体系。A2A v1.0已于2026年3月形成稳定规范，支持多协议绑定、版本协商、多租户和带签名的Agent Card。</p>
@@ -200,15 +200,15 @@
   <p><strong>高概率架构方向：</strong>AI集群外围形成独立“Agent Fabric”，由高可靠CPU/DPU控制节点、消息/状态存储、策略网关和隔离网络组成；GPU超节点负责推理，Agent Fabric负责跨模型、工具和组织的任务编排。</p>
   <p><strong>新的技术需要：</strong>硬件加速的身份与加密、面向长任务的持久消息队列、跨云遥测、细粒度零信任策略、Agent调用的成本和SLA路由，以及故障后不重复执行真实业务动作的事务机制。</p>
 
-  <div style="padding:14px 16px;background:#f8f9fb;border-radius:8px;margin:16px 0">
+  <div style="padding:14px 16px;border-radius:8px;margin:16px 0">
     <p style="margin:0 0 6px"><strong>架构师结论：</strong>A2A把Agent之间的通信从应用集成问题提升为基础设施问题；未来“Agent超节点”的关键部件可能是独立控制与状态平面，而非继续扩大单一GPU域。</p>
     <p style="margin:0"><strong>建议跟踪：</strong>每任务Agent扇出、A2A消息速率与大小、状态生命周期、跨域P99、失败重试率和网关CPU消耗。</p>
   </div>
   <p><strong>来源：</strong><a href="https://aaif.io/blog/a2a-joins-aaif">AAIF官方公告</a>｜<a href="https://aaif.io/projects/agent2agent">A2A项目说明</a>｜<a href="https://developers.googleblog.com/en/a2a-a-new-era-of-agent-interoperability/">Google原始协议设计</a></p>
 
-  <hr style="border:0;border-top:1px solid #e3e7ee;margin:28px 0">
+  <hr style="border:0;border-top:1px solid currentColor;margin:28px 0">
 
-  <h2 style="font-size:23px;line-height:1.4;margin:0 0 16px;color:#14213d">03｜软件技术债转化为并行Agent任务：计算瓶颈从代码生成转向沙箱、存储与验证</h2>
+  <h2 style="font-size:23px;line-height:1.4;margin:0 0 16px;">03｜软件技术债转化为并行Agent任务：计算瓶颈从代码生成转向沙箱、存储与验证</h2>
 
   <p><strong>① 新变化是什么</strong></p>
   <p>OpenAI于8月18日披露Asana的生产案例：最多4个Codex Agent在相互独立的代码库副本中并行工作，工程师每天检查两次并审核所有改动，在两个自然周、约1.5个工程周内移除了旧测试框架Enzyme。模型与基础设施成本约1.2万美元，而Asana此前估算传统人员方案至少需要5年、约600万美元。</p>
@@ -236,15 +236,15 @@
   <p><strong>高概率架构方向：</strong>形成“Agent执行工厂”——共享GPU推理池配合高核CPU执行池、快速快照NVMe层、依赖与构建缓存、隔离网络及DPU安全边界；调度器同时分配模型额度、CPU、内存、存储和沙箱，而非只分配GPU。</p>
   <p><strong>新的技术需要：</strong>写时复制代码库、可复现沙箱镜像、增量编译缓存、Agent轨迹与测试结果索引、失败分支快速回收，以及以成功合并/工程小时为单位的系统基准。</p>
 
-  <div style="padding:14px 16px;background:#f8f9fb;border-radius:8px;margin:16px 0">
+  <div style="padding:14px 16px;border-radius:8px;margin:16px 0">
     <p style="margin:0 0 6px"><strong>架构师结论：</strong>代码Agent规模化后，硬件机会不只在更快推理，而在把GPU、CPU、NVMe和隔离执行环境组合成低成本、可验证的长期任务平台。</p>
     <p style="margin:0"><strong>建议跟踪：</strong>每任务Token与CPU小时、代码库读写放大、缓存命中率、沙箱启动时间、失败分支比例、人工审核时间和最终合并率。</p>
   </div>
   <p><strong>来源：</strong><a href="https://openai.com/index/asana/">OpenAI/Asana案例</a></p>
 
-  <hr style="border:0;border-top:1px solid #e3e7ee;margin:28px 0">
+  <hr style="border:0;border-top:1px solid currentColor;margin:28px 0">
 
-  <h2 style="font-size:23px;line-height:1.4;margin:0 0 16px;color:#14213d">04｜DeepSeek启用峰谷API价格：推理需求开始通过经济信号主动时移</h2>
+  <h2 style="font-size:23px;line-height:1.4;margin:0 0 16px;">04｜DeepSeek启用峰谷API价格：推理需求开始通过经济信号主动时移</h2>
 
   <p><strong>① 新变化是什么</strong></p>
   <p>DeepSeek V4 Pro于8月13日正式上线，并从8月17日起对V4 Pro与V4 Flash采用峰谷API价格。官方定价页规定，01:00—04:00和06:00—10:00 UTC为峰时，其余时段为谷时；谷价为峰价的50%。V4 Pro峰时缓存未命中输入/输出价格分别为每百万Token 1.32/3.96美元，谷时为0.66/1.98美元。</p>
@@ -272,20 +272,20 @@
   <p><strong>高概率架构方向：</strong>推理平台形成实时池、经济型批处理池和可抢占池，调度器联合考虑价格、SLA、模型、缓存位置和电力成本；跨地域集群可把弹性作业迁移到低价或低碳时段。</p>
   <p><strong>新的技术需要：</strong>面向截止时间的队列、价格感知SDK、批任务自动延期、KV Cache跨时段保留、功率爬坡控制，以及将Token成本与实时电价、GPU利用率联动的容量模型。</p>
 
-  <div style="padding:14px 16px;background:#f8f9fb;border-radius:8px;margin:16px 0">
+  <div style="padding:14px 16px;border-radius:8px;margin:16px 0">
     <p style="margin:0 0 6px"><strong>架构师结论：</strong>分时定价把“什么时候计算”变成与“用什么模型计算”同等重要的架构变量，推理资源池可能由固定容量服务转向可调度的算力市场。</p>
     <p style="margin:0"><strong>建议跟踪：</strong>峰谷请求转移比例、价格切换点并发、队列P99、GPU利用率、电力曲线、缓存命中率和用户对延迟的价格弹性。</p>
   </div>
   <p><strong>来源：</strong><a href="https://api-docs.deepseek.com/news/news260813/">DeepSeek V4 Pro官方发布</a>｜<a href="https://api-docs.deepseek.com/quick_start/pricing">DeepSeek官方定价页</a>｜<a href="https://www.reuters.com/world/china/deepseek-raises-api-pricing-its-v4-models-2026-08-13/">Reuters交叉核实</a></p>
 
-  <hr style="border:0;border-top:1px solid #e3e7ee;margin:28px 0">
+  <hr style="border:0;border-top:1px solid currentColor;margin:28px 0">
 
-  <h2 style="font-size:21px;margin:0 0 12px;color:#14213d">今日架构主线</h2>
+  <h2 style="font-size:21px;margin:0 0 12px;">今日架构主线</h2>
   <p><strong>AI基础设施正在从“算力资源池”演进为同时受安全等级、Agent协议、执行资源和经济调度约束的任务交付系统。</strong></p>
   <p>前沿模型要求训练环境按风险分域；跨厂商Agent要求独立的通信、身份和状态平面；长期编码任务要求GPU之外的CPU、NVMe和沙箱资源；峰谷定价则要求算力平台理解任务截止时间与价格弹性。</p>
   <p>对超节点产品而言，值得提前考虑的不是把所有能力继续塞入一个更大的GPU域，而是形成四个可组合边界：<strong>高速计算域、安全执行域、Agent控制/状态域、价格与SLA调度域</strong>。其中计算域追求规模和效率，其他三个域决定高能力模型能否安全、可靠并经济地进入生产。</p>
 
-  <h2 style="font-size:21px;margin:26px 0 12px;color:#14213d">未发现可信新增</h2>
+  <h2 style="font-size:21px;margin:26px 0 12px;">未发现可信新增</h2>
   <p>本期未发现新的SemiAnalysis公开文章、独立超节点新品、可信的NPO/CPO或OCS产品进展，也未发现240kW以上机柜液冷与供电的新工程参数。相关专题继续跟踪，不使用旧闻补足数量。</p>
 </div>
       ]]></description>
@@ -296,28 +296,28 @@
       <guid isPermaLink="false">ai-supernode-brief-2026-08-18</guid>
       <pubDate>Tue, 18 Aug 2026 10:00:00 +0800</pubDate>
       <description><![CDATA[
-        <div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;line-height:1.75;color:#202124">
-          <div style="padding:18px 20px;background:#f3f7ff;border-left:4px solid #315efb;border-radius:8px;margin:0 0 22px">
-            <div style="font-size:13px;color:#52606d;margin-bottom:6px">今日判断</div>
+        <div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;line-height:1.75;">
+          <div style="padding:18px 20px;border-left:4px solid currentColor;border-radius:8px;margin:0 0 22px">
+            <div style="font-size:13px;margin-bottom:6px">今日判断</div>
             <p style="margin:0"><strong>AI基础设施的产品单位，正在从“提供多少Token”转向“多快、以多低风险完成一个可执行任务”。</strong>低时延推理改变计算调度，企业Agent改变状态与数据流，长期园区合约则改变硬件的生命周期。三条信号共同指向：超节点将从GPU互联设备，演进为按SLA交付计算、状态、数据移动和电力容量的系统。</p>
           </div>
         
-          <h2 style="font-size:20px;margin:26px 0 12px;border-bottom:1px solid #dfe3e8;padding-bottom:8px">信号总览</h2>
+          <h2 style="font-size:20px;margin:26px 0 12px;border-bottom:1px solid currentColor;padding-bottom:8px">信号总览</h2>
           <ul style="padding-left:22px;margin:0 0 24px">
             <li style="margin:8px 0"><strong>低时延推理成为独立服务等级</strong>｜业务/推理｜有限预览｜影响调度、存储与异构计算</li>
             <li style="margin:8px 0"><strong>企业Agent进入受治理执行</strong>｜业务/软件｜正式产品化｜影响状态、IO、控制面与安全隔离</li>
             <li style="margin:8px 0"><strong>算力采购与电力、租约和资本绑定</strong>｜部署/商业｜已签安排｜影响超节点接口与跨代生命周期</li>
           </ul>
         
-          <h2 style="font-size:23px;line-height:1.4;margin:34px 0 16px;color:#172b4d">01｜低时延成为独立服务等级：推理优化目标转向任务闭环时间</h2>
+          <h2 style="font-size:23px;line-height:1.4;margin:34px 0 16px;">01｜低时延成为独立服务等级：推理优化目标转向任务闭环时间</h2>
         
-          <h3 style="font-size:17px;margin:20px 0 6px;color:#315efb">① 新变化是什么</h3>
+          <h3 style="font-size:17px;margin:20px 0 6px;">① 新变化是什么</h3>
           <p style="margin:6px 0 14px">OpenAI于8月13日预览GPT-5.6 Sol Ultrafast，最高约750输出Token/s、最高达到标准模式的14倍，由Cerebras承载，目前仅向部分客户开放。相对过去单纯公布模型速度，真正的新变化是：<strong>头部模型厂商开始把低时延包装成独立、可售的服务等级</strong>。官方给出的内部场景是把隔夜批量研究压缩为工作日内的多轮迭代。</p>
         
-          <h3 style="font-size:17px;margin:20px 0 6px;color:#315efb">② 为什么发生</h3>
+          <h3 style="font-size:17px;margin:20px 0 6px;">② 为什么发生</h3>
           <p style="margin:6px 0 14px">AI正在从一次性问答进入研究、编程和Agent工具循环。用户真正购买的不再只是Token，而是更短的任务完成时间：模型每快一步，“推理—调用工具—读取结果—继续推理”的串行闭环就能更快完成。这一变化主要由新场景和生产率驱动，而不是简单降成本；交互型工作负载开始与价格敏感的批处理负载分层。</p>
         
-          <h3 style="font-size:17px;margin:20px 0 6px;color:#315efb">③ 改变了什么计算或数据特征</h3>
+          <h3 style="font-size:17px;margin:20px 0 6px;">③ 改变了什么计算或数据特征</h3>
           <ul style="padding-left:22px;margin:6px 0 14px">
             <li>高优先级、小Batch、Decode占比较高的请求增加；</li>
             <li>多轮工具调用形成短突发、强串行依赖的负载；</li>
@@ -325,28 +325,28 @@
             <li>KV访问、检索、工具网络与排队时间开始决定最终体验。</li>
           </ul>
         
-          <h3 style="font-size:17px;margin:20px 0 6px;color:#315efb">④ 触碰了哪个技术边界</h3>
+          <h3 style="font-size:17px;margin:20px 0 6px;">④ 触碰了哪个技术边界</h3>
           <p style="margin:6px 0 14px"><strong>首先触碰的是“利用大Batch换取GPU高利用率”的调度边界。</strong>低时延服务要求减少排队和Batch等待，而这与吞吐率、利用率和单位Token成本存在直接冲突。若模型侧达到数百Token/s，瓶颈还可能外移到KV Cache、状态存储、检索网络和工具响应，单颗加速器的速度优势会被系统链路抵消。目前已验证的是模型服务速度，完整并发、价格和端到端P99仍待验证。</p>
         
-          <h3 style="font-size:17px;margin:20px 0 6px;color:#315efb">⑤ 可能催生什么硬件架构、新的技术需要</h3>
+          <h3 style="font-size:17px;margin:20px 0 6px;">⑤ 可能催生什么硬件架构、新的技术需要</h3>
           <p style="margin:6px 0 10px"><strong>高概率方向：</strong>推理平台分化为低时延专池与经济型吞吐池，配套优先级调度、准入控制和端到端遥测；Prefill与Decode可能进一步解耦，分别配置适合计算密集和带宽/容量敏感阶段的节点。</p>
           <p style="margin:6px 0 14px"><strong>可能的新硬件需要：</strong>大容量片上SRAM或晶圆级计算、低时延KV存储层、可池化内存、低抖动网络，以及面向任务闭环而非单芯片Token/s的系统基准。是否需要大规模替换GPU架构，仍取决于价格、并发和P99数据。</p>
         
-          <div style="padding:14px 16px;background:#f7f8fa;border-radius:8px;margin:16px 0">
+          <div style="padding:14px 16px;border-radius:8px;margin:16px 0">
             <strong>架构师结论：</strong>低时延不是普通性能升级，而是在制造新的推理服务等级；系统设计目标必须从峰值吞吐扩展到端到端任务完成时间。<br>
             <strong>建议跟踪：</strong>价格与并发上限；不同Batch下的P99；模型生成、KV访问、检索、工具调用和排队的时延分解。
           </div>
-          <p style="font-size:14px;color:#52606d">来源：<a href="https://openai.com/index/previewing-ultrafast/">OpenAI官方发布</a>｜<a href="https://www.cerebras.ai/blog/accelerating-gpt-5-6-sol-ultrafast-with-openai">Cerebras技术说明</a></p>
+          <p style="font-size:14px;">来源：<a href="https://openai.com/index/previewing-ultrafast/">OpenAI官方发布</a>｜<a href="https://www.cerebras.ai/blog/accelerating-gpt-5-6-sol-ultrafast-with-openai">Cerebras技术说明</a></p>
         
-          <h2 style="font-size:23px;line-height:1.4;margin:38px 0 16px;color:#172b4d">02｜企业Agent进入受治理执行：系统瓶颈从GPU扩展到状态、数据与控制面</h2>
+          <h2 style="font-size:23px;line-height:1.4;margin:38px 0 16px;">02｜企业Agent进入受治理执行：系统瓶颈从GPU扩展到状态、数据与控制面</h2>
         
-          <h3 style="font-size:17px;margin:20px 0 6px;color:#315efb">① 新变化是什么</h3>
+          <h3 style="font-size:17px;margin:20px 0 6px;">① 新变化是什么</h3>
           <p style="margin:6px 0 14px">Oracle宣布AI Data Platform Agents正式可用，并在8月17日给出企业Agent架构蓝图：AI数据平台承担可信数据、检索与推理，Oracle Integration承担跨业务系统的异步执行、审批、审计和人工监督。新增之处不是又一个聊天机器人，而是<strong>Agent开始以受治理的业务执行主体进入生产系统</strong>。</p>
         
-          <h3 style="font-size:17px;margin:20px 0 6px;color:#315efb">② 为什么发生</h3>
+          <h3 style="font-size:17px;margin:20px 0 6px;">② 为什么发生</h3>
           <p style="margin:6px 0 14px">聊天式AI只能产生建议，企业真正的ROI来自修改订单、触发供应链流程或更新客户记录等可执行结果。但核心业务系统存在权限、合规、审批、幂等和失败补偿要求，模型不能直接越过这些边界。因此，业务需求推动Agent从无状态问答升级为跨系统、长生命周期、可审计和可追责的执行主体。</p>
         
-          <h3 style="font-size:17px;margin:20px 0 6px;color:#315efb">③ 改变了什么计算或数据特征</h3>
+          <h3 style="font-size:17px;margin:20px 0 6px;">③ 改变了什么计算或数据特征</h3>
           <ul style="padding-left:22px;margin:6px 0 14px">
             <li>一个任务拆成多次短模型调用、检索、API事务和人工审批；</li>
             <li>状态生命周期从一次请求延长到分钟、小时甚至数天；</li>
@@ -356,47 +356,47 @@
           </ul>
           <p style="margin:6px 0 14px">Cisco基于真实广域网流量和Agent实验的研究，也观察到不同于传统网页与视频访问的新型流量：Agent在模型与互联网服务之间连续交换数据。当前流量规模仍小，但这一结果支持“Agent首先改变端到端数据流，而不只是增加GPU负载”的判断。</p>
         
-          <h3 style="font-size:17px;margin:20px 0 6px;color:#315efb">④ 触碰了哪个技术边界</h3>
+          <h3 style="font-size:17px;margin:20px 0 6px;">④ 触碰了哪个技术边界</h3>
           <p style="margin:6px 0 14px"><strong>首先失效的是“推理请求无状态、GPU是主要瓶颈”的假设。</strong>当任务包含长期状态、外部工具和审批时，系统边界转移到状态一致性、低时延小IO、身份权限、消息可靠性和失败恢复。现有证据已经验证软件与业务架构变化，但存储、网络和CPU负载占比仍缺少公开的大规模生产数据。</p>
         
-          <h3 style="font-size:17px;margin:20px 0 6px;color:#315efb">⑤ 可能催生什么硬件架构、新的技术需要</h3>
+          <h3 style="font-size:17px;margin:20px 0 6px;">⑤ 可能催生什么硬件架构、新的技术需要</h3>
           <p style="margin:6px 0 10px"><strong>已出现的解法：</strong>独立的数据/智能层与执行/编排层，持续索引的AI数据平台，以及DPU参与的安全数据路径。</p>
           <p style="margin:6px 0 14px"><strong>高概率方向：</strong>超节点外增加Agent控制面、持久状态层、事件总线和统一遥测；硬件配置从GPU中心化转向GPU、CPU/DPU、低时延存储和隔离网络的异构组合。新的技术需求包括状态分级、可持久化上下文、细粒度零信任、事务回滚以及跨模型和工具的故障追踪。</p>
         
-          <div style="padding:14px 16px;background:#f7f8fa;border-radius:8px;margin:16px 0">
+          <div style="padding:14px 16px;border-radius:8px;margin:16px 0">
             <strong>架构师结论：</strong>Agent可能先扩大CPU、存储、网络和控制面的价值，而不是同比例扩大GPU需求；“Agent超节点”应以完整任务轨迹而非传统QPS建模。<br>
             <strong>建议跟踪：</strong>每任务模型调用次数；思考/执行时间比；状态大小与生命周期；工具扇出；审计IO与失败重试率。
           </div>
-          <p style="font-size:14px;color:#52606d">来源：<a href="https://blogs.oracle.com/integration/from-data-to-action-a-blueprint-for-enterprise-ai-agents-with-oracle-ai-data-platform-and-oracle-integration">Oracle企业Agent架构蓝图</a>｜<a href="https://blogs.oracle.com/ai-data-platform/your-data-already-knows-the-answer-now-it-can-act-on-it">Oracle AIDP Agents GA</a>｜<a href="https://www.cisco.com/c/dam/en/us/solutions/collateral/artificial-intelligence/mass-scale-infrastructure/ai-network-traffic-report.pdf">Cisco AI网络流量研究</a></p>
+          <p style="font-size:14px;">来源：<a href="https://blogs.oracle.com/integration/from-data-to-action-a-blueprint-for-enterprise-ai-agents-with-oracle-ai-data-platform-and-oracle-integration">Oracle企业Agent架构蓝图</a>｜<a href="https://blogs.oracle.com/ai-data-platform/your-data-already-knows-the-answer-now-it-can-act-on-it">Oracle AIDP Agents GA</a>｜<a href="https://www.cisco.com/c/dam/en/us/solutions/collateral/artificial-intelligence/mass-scale-infrastructure/ai-network-traffic-report.pdf">Cisco AI网络流量研究</a></p>
         
-          <h2 style="font-size:23px;line-height:1.4;margin:38px 0 16px;color:#172b4d">03｜算力采购绑定电力、租约与资本：硬件生命周期开始跨越多个GPU代际</h2>
+          <h2 style="font-size:23px;line-height:1.4;margin:38px 0 16px;">03｜算力采购绑定电力、租约与资本：硬件生命周期开始跨越多个GPU代际</h2>
         
-          <h3 style="font-size:17px;margin:20px 0 6px;color:#315efb">① 新变化是什么</h3>
+          <h3 style="font-size:17px;margin:20px 0 6px;">① 新变化是什么</h3>
           <p style="margin:6px 0 14px">Reuters 8月17日报道，NVIDIA拟向SB Energy投资15亿美元，并为OpenAI在俄亥俄州Pike County的20年数据中心租约提供最高1050亿美元的部分付款担保。首期800MW目标在2028年上线，远期上限8GW，并计划使用NVIDIA芯片。已确认的是投资、担保和租约框架；<strong>8GW是远期上限，不是已经上线或完成采购的算力</strong>。</p>
         
-          <h3 style="font-size:17px;margin:20px 0 6px;color:#315efb">② 为什么发生</h3>
+          <h3 style="font-size:17px;margin:20px 0 6px;">② 为什么发生</h3>
           <p style="margin:6px 0 14px">AI需求增长速度超过电网接入和数据中心融资速度。客户必须提前多年锁定土地、电力与建设能力，基础设施方则需要信用增级才能为超大园区融资。芯片供应商因此从设备销售者延伸为资本与需求的组织者。真正的稀缺资源已从“GPU现货”前移到“可融资、可按期交付的电力容量”。</p>
         
-          <h3 style="font-size:17px;margin:20px 0 6px;color:#315efb">③ 改变了什么计算或数据特征</h3>
+          <h3 style="font-size:17px;margin:20px 0 6px;">③ 改变了什么计算或数据特征</h3>
           <p style="margin:6px 0 14px">这条变化不直接改变算法，却改变算力的部署颗粒度和时间特征：容量以数百MW分期上线，20年租约覆盖多个GPU代际，建设决策早于具体计算平台定型。系统验收也将从GPU卡数转向可用MW、有效Token产能、单位Token能耗和持续服务能力。</p>
         
-          <h3 style="font-size:17px;margin:20px 0 6px;color:#315efb">④ 触碰了哪个技术边界</h3>
+          <h3 style="font-size:17px;margin:20px 0 6px;">④ 触碰了哪个技术边界</h3>
           <p style="margin:6px 0 14px"><strong>首先触碰的是电力交付、资本期限与硬件迭代周期不匹配的边界。</strong>建筑、电力和冷却资产寿命可达十年以上，而GPU平台约数年就会换代。如果机房接口与某代整柜强绑定，后续升级将产生巨额改造和资产减值。首期800MW的电源、变电站、冷却及GPU代际仍待持续验证。</p>
         
-          <h3 style="font-size:17px;margin:20px 0 6px;color:#315efb">⑤ 可能催生什么硬件架构、新的技术需要</h3>
+          <h3 style="font-size:17px;margin:20px 0 6px;">⑤ 可能催生什么硬件架构、新的技术需要</h3>
           <p style="margin:6px 0 10px"><strong>高概率方向：</strong>数据中心先定义稳定的电力、冷却、承载和光纤边界，计算Tray与交换Tray按代际替换；超节点从一次性交付设备转向可升级、可测量、可融资的标准化算力模块。</p>
           <p style="margin:6px 0 14px"><strong>新的技术需要：</strong>跨代兼容的800VDC或高压交流接口、统一水温/压差/水质窗口、模块化Manifold和Busbar、光纤化机柜边界、设备健康与性能衰减遥测，以及面向残值评估的整柜验收标准。芯片独家绑定同时会降低异构选择权。</p>
         
-          <div style="padding:14px 16px;background:#f7f8fa;border-radius:8px;margin:16px 0">
+          <div style="padding:14px 16px;border-radius:8px;margin:16px 0">
             <strong>架构师结论：</strong>未来超节点竞争不仅是当代性能竞争，也包括能否跨代接入长期电力资产；硬件接口标准化将直接影响融资成本和设备残值。<br>
             <strong>建议跟踪：</strong>首期800MW的已签电源、变电站与冷却方案；实际GPU代际和机柜数量；担保触发条件；跨代基础设施改造比例。
           </div>
-          <p style="font-size:14px;color:#52606d">来源：<a href="https://www.reuters.com/business/media-telecom/nvidia-invest-15-billion-sb-energy-under-openai-data-center-deal-2026-08-17/">Reuters交易与建设安排</a></p>
+          <p style="font-size:14px;">来源：<a href="https://www.reuters.com/business/media-telecom/nvidia-invest-15-billion-sb-energy-under-openai-data-center-deal-2026-08-17/">Reuters交易与建设安排</a></p>
         
-          <h2 style="font-size:20px;margin:34px 0 12px;border-bottom:1px solid #dfe3e8;padding-bottom:8px">今日架构主线</h2>
+          <h2 style="font-size:20px;margin:34px 0 12px;border-bottom:1px solid currentColor;padding-bottom:8px">今日架构主线</h2>
           <p><strong>业务正在同时要求更快完成任务、更安全地执行任务，以及更大规模地供应任务所需算力。</strong>这使推理资源池发生SLA分化，使数据与状态成为Agent系统的核心部件，也使电力和基础设施成为跨代硬件平台。对应的系统机会不是单一地增加GPU，而是重构计算、状态、互联、供电和冷却之间的边界。</p>
         
-          <h2 style="font-size:20px;margin:30px 0 12px;border-bottom:1px solid #dfe3e8;padding-bottom:8px">未发现可信新增</h2>
+          <h2 style="font-size:20px;margin:30px 0 12px;border-bottom:1px solid currentColor;padding-bottom:8px">未发现可信新增</h2>
           <p style="color:#52606d">截至本期扫描时间，未发现新的SemiAnalysis文章、独立超节点新品、可信NPO/CPO量产规格，或240kW以上机柜液冷与供电的新工程参数。相关专题继续跟踪，不以旧闻补足数量。</p>
         </div>
       ]]></description>
