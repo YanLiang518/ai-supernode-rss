@@ -1,0 +1,133 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>AI算力架构前沿简报｜2026年8月25日</title><style>:root{color-scheme:light dark;--bg:#f7f8fa;--fg:#1b1f24;--muted:#59636e;--link:#0969da;--border:#d0d7de;--panel:#ffffff;--accent:#eef5ff}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--fg);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;line-height:1.75}main{max-width:900px;margin:0 auto;padding:44px 24px 72px;background:var(--panel);min-height:100vh}h1{font-size:2rem;line-height:1.3;margin:0 0 28px}h2{font-size:1.45rem;margin:38px 0 16px;padding-bottom:8px;border-bottom:1px solid var(--border)}h3{font-size:1.05rem;margin:26px 0 8px}p{margin:10px 0}ul{padding-left:1.35rem}li{margin:6px 0}a{color:var(--link);text-decoration:none}a:hover{text-decoration:underline}hr{border:0;border-top:1px solid var(--border);margin:40px 0}.lead{padding:18px 20px;background:var(--accent);border:1px solid var(--border);border-radius:10px}.meta{color:var(--muted);font-size:.92rem;margin-bottom:26px}@media(prefers-color-scheme:dark){:root{--bg:#0d1117;--fg:#e6edf3;--muted:#9da7b3;--link:#58a6ff;--border:#30363d;--panel:#161b22;--accent:#17263c}}@media(max-width:640px){main{padding:28px 18px 56px}h1{font-size:1.65rem}h2{font-size:1.25rem}}</style></head><body><main><h1>AI算力架构前沿简报｜2026年8月25日</h1><p class="meta">聚焦业务变化、计算特征与硬件架构之间的因果链</p>
+<h2>今日判断</h2>
+<p><strong>今天最值得关注的上游变化，是生成式AI开始从“回答或生成素材”进入“直接交付完整工作产品”。</strong>阿里Wan3.0把单次视频生成延长到30秒，并可直接读取PPT、PDF、表格和网页；Perplexity Computer则把研究、分析和办公操作组合成持续执行的数字工作者。两者都会让计算从短请求转向长链路、多阶段、有状态任务。</p>
+<p>另一条信号来自NVIDIA据报斥资获取Poolside的模型工厂能力。若交易按报道落地，GPU厂商竞争边界将继续上移：不只优化芯片和推理引擎，还要控制模型生产、量化格式与开放模型分发，使软件需求更早地反向定义硬件利用方式。</p>
+
+<h2>信号总览</h2>
+<ul>
+<li><strong>Wan3.0把文档直接转为30秒视频</strong>｜业务/模型信号｜正式上线｜影响视频推理流水线、显存、缓存、存储与异构调度</li>
+<li><strong>Perplexity Computer推动Agent收入快速增长</strong>｜商业/工作负载信号｜媒体披露、产品已上线｜影响多模型路由、会话状态、工具执行与跨云容量</li>
+<li><strong>NVIDIA据报购买Poolside模型工厂能力</strong>｜产业/软件栈信号｜媒体报道、未获官方确认｜影响开放模型生产、NVFP4、端侧部署与软硬件绑定</li>
+</ul>
+<hr>
+
+<h2>01｜Wan3.0从“生成镜头”转向“生成成片”：视频算力将按完整工作流而非单帧组织</h2>
+<h3>① 新变化是什么</h3>
+<p>阿里于2026年8月24日正式上线Wan3.0。它可在一次生成中输出最长30秒的视频，支持480P、720P和1080P，并首次把PPT、PDF、DOC、XLS、网页等文档与文本、图像、音频、视频一起作为输入；单个文档上限为100MB、50页。</p>
+<p>官方API价格为每秒0.05美元（480P）、0.10美元（720P）和0.20美元（1080P），即一次30秒1080P生成标价6美元。模型还支持修改画面、情节与对白，而不必完全重新生成。阿里称其公测后已用于短剧、影视、广告、旅游推广和音乐视频；具体客户规模、实际成功率和基础设施参数没有披露。</p>
+
+<h3>② 为什么发生</h3>
+<p>商业用户需要的不是孤立的数秒镜头，而是能够直接进入广告、培训、短剧和产品介绍流程的完整内容。传统流程要把文档拆成脚本、分镜、素材、配音和后期，再由多种工具反复转换；延长单次生成时间并直接解析办公文档，是为了缩短从企业信息到可发布视频的任务完成时间。</p>
+<p><strong>业务目标由“降低单个镜头的制作成本”上移为“减少完整视频工作流中的人工交接和重做”。</strong>按秒计费也使基础设施收益更直接地与有效成片时长绑定，而不是与Token或单张图像数量绑定。</p>
+
+<h3>③ 改变了什么计算或数据特征</h3>
+<p>30秒连续生成需要在更长时间轴上保持人物、场景、运动、对白和声音一致性，单次任务的状态生命周期、临时激活和输出数据量都会增加。文档输入还引入解析、OCR、表格理解、脚本规划、镜头编排、视频扩散或自回归生成、音频同步和编码等多个阶段。</p>
+<p>请求将由相对同质的GPU Kernel转变为CPU解析、LLM规划、GPU视频生成、音频模型和媒体编解码混合流水线。草稿通常以480P反复迭代，再以1080P完成最终输出，因此同一项目会产生有明显层级的中间状态、参考素材与可复用缓存。</p>
+
+<h3>④ 触碰了哪个技术边界</h3>
+<p><strong>开始失效的假设是：视频生成可以作为无状态、短时、单模型推理请求处理。</strong>更长时长首先触碰显存容量、时序一致性和任务中断后的重算成本；文档到视频则会触碰多阶段调度、对象存储吞吐、媒体缓存和跨模型状态传递。</p>
+<p>官方披露了输出时长、分辨率和价格，但没有公布模型参数、单任务显存、生成时延、GPU类型、并发度、缓存命中或每秒视频能耗。因此，目前能确认的是产品与数据流变化，不能由6美元售价推断实际硬件成本或毛利。</p>
+
+<h3>⑤ 可能催生什么硬件架构、新的技术需要</h3>
+<ul>
+<li><strong>已出现：</strong>多模态输入、30秒单次生成、分辨率分级计费，以及局部修改而非完整重生成。</li>
+<li><strong>高概率方向：</strong>视频推理系统拆成文档解析与规划池、视频生成池、音频池和编码池；调度器按草稿与成片阶段选择不同GPU或ASIC。</li>
+<li><strong>高概率方向：</strong>HBM保存当前时序状态和热参考，主机内存或CXL承载温状态，NVMe与对象存储保存素材、草稿、检查点和成片；DPU承担数据搬运、租户隔离和媒体流处理。</li>
+<li><strong>尚待验证：</strong>跨GPU切分时间轴是否能保持一致性；中间状态能否Checkpoint并恢复；局部编辑节省的算力是否大于缓存和状态管理开销。</li>
+</ul>
+<p><strong>架构师结论：</strong>Wan3.0的架构意义不只是“视频更长”，而是推理单位从单个镜头变成完整内容任务。视频超节点需要按工作流阶段、状态生命周期和最终可用秒数优化，而不是只追求单卡生成FPS。</p>
+<p><strong>建议跟踪：</strong></p>
+<ul>
+<li>30秒1080P的端到端时延、峰值显存和GPU秒数</li>
+<li>一次可用成片所需的平均重试次数与草稿/成片算力比</li>
+<li>局部编辑的状态复用率和跨阶段数据移动量</li>
+</ul>
+<p><strong>来源：</strong><a href="https://www.alibabacloud.com/blog/wan3-0-30-second-ai-video-generation-from-any-input_603452">阿里云Wan3.0规格与价格</a>｜<a href="https://www.reuters.com/business/retail-consumer/alibaba-launches-wan30-ai-video-model-after-10-billion-share-sale-2026-08-24/">Reuters正式上线与应用场景核实</a></p>
+<hr>
+
+<h2>02｜Perplexity Computer推动收入转向Agent：推理容量从API调用变成持续运行的数字工作者</h2>
+<h3>① 新变化是什么</h3>
+<p>Reuters于2026年8月24日转述The Information称，Perplexity年化收入已由年初不足2.5亿美元增长至超过7.5亿美元，其中部分增长来自云端通用Agent Perplexity Computer。该产品面向专业用户执行研究、分析、报告生成和计算机工作流，而不只返回搜索答案。</p>
+<p>报道同时称NVIDIA正在讨论投资Perplexity，新一轮估值可能超过300亿美元；双方没有确认，不能视为已完成融资。可独立确认的是，Perplexity此前签署了为期三年、总额7.5亿美元的Azure协议，通过Microsoft Foundry调用OpenAI、Anthropic和xAI等模型，同时仍保留AWS作为重要基础设施来源。</p>
+
+<h3>② 为什么发生</h3>
+<p>搜索和聊天订阅的收入上限较低，而能够完成研究、表格、报告和跨应用操作的Agent，可以按使用量或完成任务收费，并嵌入企业工作流。客户支付的对象由“一次回答”变成节省的专业人员时间和完成的业务结果。</p>
+<p><strong>Perplexity的收入信号说明Agent商业化开始从试用进入可观规模，但公开数字仍来自媒体引述，盈利能力未得到验证。</strong>年化收入增长并不意味着推理毛利同步改善，因为每个Agent任务会调用多个模型、工具和外部服务。</p>
+
+<h3>③ 改变了什么计算或数据特征</h3>
+<p>Agent任务持续时间更长，包含检索、规划、浏览器或桌面操作、代码执行、模型复核和结果整理。一次用户请求可能拆成大量串行和并行子调用，形成突发Prefill、低Batch Decode、工具等待和多次状态恢复。</p>
+<p>Perplexity跨AWS与Azure、并可调用多家模型，意味着负载调度不只选择空闲GPU，还要考虑模型能力、价格、区域、数据驻留、缓存位置和供应商限流。长任务必须保存计划、工具结果、权限和可重放日志；等待外部工具时如果继续占用GPU，会明显降低利用率。</p>
+
+<h3>④ 触碰了哪个技术边界</h3>
+<p><strong>开始失效的假设是：推理平台可以用独立、无状态、持续占用加速器的API请求来代表Agent负载。</strong>新的瓶颈首先是控制面和状态管理，其次才是峰值FLOPS：任务暂停、迁移、恢复、取消与重试必须避免重复付费和重新计算长上下文。</p>
+<p>7.5亿美元Azure合同证明Perplexity需要多云容量，但没有披露GPU型号、模型调用比例、Token规模、缓存命中率或任务P99。超过7.5亿美元的年化收入和NVIDIA投资均属于报道，仍需公司财务披露验证。</p>
+
+<h3>⑤ 可能催生什么硬件架构、新的技术需要</h3>
+<ul>
+<li><strong>已出现：</strong>跨模型路由、Azure Foundry多模型调用、Microsoft Teams内的通用数字工作者，以及AWS与Azure并存。</li>
+<li><strong>高概率方向：</strong>Agent基础设施形成路由与安全控制面、Prefill/Decode计算池、工具执行池和持久状态池；GPU只在有计算时被短时分配。</li>
+<li><strong>高概率方向：</strong>CPU/DPU承担会话编排、身份与网络隔离；KV、Prompt、工具结果和执行日志按生命周期分层到HBM、DRAM/CXL与Flash。</li>
+<li><strong>尚待验证：</strong>跨云迁移能否保留缓存；多模型路由节省的价格是否覆盖额外网络和状态复制；任务级计费能否形成稳定毛利。</li>
+</ul>
+<p><strong>架构师结论：</strong>Agent收入增长把“持续工作者”变成新的容量单位。未来推理超节点的有效产出应按成功任务/小时计算，并扣除工具等待、跨云搬移、重试和缓存丢失，而不是只统计Token/s。</p>
+<p><strong>建议跟踪：</strong></p>
+<ul>
+<li>单个成功任务的模型调用数、Token、持续时间和毛利</li>
+<li>工具等待期间的GPU占用率及状态恢复P99</li>
+<li>AWS/Azure流量比例、跨云数据量和缓存命中损失</li>
+</ul>
+<p><strong>来源：</strong><a href="https://www.reuters.com/technology/nvidia-discusses-perplexity-investment-30-billion-plus-valuation-information-2026-08-24/">Reuters对收入、融资讨论和Agent业务的报道</a>｜<a href="https://www.reuters.com/business/perplexity-signs-750-million-ai-cloud-deal-with-microsoft-bloomberg-news-reports-2026-01-29/">Reuters对Azure协议的核实</a>｜<a href="https://marketplace.microsoft.com/en-us/product/wa200010619?tab=overview">Microsoft Marketplace产品说明</a></p>
+<hr>
+
+<h2>03｜NVIDIA据报购买Poolside模型工厂：GPU厂商开始控制开放模型的生产与量化路径</h2>
+<h3>① 新变化是什么</h3>
+<p>《华尔街日报》于2026年8月23日报道，NVIDIA拟以60亿美元获得Poolside模型工厂技术的非独占许可，另投资10亿美元，并吸收超过100名员工参与Nemotron开放模型项目。NVIDIA和Poolside尚未发布正式交易公告，因此金额、人员与最终交割均应视为媒体报道。</p>
+<p>可确认的技术基础是：Poolside已发布1180亿参数的Laguna S 2.1，用于长时间Agent编码任务；Hugging Face同时提供原始、FP8、INT4、GGUF和NVIDIA NVFP4等多个Checkpoint。NVIDIA称NVFP4版本可在单台DGX Spark上运行，但未公开完整端到端基准。</p>
+
+<h3>② 为什么发生</h3>
+<p>NVIDIA过去主要从模型规模增长中销售更多加速器，但开放模型正在把价值转移到数据配方、后训练、评测、蒸馏和快速迭代的“模型工厂”。掌握这套生产能力，可以更早把新模型映射到NVFP4、TensorRT和Blackwell内存层级，并用开放权重推动本地、企业私有和边缘设备需求。</p>
+<p><strong>本简报判断：潜在交易的核心不是购买一款编码模型，而是缩短“新工作负载出现—模型训练完成—硬件优化Checkpoint发布”的闭环。</strong>同时，这也是NVIDIA对中国开放模型快速迭代和云商自研ASIC的一种软件层回应。</p>
+
+<h3>③ 改变了什么计算或数据特征</h3>
+<p>模型工厂会持续生成基础模型、任务模型、蒸馏模型和多精度Checkpoint，使生产集群同时承担大规模训练、后训练、合成数据、评测与量化校准。下游则出现同一模型在数据中心GPU、DGX Spark和边缘设备上的多种执行形态。</p>
+<p>Laguna S 2.1强调数小时长程编码，意味着本地部署也需要百万Token级上下文管理、持续工具执行和Checkpoint，而不只是离线短Prompt。多格式权重会提高存储、分发、版本治理和Kernel覆盖复杂度。</p>
+
+<h3>④ 触碰了哪个技术边界</h3>
+<p><strong>开始失效的假设是：硬件厂商只需提供通用编译器和算子库，模型实验室会独立完成模型设计与发布。</strong>当模型结构、稀疏度、量化格式和推理引擎共同决定实际Token/W时，模型与硬件分离会拉长优化周期。</p>
+<p>但60亿美元许可和10亿美元投资尚未获得官方确认；NVFP4“单台DGX Spark运行”也不等于能够以企业可接受的P99完成长程Agent任务。仍需验证上下文长度、吞吐、功耗、质量损失和工具执行条件。</p>
+
+<h3>⑤ 可能催生什么硬件架构、新的技术需要</h3>
+<ul>
+<li><strong>已出现：</strong>同一开放模型的FP8、NVFP4、INT4和GGUF发行，以及DGX Spark本地推理路径。</li>
+<li><strong>高概率方向：</strong>NVIDIA把模型工厂、合成数据、评测、量化和部署Checkpoint作为硬件平台共同交付；数据中心模型与本地模型共享权重谱系和遥测。</li>
+<li><strong>高概率方向：</strong>超节点增加面向连续后训练与量化的异构分区，权重仓库和模型注册表成为与GPU Fabric同等重要的基础设施。</li>
+<li><strong>尚待验证：</strong>开放模型是否会保持硬件中立；NVFP4优化会否形成新的软件锁定；模型工厂收益能否覆盖巨额许可成本。</li>
+</ul>
+<p><strong>架构师结论：</strong>如果交易落地，NVIDIA的系统边界将从芯片、整柜和数据中心继续上移到模型生产。未来硬件竞争可能围绕“每月能为特定平台交付多少个可用、可量化、可部署的模型版本”展开。</p>
+<p><strong>建议跟踪：</strong></p>
+<ul>
+<li>NVIDIA或Poolside的正式交易公告与许可范围</li>
+<li>Laguna S 2.1在DGX Spark上的上下文、Token/s、功耗和任务成功率</li>
+<li>NVFP4相对FP8/INT4的质量损失与显存节省</li>
+</ul>
+<p><strong>来源：</strong><a href="https://www.wsj.com/tech/ai/nvidia-is-spending-6-billion-to-build-a-powerful-u-s-alternative-to-chinese-ai-c51c38cc">《华尔街日报》交易报道</a>｜<a href="https://blogs.nvidia.com/blog/local-ai-open-source-models-agents-nemotron/">NVIDIA对Laguna S 2.1与NVFP4部署的说明</a>｜<a href="https://huggingface.co/collections/poolside/laguna-s-21">Poolside官方Hugging Face模型集合</a></p>
+
+<h2>今日架构主线</h2>
+<p><strong>生成式AI的计量单位正在从Token、图像和短视频片段，上移到完整内容与持续任务。</strong>Wan3.0把企业文档直接变为成片；Perplexity Computer把一次提问变为跨模型、跨工具的数字工作；NVIDIA则据报把投资对象从模型本身上移到能够持续生产模型的工厂。</p>
+<p>这会把基础设施拆成三个相互配合的层次：</p>
+<ul>
+<li><strong>任务控制层：</strong>理解用户目标、拆解工作流、管理权限和成功标准；</li>
+<li><strong>状态与数据层：</strong>保存KV、参考素材、工具结果、视频中间状态、权重和可重放日志；</li>
+<li><strong>异构执行层：</strong>按阶段选择CPU、GPU、视频/音频加速器、编解码器和不同云资源。</li>
+</ul>
+<p>因此，超节点的评价指标需要由峰值Token/s扩展到<strong>成功任务/小时、可用视频秒/美元、任务级P99、状态复用率和模型版本交付周期</strong>。如果仍把长程Agent和视频工作流当成普通无状态推理，请求等待、重算和数据移动会吃掉大部分硬件收益。</p>
+
+<h2>未发现可信新增</h2>
+<p>本期已检查SemiAnalysis、独立超节点新品、NPO/CPO/OCS及相关光互联，以及240kW以上机柜液冷和供电专题。</p>
+<ul>
+<li>SemiAnalysis自8月21日开放模型分析后未发现新文章。</li>
+<li>未发现新的独立超节点整机发布。</li>
+<li>未发现可信的CPO、NPO或OCS量产规格更新。</li>
+<li>未发现240kW以上机柜新的供回水温、流量、母排或可靠性工程参数。</li>
+</ul>
+<p>本期三条信号均位于业务、模型和软件栈上游；其硬件方向属于因果推演，未将推测写成已交付产品。</p></main></body></html>
