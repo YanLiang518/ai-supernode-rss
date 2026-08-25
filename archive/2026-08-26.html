@@ -1,0 +1,106 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>AI算力架构前沿简报｜2026年8月26日</title><style>:root{color-scheme:light dark;--bg:#f7f8fa;--fg:#1b1f24;--muted:#59636e;--link:#0969da;--border:#d0d7de;--panel:#fff;--accent:#eef5ff}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--fg);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;line-height:1.75}main{max-width:900px;margin:0 auto;padding:44px 24px 72px;background:var(--panel);min-height:100vh}h1{font-size:2rem;line-height:1.3;margin:0 0 28px}h2{font-size:1.45rem;margin:38px 0 16px;padding-bottom:8px;border-bottom:1px solid var(--border)}h3{font-size:1.05rem;margin:26px 0 8px}p{margin:10px 0}ul{padding-left:1.35rem}li{margin:6px 0}a{color:var(--link);text-decoration:none}a:hover{text-decoration:underline}hr{border:0;border-top:1px solid var(--border);margin:40px 0}.meta{color:var(--muted);font-size:.92rem}@media(prefers-color-scheme:dark){:root{--bg:#0d1117;--fg:#e6edf3;--muted:#9da7b3;--link:#58a6ff;--border:#30363d;--panel:#161b22;--accent:#17263c}}@media(max-width:640px){main{padding:28px 18px 56px}h1{font-size:1.65rem}h2{font-size:1.25rem}}</style></head><body><main><h1>AI算力架构前沿简报｜2026年8月26日</h1><p class="meta">聚焦业务变化、计算特征与硬件架构之间的因果链</p>
+<h2>今日判断</h2>
+<p><strong>今天最重要的变化，是推理ASIC和企业AI工厂同时跨过“概念架构”阶段，开始用系统数据和交付流程证明价值。</strong>OpenAI首次公开Jalapeño在三类开放模型上的InferenceX结果，并披露HBM4、Scale-up带宽和2,048颗XPU多柜域；它不是只追求低Batch极低时延的窄型芯片，而是试图同时覆盖交互时延与规模吞吐。</p>
+<p>Cisco则把Supermicro NVL72/HGX/MGX、前端Silicon One、后端Spectrum-X、交换机液冷、Splunk遥测与全栈验收组合为10月可订购的参考架构。两条信号共同说明：<strong>竞争单位正从芯片或机柜上移到“能否把特定工作负载快速、可验证地转化为在线Token容量”。</strong></p>
+
+<h2>信号总览</h2>
+<ul>
+<li><strong>OpenAI Jalapeño公开首批系统基准与Scale-up规格</strong>｜芯片/系统信号｜A0工程样片实测，B0在制，量产待爬坡｜影响推理ASIC、HBM4、两级Scale-up与GPU替代边界</li>
+<li><strong>Cisco推出机柜到Fabric全液冷AI工厂架构</strong>｜产品/部署信号｜正式发布，计划2026年10月可订购｜影响企业超节点、开放以太网、液冷交换机、验收和MTTR</li>
+</ul>
+<hr>
+
+<h2>01｜Jalapeño同时提高Token/W与交互时延：推理ASIC不再只是低Batch专用加速器</h2>
+<h3>① 新变化是什么</h3>
+<p>2026年8月25日，OpenAI在Hot Chips公布Jalapeño首批系统数据，SemiAnalysis在OpenAI实验室使用公开InferenceX套件测试A0工程样片。相对NVIDIA GB200与GB300系统，Jalapeño在GPT-OSS 120B、DeepSeek R1 670B和Kimi K2.5 1T上实现约1.5—1.9倍峰值吞吐/千瓦，以及1.7—3.6倍更低的端到端时延；高度交互负载的性能提升为2.1—4.1倍。</p>
+<p>公开架构包括TSMC N3P计算Die、N3E I/O Chiplet、HBM4和PCIe 5.0主机接口。SemiAnalysis披露B0版本单计算Die为13.4PFLOPS MXFP4、TDP 700W，HBM带宽15.4TB/s；封装对本地Scale-up提供600GB/s、对跨柜全局Scale-up提供200GB/s，目标域规模为2,048颗XPU。B0仍在晶圆厂，约25%的性能/瓦改善属于设计目标，不是量产实测。</p>
+<p>OpenAI计划在2026年底开始初始部署；SemiAnalysis称主要产量预计在2027年后段爬坡。因此，当前成熟度是工程样片与公开基准，不是已经规模替换Blackwell或Rubin。</p>
+
+<h3>② 为什么发生</h3>
+<p>ChatGPT、Codex与Agent产品同时需要较低的首Token/每Token时延和较高的全站吞吐。传统通用GPU为了训练、图形及广泛兼容性保留大量能力，而OpenAI掌握自身模型、Kernel、请求分布和服务调度，可以围绕实际推理数据流重新平衡计算、HBM和网络。</p>
+<p>业务驱动力是固定电力下服务更多并发用户，并缩短Agent连续推理步骤之间的等待。如果每一步更快，Agent在相同墙钟时间内可以执行更多规划、工具调用与验证；如果Token/W提高，OpenAI也可在相同GW容量下支撑更多收入。</p>
+<p><strong>Jalapeño真正挑战的是“低时延必须牺牲总吞吐、定制ASIC只能跑少数内部模型”这两个假设。</strong>OpenAI特意使用三种外部开放模型展示通用性，但仍需更多独立软件和模型验证。</p>
+
+<h3>③ 改变了什么计算或数据特征</h3>
+<p>Jalapeño把优化重点放在HBM供数效率和端到端服务路径，而不是只提高峰值FLOPS。15.4TB/s HBM4带宽与700W TDP形成很高的带宽/瓦，适合Decode阶段频繁读取权重、低Batch且受内存带宽约束的负载。</p>
+<p>同时，600GB/s本地和200GB/s全局Scale-up说明它并非单芯片推理设备：万亿参数MoE、长上下文和多用户服务仍需要在机柜及多柜域内移动激活、专家数据和KV状态。2,048颗XPU域意味着集体通信、路由一致性和故障恢复仍会决定端到端效率。</p>
+<p>公开测试覆盖从120B到1T参数模型，说明工作负载跨度较大；但没有公开Prompt长度、输出长度、Batch、精度、每用户并发和缓存策略的完整组合，不能把倍数直接外推到所有ChatGPT请求。</p>
+
+<h3>④ 触碰了哪个技术边界</h3>
+<p><strong>开始失效的假设是：第一代自研ASIC的软件成熟度和模型覆盖率必然显著落后于CUDA GPU。</strong>Jalapeño在A0样片上已经运行公开模型并取得系统级结果，表明头部模型实验室可以用自身模型辅助芯片设计、Kernel移植和调优，大幅压缩软硬件协同周期。</p>
+<p>但边界并未消失，而是转移到量产与多柜系统：HBM4供应、CoWoS良率、I/O Chiplet、2,048颗XPU Fabric、调度器和故障域必须同时成熟。Jalapeño的局部Scale-up仅600GB/s，明显低于部分GPU平台的封装级互联总带宽，因此需要验证其计算/通信比、MoE All-to-All和跨柜尾时延。</p>
+<p>比较对象是当前GB200/GB300而非Rubin；SemiAnalysis也认为优势部分来自Jalapeño软件Bring-up更快，并不证明其硅片在所有维度优于NVIDIA下一代产品。</p>
+
+<h3>⑤ 可能催生什么硬件架构、新的技术需要</h3>
+<ul>
+<li><strong>已出现：</strong>HBM4推理ASIC、计算Die与独立I/O Chiplet、600GB/s柜内与200GB/s跨柜Scale-up、2,048 XPU域，以及针对真实服务流量的软硬件共设计。</li>
+<li><strong>高概率方向：</strong>OpenAI形成GPU训练池与Jalapeño推理池，进一步按Prefill、Decode、交互SLA和模型支持情况路由；GPU保留通用与快速变化负载，ASIC承载稳定的大规模核心流量。</li>
+<li><strong>高概率方向：</strong>由于柜内和跨柜带宽分层，超节点需要本地高带宽域、全局扩展域和独立Scale-out网络；模型并行策略必须感知三层网络，而非把2,048颗XPU视为均匀互联。</li>
+<li><strong>尚待验证：</strong>Fabric采用的交换芯片与拓扑、铜/光边界、单机柜XPU数量、整柜功率、液冷参数、故障隔离，以及跨2,048颗XPU的有效带宽。</li>
+</ul>
+<p><strong>架构师结论：</strong>Jalapeño说明推理ASIC的竞争目标已从“做一个便宜的Decode芯片”升级为“用HBM、Scale-up和服务软件共同实现低时延与高Token/MW”。对超节点厂商而言，未来竞争对象不只是GPU整柜，还包括模型实验室自定义的、工作负载先验更强的完整推理域。</p>
+<p><strong>建议跟踪：</strong></p>
+<ul>
+<li>单机柜XPU数量、整柜功率、供电电压与液冷流量</li>
+<li>600GB/s本地及200GB/s全局链路的单向/双向口径、拓扑和实测时延</li>
+<li>2,048 XPU下MoE有效带宽、故障恢复和任务P99</li>
+<li>B0量产良率、HBM4供应与实际Token/W</li>
+</ul>
+<p><strong>来源：</strong><a href="https://openai.com/index/openai-broadcom-jalapeno-inference-chip/">OpenAI与Broadcom官方产品说明</a>｜<a href="https://newsletter.semianalysis.com/p/openai-jalapeno-better-than-nvidia">SemiAnalysis架构与InferenceX实测</a>｜<a href="https://www.theverge.com/ai-artificial-intelligence/984290/openai-jalapeno-ai-chip-benchmarks">公开基准结果交叉核实</a></p>
+<hr>
+
+<h2>02｜Cisco把液冷计算、交换Fabric与验收合并交付：企业超节点的瓶颈转向集成与上线时间</h2>
+<h3>① 新变化是什么</h3>
+<p>2026年8月25日，Cisco宣布与Supermicro扩展Secure AI Factory with NVIDIA，计划从10月起提供可订购的机架级方案。计算侧覆盖Supermicro NVIDIA NVL72、HGX和MGX高密服务器；网络侧使用Cisco Silicon One N9300作为前端Fabric，并用基于NVIDIA Spectrum-X以太网硅的Cisco N9100构建后端Fabric，由Nexus One统一管理，支持NX-OS或SONiC。</p>
+<p>方案把液冷从服务器扩展到网络：Cisco液冷N9000交换机与Supermicro液冷计算系统组成“rack-to-fabric”液冷架构。Cisco明确指出NVL72类系统可超过200kW/柜，但没有公布本方案具体最大功率、CDU容量、供回水温和流量，因此不能视为新的240kW工程规格。</p>
+<p>Cisco还推出CVIS验证服务，目标是把全栈部署与验证周期由数月缩短至数周，并以基础设施性能、任务完成时间和Token吞吐作为验收指标。</p>
+
+<h3>② 为什么发生</h3>
+<p>企业、Neocloud和主权云并不只缺GPU，更缺少把服务器、前后端网络、存储、液冷、安全、软件和支持体系在短时间内组合上线的能力。多供应商集成失败会使昂贵GPU在网络、光模块、软件版本或液路问题上长期等待。</p>
+<p>购买完整参考架构的经济动机，是缩短Time-to-first-token并降低重新设计、现场调试和责任划分成本。Cisco希望利用企业既有网络技能、渠道和支持体系，让AI集群成为现有数据中心的扩展，而不是完全独立的专有运维域。</p>
+<p><strong>业务需求由“采购一批GPU”变成“购买经过验收、能按期产出Token的完整容量”。</strong></p>
+
+<h3>③ 改变了什么计算或数据特征</h3>
+<p>大型推理、Agent和万亿参数训练使后端网络承载集合通信和专家流量，前端网络承载用户、数据和控制流，存储网络则承担数据集、Checkpoint和KV/上下文状态。三类流量的突发性、拥塞语义和故障影响不同，但企业希望用统一控制面关联。</p>
+<p>Cisco计划将任务健康与计算、NIC、光模块和网络性能指标关联，这意味着验收与运维从端口Up/Down上移到Job Completion Time和Token Throughput。交换机进入液冷环路后，网络功耗、温度和液路故障也开始直接参与作业调度和根因定位。</p>
+
+<h3>④ 触碰了哪个技术边界</h3>
+<p><strong>开始失效的假设是：符合服务器和交换机各自规格，就能自然组成可用的机架级AI系统。</strong>在超过200kW的计算柜中，交换Fabric、光模块、液冷、固件、拥塞控制和GPU软件必须联合验证；任一层的尾部异常都可能降低整个训练域的有效利用率。</p>
+<p>新架构首先触碰的是跨供应商验收和MTTR，而非单一链路峰值带宽。Cisco负责L0/L1分诊，再把问题路由给各组件厂商，能够统一入口，但并没有消除多厂商责任边界。CVIS“数月缩短至数周”是厂商目标，尚无公开批量项目数据验证。</p>
+<p>另外，前端采用Silicon One、后端采用Spectrum-X，说明这是统一运维下的双ASIC网络，并非单一开放Fabric；其互操作性仍依赖NVIDIA参考架构认证和Cisco软件集成。</p>
+
+<h3>⑤ 可能催生什么硬件架构、新的技术需要</h3>
+<ul>
+<li><strong>已出现：</strong>计算与交换机共同液冷、Silicon One前端与Spectrum-X后端、Nexus One统一管理、Splunk遥测和全栈自动验收。</li>
+<li><strong>高概率方向：</strong>AI工厂以“计算柜＋网络柜＋CDU/配电单元＋验证软件”作为交付Block，现场只组合经过实验室验证的模块，减少一次性工程。</li>
+<li><strong>高概率方向：</strong>CDU、Manifold、交换机冷板与计算冷板共享系统级水力设计；遥测统一关联流量、温度、压差、误码、GPU降频和任务完成时间。</li>
+<li><strong>尚待验证：</strong>液冷交换机的可维护性、快接故障影响、交换与计算是否共用二次侧、单一CDU故障域，以及Cisco前后端网络相对纯Spectrum-X方案的性能和成本。</li>
+</ul>
+<p><strong>架构师结论：</strong>Cisco的变化不是又多了一套NVL72集成，而是把企业超节点的产品边界扩展到Fabric液冷、跨层可观测性和任务级验收。对于非Hyperscaler客户，决定GPU价值的往往不是峰值规格，而是部署周期、故障定位和支持责任是否可控。</p>
+<p><strong>建议跟踪：</strong></p>
+<ul>
+<li>首批项目从到货到First Token的实际周数</li>
+<li>机柜功率、CDU容量、供回水温、流量与交换机液冷占比</li>
+<li>Job Completion Time与Token吞吐的验收阈值</li>
+<li>跨服务器、NIC、光模块和交换机故障的平均定位及修复时间</li>
+</ul>
+<p><strong>来源：</strong><a href="https://newsroom.cisco.com/c/r/newsroom/en/us/a/y2026/m08/cisco-secure-ai-factory-nvidia-rack-scale.html">Cisco正式发布</a>｜<a href="https://www.cisco.com/c/en/us/solutions/collateral/artificial-intelligence/cisco-secure-ai-factory-nvidia-rackscale-faq.html">Cisco架构与液冷FAQ</a>｜<a href="https://www.axios.com/2026/08/25/exclusive-cisco-expands-nvidia-partnership-for-ai-data-center-boom">Axios合作背景核实</a></p>
+
+<h2>今日架构主线</h2>
+<p><strong>推理基础设施正在沿两条路线同时收敛：向下进行更深的模型—芯片共设计，向上进行更完整的机柜—网络—冷却—验收集成。</strong></p>
+<p>Jalapeño利用OpenAI真实模型和服务数据重新平衡计算、HBM与Scale-up，证明头部用户可以绕过通用GPU的部分兼容性成本；Cisco则证明多数企业不会自行完成这种垂直整合，而会购买经过认证、能够快速上线并由统一入口支持的系统。</p>
+<p>这意味着未来市场可能形成两类超节点：</p>
+<ul>
+<li><strong>头部模型厂商的深度定制域：</strong>以特定工作负载的Token/MW和交互P99为目标，ASIC、HBM、Fabric和调度共同设计；</li>
+<li><strong>企业与主权云的验证型AI工厂：</strong>采用相对标准的GPU平台，但把网络、液冷、安全、遥测和验收封装成可复制Block。</li>
+</ul>
+<p>两者的共同KPI不再是理论FLOPS，而是<strong>Time-to-first-token、有效Token/MW、任务完成时间、跨层故障恢复和容量上线确定性</strong>。</p>
+
+<h2>未发现可信新增</h2>
+<p>本期确认SemiAnalysis于8月25日发布Jalapeño深度分析，并已纳入正文。Cisco发布了超过200kW机柜的rack-to-fabric液冷方案，但未披露240kW以上具体水力和电气规格。</p>
+<ul>
+<li>未发现除上述Cisco集成架构外的新独立超节点整机。</li>
+<li>未发现可信的NPO、CPO或OCS量产规格更新。</li>
+<li>未发现240kW以上机柜新的流量、供回水温、母排、短路保护或可靠性参数。</li>
+</ul>
+<p>Jalapeño披露了分层Scale-up带宽，但没有确认铜、NPO或CPO物理实现，因此本期不据此推断其光互联路线。</p></main></body></html>
