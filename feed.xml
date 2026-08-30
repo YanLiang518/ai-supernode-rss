@@ -5,7 +5,7 @@
     <link>https://github.com/YanLiang518/ai-supernode-rss</link>
     <description>聚焦 AI 超节点、GPU/加速芯片、Scale-up 互联、NPO/CPO、液冷、供电与头部厂商架构动态。</description>
     <language>zh-cn</language>
-    <lastBuildDate>Sun, 30 Aug 2026 05:00:00 +0800</lastBuildDate>
+    <lastBuildDate>Mon, 31 Aug 2026 05:00:00 +0800</lastBuildDate>
     <ttl>15</ttl>
     <atom:link href="https://raw.githubusercontent.com/YanLiang518/ai-supernode-rss/main/feed.xml" rel="self" type="application/rss+xml"/>
         
@@ -46,6 +46,100 @@
 
 
 
+
+<item>
+<title>AI算力架构前沿简报｜2026年8月31日</title>
+<link>https://raw.githubusercontent.com/YanLiang518/ai-supernode-rss/main/archive/2026-08-31.html</link>
+<guid isPermaLink="false">ai-supernode-brief-2026-08-31</guid>
+<pubDate>Mon, 31 Aug 2026 05:00:00 +0800</pubDate>
+<description><![CDATA[<h2>今日判断</h2>
+<p><strong>今天最重要的变化是，多租户GPU云的安全问题已经从合规清单变成可复现的系统架构失效。</strong>SemiAnalysis在ClusterMAX 3.0前瞻测试中称，其对25家服务商、32个集群进行约四个月测试，发现Kubernetes、容器、InfiniBand分区、存储、Grafana、BMC和DPU配置可级联为跨租户数据暴露甚至远程代码执行；相关服务商在文章发布前均已确认修复或由测试方验证修复。</p>
+<p>这意味着Neocloud不能再以“容器或VM＋防火墙”代表租户隔离。<strong>超节点的安全边界必须下沉到计算主机、Scale-out Fabric、DPU、BMC、存储和遥测，并把固件重置、补丁滚动与故障注入纳入整柜交付和持续验收。</strong></p>
+
+<h2>信号总览</h2>
+<ul>
+<li><strong>ClusterMAX 3.0实测暴露Neocloud多租户级联漏洞</strong>｜部署/安全架构信号｜25家服务商、32个集群测试，完整3.0报告待发布｜影响GPU节点隔离、InfiniBand分区、DPU信任模型、BMC管理网、固件生命周期与Token供应链</li>
+</ul>
+<hr>
+
+<h2>01｜跨租户RCE从配置错误级联产生：超节点安全边界必须下沉到DPU、Fabric与固件生命周期</h2>
+
+<h3>① 新变化是什么</h3>
+<p>2026年8月30日，SemiAnalysis发布ClusterMAX 3.0安全测试前瞻。其称测试于4月至7月进行，覆盖25家GPU云服务商的32个集群，另对更多单GPU虚机和裸金属服务进行了轻量检查。测试发现的模式包括：</p>
+<ul>
+<li>共享Kubernetes控制面、未启用默认拒绝的NetworkPolicy及公开暴露的Kubelet，可形成跨租户凭据泄漏和RCE链；</li>
+<li>InfiniBand默认P_Key仍然生效、SA_Key或M_Key配置不当，使测试租户看到其他客户的80个或532个Fabric端点；</li>
+<li>Grafana表面按租户分离，但底层Prometheus API密钥拥有全局权限，可读取其他租户的GPU利用率、NVLink带宽、文件系统、Pod、Slurm项目和vLLM时延数据；</li>
+<li>仅靠容器隔离且运行旧版NVIDIA Container Toolkit的环境，被已公开的CVE-2025-23266测试逃逸至宿主VM的root权限；</li>
+<li>至少一个被测环境仍向租户主机暴露BlueField RShim路径，使拥有宿主root权限的租户能够触及本应承担隔离职责的DPU控制面。</li>
+</ul>
+<p>成熟度属于<strong>实测前瞻而非完整排名报告</strong>。服务商名称大多因负责任披露而未公开；上述跨租户RCE仅在测试方拥有的两个租户之间演示。SemiAnalysis称所有被测服务商均在90天披露窗口内确认修复或完成验证，没有证据表明漏洞仍在公开利用。</p>
+
+<h3>② 为什么发生</h3>
+<p>Neocloud的商业目标是尽快把昂贵GPU变成可销售容量。为了提高利用率和缩短上线时间，部分服务商复用物理节点、Kubernetes组件、后台Fabric、存储和监控平台，并向裸金属客户开放root权限。</p>
+<p>这些做法单独看都能降低成本：共享控制面减少运维对象，容器提高密度，统一Grafana简化观测，默认DPU模式减少配置步骤，延后补丁可避免中断训练任务。但组合后，任何一层错误都可能跨越租户边界。</p>
+<p>风险又因Neocloud开始同时销售GPU小时和模型Token而放大。若Token服务所在基础设施被其他租户控制，攻击者不仅可能读取Prompt，还可能篡改返回给编码Agent或CI系统的工具调用，使基础设施漏洞转化为客户侧软件供应链攻击。</p>
+<p><strong>业务根源是“快速上线、高利用率、低运维成本”与“强租户隔离、频繁补丁、独立故障域”之间的冲突；不能再靠一次性的安全认证掩盖这一成本。</strong></p>
+
+<h3>③ 改变了什么计算或数据特征</h3>
+<p>安全隔离会改变集群资源组织，而不仅是增加少量控制软件：</p>
+<ul>
+<li>容器需要放入独立VM或专属节点，降低过度共享造成的跨租户爆炸半径；</li>
+<li>Frontend VPC、Backend Fabric、存储和遥测必须保持同一租户身份，调度器不能只按GPU空闲率放置任务；</li>
+<li>InfiniBand的P_Key、M_Key、SA_Key及SHARP相关密钥需要随租户和作业生命周期创建、验证与回收；以太网则需要一致的VLAN/VXLAN、ACL和DPU流表；</li>
+<li>驱动、CUDA、GPU Operator、容器运行时、ConnectX固件和DPU OS的更新必须滚动进行，因此需要预留迁移容量、排空长作业并重新预热模型与KV Cache；</li>
+<li>Token服务需要把模型输出完整性、工具调用签名和后端租户隔离纳入端到端SLA。</li>
+</ul>
+<p>结果是安全更新与计算利用率直接耦合：没有备用节点和状态迁移能力，运营商会因害怕中断长训练或推理会话而推迟补丁；补丁越延后，公开CVE被自动化利用的窗口越长。</p>
+
+<h3>④ 触碰了哪个技术边界</h3>
+<p><strong>开始失效的假设是：租户只要无法登录彼此的服务器，超节点就具备足够隔离；DPU和后台Fabric天然属于可信基础设施。</strong></p>
+<p>首先失效的是单层隔离。ClusterMAX测试显示，过期容器组件可逃逸到宿主，但在“容器置于VM内”的环境中，VM仍能形成第二道边界。共享Kubernetes节点、共享监控密钥或全局root密钥则会把单点配置错误扩大为全租户事件。</p>
+<p>其次是DPU信任模型。NVIDIA官方文档显示，BlueField出厂或默认DPU模式通常假定宿主可信；Zero-trust模式才会限制RShim、固件刷新、端口所有权和硬件计数器。裸金属GPU云却经常把宿主root交给租户，导致“DPU信任的主体”恰好是运营商需要隔离的主体。</p>
+<p>第三是生命周期边界。重新安装宿主OS不会自动清除DPU自身的Arm OS和固件；如果DPU曾被修改，仅重装服务器就可能把持久状态交给下一租户。BMC、DPU、NIC、交换机及存储控制器因此都必须进入租户间擦除和证明流程。</p>
+<p>证据边界也需说明：安全结果主要来自SemiAnalysis单一测试团队，完整ClusterMAX 3.0方法、服务商分布和复测数据尚未全部公开；个别配置错误不能外推为所有Neocloud均存在同样漏洞。</p>
+
+<h3>⑤ 可能催生什么硬件架构、新的技术需要</h3>
+<ul>
+<li><strong>已出现：</strong>NVIDIA Container Toolkit 1.17.8已修复CVE-2025-23266；BlueField已提供Zero-trust模式、独立BMC和限制RShim/固件刷写的能力；ClusterMAX CLI开始对驱动、容器、固件和隔离配置进行自动审计。</li>
+<li><strong>高概率方向：</strong>面向多租户的超节点将形成“计算租户域＋独立DPU信任域＋隔离管理域”。租户主机不直接访问BMC、DPU Arm核或交换机管理面，所有配置通过独立带外网络和可审计控制器下发。</li>
+<li><strong>高概率方向：</strong>DPU被当作需要独立Secure Boot、远程证明、固件版本锁定和租户间重刷的完整计算机，而不是随服务器重装即可复位的网卡。</li>
+<li><strong>高概率方向：</strong>整柜验收加入跨租户故障注入：验证容器逃逸后的VM边界、P_Key/VXLAN隔离、存储RBAC、Prometheus最小权限、BMC不可达及DPU Zero-trust状态，并持续而非一次性执行。</li>
+<li><strong>高概率方向：</strong>园区保留安全维护容量，使长训练、推理和KV状态能在补丁窗口迁移；“可安全滚动升级的有效GPU比例”将成为比名义装机率更有意义的可用性指标。</li>
+<li><strong>尚待验证：</strong>强隔离对GPU利用率、网络时延、运维成本和整柜BOM的量化影响，以及以太网超节点能否凭借成熟VPC/VXLAN工具降低相对InfiniBand的隔离复杂度。</li>
+</ul>
+<p><strong>架构师结论：</strong>Neocloud安全不再是部署完成后的软件加固，而是超节点的基础拓扑问题。DPU、BMC、Fabric密钥、存储和遥测必须共同形成硬件级信任边界；没有可滚动补丁、可彻底重置和可持续验证的能力，峰值性能越高，跨租户故障的爆炸半径反而越大。</p>
+<p><strong>建议跟踪：</strong></p>
+<ul>
+<li>ClusterMAX 3.0正式报告中的服务商分布、复测通过率和各类漏洞发生比例；</li>
+<li>租户间服务器、DPU、NIC和BMC重置所需时间，以及可验证擦除覆盖率；</li>
+<li>补丁平均滞后时间、可滚动升级GPU比例及隔离开启后的有效训练/推理性能损失。</li>
+</ul>
+<p><strong>来源：</strong><a href="https://newsletter.semianalysis.com/p/most-neoclouds-suck-at-security">SemiAnalysis：Most Neoclouds Suck At Security（2026年8月30日）</a>｜<a href="https://www.clustermax.ai/criteria">ClusterMAX测试维度与标准</a>｜<a href="https://nvidia.custhelp.com/app/answers/detail/a_id/5659/~/security-bulletin%3A-nvidia-container-toolkit---july-2025">NVIDIA Container Toolkit安全公告</a>｜<a href="https://docs.nvidia.com/doca/archive/2-9-0-cx8/bluefield%2Bmodes%2Bof%2Boperation/index.html">NVIDIA BlueField运行模式文档</a></p>
+
+<h2>今日架构主线</h2>
+<p><strong>AI超节点正在从“高带宽计算域”变成“必须证明每一层信任边界的多租户生产域”。</strong></p>
+<p>此前的超节点设计主要优化GPU利用率、集合通信和Token产出；ClusterMAX实测说明，计算、Fabric、DPU、BMC、存储和遥测不能各自声明安全后再组合。租户身份必须贯穿所有层级，且任何一层失效时仍有第二道隔离。</p>
+<p>对应的系统评价指标需要增加：</p>
+<ul>
+<li>跨租户可见端点数必须为零；</li>
+<li>DPU/BMC管理面从租户主机不可达；</li>
+<li>租户间固件与状态可验证清除；</li>
+<li>公开高危CVE到完成滚动升级的时间；</li>
+<li>单层失效后的横向移动范围和恢复时间。</li>
+</ul>
+<p><strong>安全隔离、可靠性和可维护性正在收敛为同一个架构问题：是否能在不停止整座AI工厂的前提下，持续替换、重置和验证每一个计算与控制组件。</strong></p>
+
+<h2>未发现可信新增</h2>
+<p>本期已主动检查SemiAnalysis、独立超节点新品、NPO/CPO/OCS以及240kW以上机柜液冷与供电。</p>
+<ul>
+<li>SemiAnalysis于8月30日发布Neocloud安全与ClusterMAX 3.0前瞻，本期已作为核心条目纳入；</li>
+<li>未发现新的独立超节点整机发布；</li>
+<li>未发现可信的NPO、CPO或OCS量产规格更新；</li>
+<li>未发现240kW以上单柜新的供回水温、流量、压降、母排、保护或可靠性工程参数。</li>
+</ul>
+<p>本期不重复使用此前的Agent状态、HBM采购、机器人运维或算力融资信息，也不以普通安全新闻补足条目数量。</p>]]></description>
+</item>
 
 <item>
 <title>AI算力架构前沿简报｜2026年8月30日</title>
