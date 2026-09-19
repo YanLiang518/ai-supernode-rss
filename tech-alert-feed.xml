@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/">
+  <channel>
+    <title>超节点关键技术预警</title>
+    <link>https://github.com/YanLiang518/ai-supernode-rss</link>
+    <description>仅在重要公开技术变化触发时发布，不发布内部架构与商业信息。</description>
+    <language>zh-cn</language>
+    <ttl>15</ttl>
+    <atom:link href="https://raw.githubusercontent.com/YanLiang518/ai-supernode-rss/main/tech-alert-feed.xml" rel="self" type="application/rss+xml"/>
+  </channel>
+</rss>
