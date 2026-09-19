@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/">
+  <channel>
+    <title>AI Memory 知识沉淀周报</title>
+    <link>https://github.com/YanLiang518/ai-supernode-rss</link>
+    <description>每周长期可复用知识的公开、脱敏摘要；涉及非公开信息的内容不会发布。</description>
+    <language>zh-cn</language>
+    <ttl>15</ttl>
+    <atom:link href="https://raw.githubusercontent.com/YanLiang518/ai-supernode-rss/main/ai-memory-feed.xml" rel="self" type="application/rss+xml"/>
+  </channel>
+</rss>
