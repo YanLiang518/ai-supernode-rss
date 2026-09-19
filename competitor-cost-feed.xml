@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/">
+  <channel>
+    <title>超节点竞品与成本周报</title>
+    <link>https://github.com/YanLiang518/ai-supernode-rss</link>
+    <description>每周公开的超节点竞品架构变化及可核实成本信息；不披露内部成本模型。</description>
+    <language>zh-cn</language>
+    <ttl>15</ttl>
+    <atom:link href="https://raw.githubusercontent.com/YanLiang518/ai-supernode-rss/main/competitor-cost-feed.xml" rel="self" type="application/rss+xml"/>
+  </channel>
+</rss>
