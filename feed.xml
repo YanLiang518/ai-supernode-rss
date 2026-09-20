@@ -5,7 +5,7 @@
     <link>https://github.com/YanLiang518/ai-supernode-rss</link>
     <description>聚焦 AI 超节点、GPU/加速芯片、Scale-up 互联、NPO/CPO、液冷、供电与头部厂商架构动态。</description>
     <language>zh-cn</language>
-    <lastBuildDate>Sun, 20 Sep 2026 05:00:00 +0800</lastBuildDate>
+    <lastBuildDate>Sun, 20 Sep 2026 08:31:00 +0800</lastBuildDate>
     <ttl>15</ttl>
     <atom:link href="https://raw.githubusercontent.com/YanLiang518/ai-supernode-rss/main/feed.xml" rel="self" type="application/rss+xml"/>
 
@@ -3027,4 +3027,5 @@
         <p>真正分水岭是断路保护、接地、预充电、直流拉弧、模块热插拔以及GPU功率阶跃能否形成统一规范。</p>
       ]]></description>
     </item>
+<item><title>AI算力架构前沿简报｜2026年9月20日·即时验收增刊</title><link>https://raw.githubusercontent.com/YanLiang518/ai-supernode-rss/main/archive/2026-09-20-rss-check.html</link><guid isPermaLink="false">ai-supernode-brief-2026-09-20-manual-check</guid><pubDate>Sun, 20 Sep 2026 08:31:00 +0800</pubDate><description><![CDATA[<h2>AI算力架构前沿简报｜2026年9月20日·即时验收增刊</h2><p><strong>验收说明：</strong>本篇为人工触发的独立验收增刊；不替代今天05:00已发布的正式日报。</p><h2>本期判断：业务需求与超节点互联需要联合定义</h2><p>2026年9月19日，华为公布面向Agent计算的SuperPoD/SuperCluster进展，提出长时任务带来的首Token等待、互联带宽与内存占用压力。以上是厂商对应用趋势的描述，并非任一系统的独立性能实测。</p><h3>① 新变化与驱动</h3><p>Agent长期运行、模型推理阶段的状态读写增加，对计算资源组织和数据放置提出不同于单一吞吐量优化的要求。</p><h3>② 计算与数据特征</h3><p>硬件研究应区分Prefill、Decode和KV缓存路径，分别测量首Token时延、缓存命中率、跨设备迁移字节量与P99时延；不能仅由GPU峰值算力推断真实任务完成时间。</p><h3>③ 技术边界与架构推演</h3><p>在不增加未经验证的系统参数前提下，比较“紧耦合加速器域内放置KV”与“分级KV池化”两条路线的内存占用、网络带宽与调度代价。这里只提出研究问题，不声称哪条路线已有确定优势。</p><h3>④ 建议验证</h3><ul><li>按不同上下文长度采集实际KV读写/迁移量和首Token时延。</li><li>分别记录Scale-up与Scale-out链路峰值及P99利用率。</li><li>将缓存成本和故障恢复时间加入每任务成本模型。</li></ul><p><a href="https://www.huawei.com/en/news/2026/9/hc-agentic-thinkpro-pto-cann">原始来源：华为2026-09-19公开发布</a></p>]]></description></item>
 </channel></rss>
