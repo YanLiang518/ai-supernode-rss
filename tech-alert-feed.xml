@@ -7,5 +7,6 @@
     <language>zh-cn</language>
     <ttl>15</ttl>
     <atom:link href="https://raw.githubusercontent.com/YanLiang518/ai-supernode-rss/main/tech-alert-feed.xml" rel="self" type="application/rss+xml"/>
-  </channel>
+  <item><title>超节点关键技术预警｜2026年9月20日·即时验收补发</title><link>https://raw.githubusercontent.com/YanLiang518/ai-supernode-rss/main/tech-alert-archive/2026-09-20.html</link><guid isPermaLink="false">tech-alert-2026-09-20</guid><pubDate>Sun, 20 Sep 2026 08:31:00 +0800</pubDate><description><![CDATA[<h2>超节点关键技术预警｜2026年9月20日·即时验收补发</h2><p><strong>验收说明：</strong>人工验收补发：回顾2026年9月17日已公开的重要事件，不表示最近24小时又发生同一新品发布。</p><h2>预警主题：7.2T NPO光引擎与系统级可靠性指标</h2><p><strong>事件日期：2026年9月17日。</strong>华为公开宣布昇腾960超节点采用Hi-ONE近封装光引擎，宣称单模块传输容量7.2T、内置光源、整机采用正交架构及全液冷；同时公布4096 NPU系统规模。这里的具体配置与收益是厂商发布数据，不应直接外推到不同系统。</p><h3>可能触碰的设计边界</h3><p>当光互联封装从可插拔收发器转向更靠近计算/交换芯片的光引擎时，除传输带宽外，光源可替换性、污染控制、冷板/散热路径、失效隔离及现场维护将成为必需同步评估的条件。</p><h3>证据与限制</h3><p>华为称使用5500个Hi-ONE替代约48000个800G光模块、节电超过550kW，并宣称系统可用度99.8%；该比较需进一步确认传统方案的系统边界、功耗口径、光引擎与光源冗余、故障统计区间。公开发布信息不能证明任一其他架构可以得到相同比例收益。</p><h3>建议验证的三个参数</h3><ul><li>7.2T的方向性、有效负载带宽与端口映射，以及模块实际墙上功耗。</li><li>内置光源失效时的维护单元、MTTR和冗余切换方式。</li><li>功耗与可用度对比的基准系统、运行负载和统计周期。</li></ul><p><a href="https://www.huawei.com/cn/news/2026/9/hc-ascend960-supernode">原始来源：华为官方公告，2026-09-17</a></p>]]></description></item>
+</channel>
 </rss>
