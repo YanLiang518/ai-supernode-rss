@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>AI算力架构前沿简报｜2026年9月22日</title>
+<style>
+:root{color-scheme:light dark;--bg:#f5f7fb;--surface:#fff;--text:#172033;--muted:#5d687b;--link:#1559c7;--border:#dce2ea;--accent:#245bd7;--box:#eef4ff;--quote:#f6f8fb}
+@media(prefers-color-scheme:dark){:root{--bg:#0e121a;--surface:#151b25;--text:#e7ebf2;--muted:#a8b1c2;--link:#82b1ff;--border:#2a3444;--accent:#8bb7ff;--box:#17243a;--quote:#1a202b}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;line-height:1.78}
+main{max-width:900px;margin:32px auto;padding:48px 56px;background:var(--surface);border:1px solid var(--border);border-radius:18px;box-shadow:0 14px 40px rgba(20,32,55,.08)}
+header{padding-bottom:24px;border-bottom:1px solid var(--border)}h1{font-size:2rem;line-height:1.35;margin:0 0 10px}header p{margin:0;color:var(--muted)}
+h2{margin:2.2em 0 .8em;font-size:1.45rem;line-height:1.45}h3{margin:1.6em 0 .55em;font-size:1.08rem;color:var(--accent)}
+p{margin:.65em 0}ul{padding-left:1.35em}li{margin:.5em 0}a{color:var(--link);overflow-wrap:anywhere}
+hr{border:0;border-top:1px solid var(--border);margin:2.2em 0}blockquote{margin:1.5em 0;padding:1em 1.2em;border-left:4px solid var(--accent);background:var(--quote);border-radius:0 10px 10px 0}
+.signal{background:var(--box);border:1px solid var(--border);padding:1px 18px 10px;border-radius:12px}footer{margin-top:2.5em;padding-top:1.2em;border-top:1px solid var(--border);color:var(--muted);font-size:.9rem}
+@media(max-width:700px){main{margin:0;padding:28px 20px;border:0;border-radius:0}h1{font-size:1.65rem}h2{font-size:1.28rem}}
+</style>
+</head><body><main>
+<header><h1>《AI算力架构前沿简报｜2026年9月22日》</h1><p>从业务源头、负载变化与技术边界，推演下一代AI计算系统和超节点架构。</p></header>
+
+<h2>今日判断</h2>
+<p><strong>今天真正改变硬件假设的信号，是MoE不再被视为必须完整部署的固定模型，而开始按业务工作流裁剪专家池。</strong> Aikido于9月21日发布面向本地、隔离环境的网络安全模型Altar：以GLM-5.3为基础，经W4A16量化和工作负载校准的专家剪枝，将权重从BF16的1,506.7GB、AWQ INT4的488.2GB进一步压缩至328.0GB，并称可在单个4×H200节点上通过vLLM运行。</p>
+<p>这不是通用模型质量无损压缩，也不是独立第三方基准。它说明的是：<strong>当业务只调用MoE能力空间的一部分时，最优硬件可能不是继续扩大Scale-up域，而是先删除低贡献专家，把HBM留给Agent上下文、KV Cache和并发。</strong> 本期只有这一条达到主信号标准；云栖大会于今天上午开幕，截至截稿尚未出现可由官方资料验证的AL144、AL64、ALink或SNPO新增硬件参数。</p>
+
+<section class="signal"><h2>信号总览</h2>
+<ul>
+<li><strong>Aikido Altar以业务轨迹裁剪MoE专家池</strong>｜模型/运行时/本地部署信号｜开放权重模型与厂商内部评测已发布；独立复现、完整性能和可靠性数据待验证｜影响MoE专家放置、4-GPU Scale-up节点、HBM/KV容量配比、隔离网络存储及模型供应链</li>
+</ul></section>
+<hr>
+
+<h2>01｜MoE专家池开始按业务裁剪：本地推理节点从“装下完整模型”转向“为有效专家、KV与Agent状态共同配HBM”</h2>
+
+<h3>① 新变化是什么</h3>
+<p>2026年9月21日，Belgium网络安全公司Aikido发布首个开放权重安全模型Altar，目标是在客户自有基础设施、包括完全隔离网络中执行代码审查和渗透测试，而不把源代码、内部架构或未修复漏洞发送给第三方推理服务。</p>
+<p>Altar以Z.AI的GLM-5.3为基础。Aikido公布的权重体积为：BF16原始模型1,506.7GB，AWQ INT4量化版本488.2GB，Altar剪枝后的W4A16版本328.0GB。它在每个骨干专家层保留原256个路由专家中的168个，删除88个、即34.4%；每个Token仍由路由器选择8个专家。相对于BF16，存储量下降78.2%；相对于已经量化的AWQ版本，再减少160GB、即32.8%。</p>
+<p>Aikido称Altar可通过最新版vLLM在单个4×H200节点上运行，并已经部署进其Aikido Machine产品。Reuters确认其开放权重、本地部署定位及面向客户的使用计划。</p>
+<p><strong>成熟度需要严格区分：</strong>权重、压缩方法和厂商评测已经发布；“可在4×H200舒适运行”属于厂商部署说明，尚未公开同一并发、上下文和P99下的Token吞吐、HBM峰值、NVLink流量、功耗或独立复现。其发现客户关键漏洞的案例也是厂商陈述，不能替代系统基准。</p>
+
+<h3>② 为什么发生</h3>
+<p>银行、医院、工业控制和涉密开发环境往往不能把完整代码及漏洞上下文送到外部API。业务需要的不是通用聊天能力，而是能够在内网持续读取代码、调用扫描与验证工具、保留调查轨迹并输出可审计结果的安全Agent。</p>
+<p>闭源云模型解决能力问题，却可能违反数据驻留、供应商风险或隔离网络要求；完整开放权重MoE虽然可本地部署，却带来新的经济障碍：只有少数专家在每个Token上激活，全部专家权重仍必须被存储和服务。安全任务只使用能力空间的一部分，但客户仍要为整个专家池购买HBM和加速器。</p>
+<p>Aikido因此用内部渗透测试轨迹及多语言文本校准专家贡献，再删除对目标工作流贡献较低的专家。<strong>本简报判断：业务根源是把“数据不能离场”的合规约束，转化为“模型必须装进可采购、可运维的本地节点”的硬件约束；工作负载专用化是缩小两者差距的手段。</strong></p>
+
+<h3>③ 改变了什么计算或数据特征</h3>
+<p>Altar揭示了MoE推理的两个不同容量：</p>
+<ul>
+<li><strong>常驻容量：</strong>所有保留专家的权重必须可被访问，即使每个Token只激活8个；</li>
+<li><strong>活动容量：</strong>当前Token的专家计算、激活值、KV Cache、Agent轨迹和工具状态共同占用运行时内存。</li>
+</ul>
+<p>在4颗141GB H200上，原始HBM总量为564GB。按公开权重体积粗算，488GB的AWQ模型只留下约76GB原始空间，而328GB的Altar留下约236GB；两者相差160GB。<strong>这些是扣除运行时碎片、通信缓冲和系统保留前的理论值，不等于可用KV容量，</strong>但足以说明剪枝的主要收益可能不是把4卡降成3卡，而是在保持4卡拓扑的同时扩大长上下文和并发余量。</p>
+<p>网络安全Agent会反复读取代码、工具输出、漏洞证据和修复结果，状态生命周期远长于一次问答。多个调查并行时，KV随上下文增长并与权重争夺HBM；工具调用还会造成计算暂停和恢复，使连续Batch更难维持。权重缩小后，调度器可以把更多会话状态留在HBM，减少KV向主存或NVMe换入换出。</p>
+<p>专家剪枝并未消除稀疏路由。路由器仍为每个Token选择8个专家；若专家跨GPU分布，Token分发和结果汇聚仍可能触发Scale-up通信。由于总专家数减少，专家放置、热点复制和负载均衡空间也会改变，但Aikido没有公开四颗H200上的专家映射和NVLink流量。</p>
+
+<h3>④ 触碰了哪个技术边界</h3>
+<p><strong>开始失效的假设是：前沿MoE的完整专家池是不可改变的模型边界，硬件只能增加GPU把它装下。</strong></p>
+<p>首先触碰的是HBM容量边界。BF16权重约1.51TB，无法进入单个4×H200节点；INT4虽可名义装入564GB HBM，却给KV、激活和通信缓冲留下很小余量。Altar把权重进一步减少160GB，使同一节点从“勉强容纳模型”转向“可以同时容纳较长状态”，但真实并发和P99尚未公开。</p>
+<p>其次是能力保持边界。Aikido在包含30个代码仓库、32个已知漏洞、每项运行三次的内部基准中报告：Altar单次平均召回率60.4%，AWQ父模型61.5%，BF16父模型65.6%；三次运行至少发现一次的覆盖分别为23/32、23/32和25/32。也就是说，Altar保留了BF16父模型25个已覆盖漏洞中的23个，即92%，但单次召回仍下降5.2个百分点。</p>
+<p>该基准只测已知CVE重发现，而且外围流水线还使用其他模型；它不测全代码库盲发现、漏洞利用验证或修复建议。因此，<strong>“权重缩小78.2%”不能写成“通用能力保留92%”，更不能外推到其他行业。</strong> 不同任务、语言和工具轨迹可能依赖被删除的专家。</p>
+<p>最后是安全供应链边界。本地权重避免代码外发，却引入模型包来源、离线更新、权重篡改、运行日志和双用途能力控制问题。完全隔离网络中，模型升级和漏洞情报进入方式会直接影响可维护性，开放权重本身不等于可审计或安全。</p>
+
+<h3>⑤ 可能催生什么硬件架构、新的技术需要</h3>
+<ul>
+<li><strong>已出现：</strong>Altar采用W4A16量化、基于业务轨迹的REAP专家剪枝和4×H200＋vLLM部署；Aikido Machine把模型放入客户自有或隔离基础设施。</li>
+<li><strong>高概率方向：</strong>形成面向具体行业的“模型—节点共配置”。同一个通用MoE衍生安全、金融、研发等不同专家子集，硬件按实际保留专家和上下文SLA配置，而不是按母模型总参数统一建设大Scale-up域。</li>
+<li><strong>高概率方向：</strong>4卡或8卡本地推理节点优先增加HBM容量与可靠Scale-up，而非追求更大的跨柜域；运行时依据专家热点、KV大小和租户隔离共同决定专家放置、复制与Batch。</li>
+<li><strong>高概率方向：</strong>HBM保存高频专家和活动KV，CPU内存保存可恢复会话与代码索引，本地加密NVMe保存模型版本、审计轨迹和冷状态；DPU或可信管理控制器承担网络隔离、权重校验和受控工具出口。</li>
+<li><strong>高概率方向：</strong>离线模型供应链需要签名权重、SBOM、版本回滚、可复现压缩记录和安全擦除；节点验收应增加模型哈希、专家映射、KV峰值和更新MTTR，而不只测Token/s。</li>
+<li><strong>尚待验证：</strong>更低比特格式能否保留更多专家、专家剪枝能否与冷专家分级加载结合，以及四卡节点在多Agent长上下文下是否仍满足P99和故障恢复要求。</li>
+</ul>
+
+<blockquote><p><strong>架构师结论：</strong>Altar的关键不是又出现一个垂直模型，而是证明“业务使用哪些专家”可以反向决定GPU数量、Scale-up域和KV预算。对于MoE推理，采购前应先测专家贡献和路由分布，再决定扩卡、压缩还是分层；把母模型总参数直接映射成超节点规模，可能系统性高估硬件需求。</p></blockquote>
+
+<h3>建议跟踪</h3>
+<ul>
+<li>在相同安全任务、上下文、并发和P99约束下，对比BF16、AWQ与Altar的实际HBM峰值、Token吞吐、功耗及每完成漏洞任务成本。</li>
+<li>四颗H200间的专家映射、路由偏斜、NVLink字节、最慢GPU等待时间，以及单GPU故障后的请求恢复或模型降级方式。</li>
+<li>跨语言与任务分布变化后的召回下降、被删除专家的能力盲区，以及权重更新、签名验证和隔离环境升级MTTR。</li>
+</ul>
+
+<p><strong>来源：</strong><a href="https://www.aikido.dev/blog/aikido-altar-open-weight-ai-sovereign-security">Aikido：Altar模型、压缩方法、基准与部署说明（2026年9月21日）</a>｜<a href="https://www.reuters.com/legal/litigation/belgiums-aikido-launches-cybersecurity-ai-model-demand-local-tools-grows-2026-09-21/">Reuters：开放权重、本地部署及客户方向核实（2026年9月21日）</a>｜<a href="https://www.cerebras.ai/blog/reap">Cerebras：REAP专家剪枝方法</a>｜<a href="https://github.com/CerebrasResearch/reap">REAP公开代码仓库</a></p>
+
+<h2>今日架构主线</h2>
+<p><strong>MoE让“模型总参数量”与“业务实际需要的硬件规模”开始解耦。</strong></p>
+<ul>
+<li>量化减少每个权重的比特数，专家剪枝减少必须常驻的权重数量；</li>
+<li>腾出的HBM可用于KV、Agent状态和更高并发，也可能缩小必要的Scale-up域；</li>
+<li>但专家池缩小会改变能力覆盖、路由偏斜和通信分布，不能只比较模型文件大小；</li>
+<li>本地部署把数据驻留问题变成模型供应链、离线运维和节点可靠性问题。</li>
+</ul>
+<p>SemiAnalysis在9月21日新文章的公开部分也指出，MoE改变了哪些张量在每个Token上激活、哪些数据必须靠近计算、哪些传输需要强本地带宽，以及存储和调度如何影响有效吞吐。Altar提供了一个具体实现：<strong>先用业务轨迹确定“哪些专家值得留在系统里”，再围绕剩余权重和长生命周期状态配置节点。</strong></p>
+<p>这意味着未来超节点选型应新增一层模型画像：专家贡献分布、路由熵、热点稳定性、上下文增长速度和任务质量下限。只有完成这一步，HBM容量、GPU数、Scale-up带宽和KV分层才有合理输入。</p>
+
+<h2>未发现可信新增</h2>
+<p>本期优先扫描9月21日全球信息，并按临时重点核查云栖大会、SemiAnalysis、超节点、光互联及240kW以上供电液冷。</p>
+<ul>
+<li><strong>云栖大会：</strong>官方确认大会于9月22日至24日在杭州举行，场馆每日8:00开放。本期截稿处于首日开幕前，尚未发现阿里云官方发布的AL144、AL64、ALink、SNPO、HBD规模、单卡Scale-up带宽、NPO光源、拓扑、液冷或供电新增参数；不采用展台预热和未署名转述替代规格。</li>
+<li><strong>SemiAnalysis：有新增。</strong>9月21日发布《Computation and Data Movement for Inference》，公开部分确认主题为MoE结构、张量活动和数据移动；全文主要内容需订阅，本期只把可公开核实的判断用于架构主线，不虚构付费内容，也不单独扩写为新闻条目。</li>
+<li><strong>超节点与NPO/CPO/OCS：</strong>未发现近24小时新的整机量产、互操作验收或现场可靠性数据。</li>
+<li><strong>240kW以上机柜液冷/供电：</strong>未发现新的供回水温、流量、压降、母排保护、结构承载或维护参数。</li>
+<li><strong>数据中心政策：</strong>California于9月21日签署数据中心电价、水耗和地方监督法案包，是昨日“增量基础设施成本内部化”主线的实际落地延伸，但没有新增机柜或超节点技术参数，本期不重复单列。</li>
+</ul>
+
+<p><strong>必查来源：</strong><a href="https://yunqi.aliyun.com/">2026云栖大会官方网站</a>｜<a href="https://yunqi.aliyun.com/2026/guide">云栖大会官方参会指南与日期</a>｜<a href="https://newsletter.semianalysis.com/p/computation-and-data-movement-for">SemiAnalysis：Computation and Data Movement for Inference（2026年9月21日）</a></p>
+
+<footer>发布日期：2026年9月22日（北京时间）</footer>
+</main></body></html>
