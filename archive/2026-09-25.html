@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>AI算力架构前沿简报｜2026年9月25日</title>
+<style>
+:root{color-scheme:light dark;--bg:#f6f8fb;--paper:#fff;--text:#172033;--muted:#5d6678;--line:#dce2ea;--link:#0b63ce;--box:#eef5ff;--quote:#f3f6fa}
+@media(prefers-color-scheme:dark){:root{--bg:#0d1117;--paper:#151b23;--text:#e6edf3;--muted:#9ba7b4;--line:#30363d;--link:#79b8ff;--box:#132238;--quote:#1b2430}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;line-height:1.78}
+main{max-width:920px;margin:0 auto;padding:48px 26px 72px;background:var(--paper);min-height:100vh}h1{font-size:2rem;line-height:1.25;margin:0 0 32px}h2{font-size:1.45rem;line-height:1.4;margin:40px 0 16px;padding-top:8px;border-top:1px solid var(--line)}h2:first-of-type{border-top:0;margin-top:0}h3{font-size:1.08rem;margin:28px 0 10px}p{margin:10px 0}ul{padding-left:1.4rem}li{margin:.55rem 0}a{color:var(--link);text-decoration:none}a:hover{text-decoration:underline}strong{font-weight:700}blockquote{margin:24px 0;padding:16px 18px;border-left:4px solid var(--link);background:var(--quote)}blockquote p{margin:0}hr{border:0;border-top:1px solid var(--line);margin:34px 0}.meta{color:var(--muted);margin-top:-20px;margin-bottom:30px}.summary{padding:16px 18px;background:var(--box);border:1px solid var(--line);border-radius:10px}
+@media(max-width:640px){main{padding:30px 18px 52px}h1{font-size:1.65rem}h2{font-size:1.28rem}}
+</style>
+</head>
+<body><main>
+<h1>《AI算力架构前沿简报｜2026年9月25日》</h1>
+<p class="meta">聚焦业务源头、模型与软件变化如何重塑计算、互联、存储、供电与冷却。</p>
+<h2>今日判断</h2>
+<p><strong>今天最重要的变化，是Agent基础设施开始同时向“并行探索”与“持久执行”演进。</strong> Anthropic用约950个并行Agent、2.1亿Token把20多万条候选序列压缩为20份重点报告，再由湿实验验证出一个新的酶系统；Kubernetes、Google Cloud与阿里云则把Agent执行环境定义为有稳定身份、持久状态、可预热和可暂停的隔离单元。</p>
+<p>前者说明任务价值可能来自大规模分支搜索后的极少数高质量候选，后者说明Agent不能再被当作一次性无状态Pod。<strong>推理GPU、CPU工具、沙箱、状态存储与人类或物理实验应被拆成不同资源池，并以“每个被验证结果的总成本和完成时间”而非Token吞吐单独优化。</strong></p>
+
+<h2>信号总览</h2>
+<ul>
+<li><strong>Anthropic以约950个并行Agent寻找新酶系统</strong>｜科学发现/多Agent工作流信号｜研究结果与预印本已发布，生物功能仍在研究｜影响推理扇出、数据库检索、候选排序、证据溯源、CPU工具与对象存储</li>
+<li><strong>Agent Sandbox进入Kubernetes与云平台标准层</strong>｜运行时/隔离/状态管理信号｜开源控制器与云端产品文档已发布，部分能力仍为预览｜影响CPU沙箱池、Warm Pool、快照存储、网络微隔离、DPU及GPU—工具分池</li>
+</ul>
+<hr>
+
+<h2>01｜近千个Agent并行筛选科学假设：AI计算从生成答案转向“扇出搜索—证据汇聚—物理验证”</h2>
+
+<h3>① 新变化是什么</h3>
+<p>2026年9月23日，Anthropic公布其生命科学团队的一项早期研究：由Claude Agent自主搜索公开DNA数据、生成并筛选假设，最终发现与重复DNA阵列相关的一类逆转录酶系统，团队将其称为ART。研究人员认为它在组织方式上与CRISPR系统存在相似之处，但<strong>其生物学功能、可编程性和应用价值仍未确定</strong>。</p>
+<p>官方披露的一次研究活动持续约21小时，协调约950个Agent，消耗约2.1亿Token。Agent收集超过20万条逆转录酶序列，识别约3500个候选系统，汇总为20份优先报告，其中一条线索经人类湿实验后形成ART发现。人类负责初始任务定义、实验选择和全部湿实验；Agent没有操作实验设备。</p>
+<p><strong>成熟度必须严格区分：</strong>自动化搜索流程、计算规模和早期实验结果已经由Anthropic发布，并配有预印本；“发现新系统”不等于其机制已完全解释，更不等于形成可用生物技术产品。实验在BSL-1/2条件下进行且未涉及人类病原体，这也是研究边界的一部分。</p>
+
+<h3>② 为什么发生</h3>
+<p>生命科学数据库增长速度远高于人类逐篇阅读和逐条构建假设的能力。真正稀缺的资源不是可枚举的序列，而是研究人员与实验平台能够验证的候选数量。若AI只生成一份长答案，仍会把筛选压力留给人类；若大量Agent独立检索、交叉验证和淘汰假设，则可把广阔搜索空间压缩成少量可实验对象。</p>
+<p>Anthropic的业务与研究驱动力是把前沿模型从“辅助阅读”推进到可重复的发现流程，让计算承担廉价的大规模探索，把昂贵、低吞吐的湿实验留给信息增益最高的候选。</p>
+<p><strong>本简报判断：</strong>这类工作流的经济目标不是最大化Token产量，而是降低每个经物理实验验证的发现所需的人类时间和实验批次。2.1亿Token若不能显著提高候选命中率，只会成为昂贵的并行噪声。</p>
+
+<h3>③ 改变了什么计算或数据特征</h3>
+<p>工作负载从单条长会话变成高扇出的有向任务图：数百个Agent并行搜索文献和序列数据库、运行代码与比对工具、生成中间报告，再由汇聚阶段去重、排序和形成少量候选。21小时内2.1亿Token意味着持续的大规模推理，但数据访问、工具执行和结果归并同样处在关键路径。</p>
+<p>候选漏斗非常陡峭：超过20万条序列压缩到约3500个系统，再到20份报告，最后形成一条主要发现线索。大量分支会被丢弃，但其来源、分析过程和淘汰理由仍需保存，以避免重复搜索并支持科学复核。</p>
+<p>这改变了缓存与存储局部性。公共数据库、论文和基础分析可被大量Agent共享，适合Prefix、检索结果和只读数据缓存；每个假设的证据链、代码输出与状态则必须隔离并版本化。最终汇聚不是普通All-Reduce，而是带语义、可信度和来源的非结构化结果合并。</p>
+
+<h3>④ 触碰了哪个技术边界</h3>
+<p><strong>开始失效的假设是：Agent任务可以按独立请求扩容，模型Token生成是主要瓶颈，最终答案由一次推理直接产生。</strong></p>
+<p>第一道边界是调度与数据移动。近千个Agent同时访问数据库、拉取文献、运行脚本并写入证据，会把压力推向CPU、网络出口、对象存储、元数据和外部服务限流。若每个分支反复装载相同资料，Prefill与I/O浪费可能超过推理收益。</p>
+<p>第二道边界是汇聚质量。扇出规模增加可以提高覆盖，但重复假设、相关性错误和共同模型偏差也会同步扩大。公开结果没有给出单Agent基线、不同并行度的边际发现率、总计算成本或失败重试分布，因此不能证明950个Agent是最优规模。</p>
+<p>第三道边界是物理验证吞吐。湿实验仍由人类完成，且候选功能尚待研究；如果计算输出速度远高于实验验证能力，新的瓶颈会从GPU转移到实验队列、样品、仪器和专家审查。</p>
+
+<h3>⑤ 可能催生什么硬件架构、新的技术需要</h3>
+<ul>
+<li><strong>已出现：</strong>Anthropic使用自有Harness协调并行Claude会话，并将公开数据库搜索、假设生成、报告汇聚和人工湿实验连接成连续流程。</li>
+<li><strong>高概率方向：</strong>基础设施拆分为推理GPU池、CPU/内存密集的生物信息工具池、隔离代码沙箱、共享只读数据缓存和不可变证据存储；调度器按信息增益与实验预算扩展分支，而不是固定启动同样数量的Agent。</li>
+<li><strong>高概率方向：</strong>共享Prefix和数据库结果在HBM、主存及NVMe间分层，Agent私有状态携带数据版本、工具版本、模型版本和来源标签；DPU或智能NIC承担租户隔离、受控出口与数据路径审计。</li>
+<li><strong>高概率方向：</strong>汇聚节点使用去重、图检索和交叉验证缩短候选列表，并把湿实验可用容量作为上游推理的背压信号，避免生成无法验证的假设积压。</li>
+<li><strong>尚待验证：</strong>不同Agent数量、模型组合和工具深度下的发现收益曲线，以及该流程能否在其他生物领域独立复现。</li>
+</ul>
+
+<blockquote><p><strong>架构师结论：</strong>科学Agent的生产单位不是Token或报告，而是经实验验证的新知识。系统应围绕“从数据库到可验证候选”的完整漏斗配置算力，把便宜的广泛搜索与昂贵的深度推理、CPU工具和湿实验分层，防止任何一层的峰值吞吐制造下一层积压。</p></blockquote>
+
+<p><strong>建议跟踪：</strong></p>
+<ul>
+<li>不同并行Agent数下的候选召回、重复率、边际信息增益、Token和工具成本；</li>
+<li>数据库读取、Prefix缓存、CPU工具、GPU推理和汇聚各阶段的P50/P99及等待占比；</li>
+<li>每20份重点报告产生的实验命中率、湿实验排队时间，以及全链路从假设到验证的成本与可复现性。</li>
+</ul>
+
+<p><strong>来源：</strong><a href="https://www.anthropic.com/news/claude-discovers-novel-enzyme-system">Anthropic：Claude discovers a novel enzyme system（2026年9月23日）</a>｜<a href="https://www.anthropic.com/research">Anthropic Research</a></p>
+
+<hr>
+
+<h2>02｜Agent Sandbox进入云原生标准层：执行环境从无状态Pod变成可预热、可暂停的持久隔离单元</h2>
+
+<h3>① 新变化是什么</h3>
+<p>2026年9月23日云栖大会的“构建Agent Infra”论坛将Agent Sandbox作为重点发布议题。阿里云公开文档已提供在ACS集群创建Agent Sandbox的流程，包括控制器、SDK、Warm Pool以及生产域名和证书配置。</p>
+<p>同一时期，Kubernetes SIG Apps的开源<code>agent-sandbox</code>项目已把这类工作负载抽象为标准CRD：Sandbox拥有稳定网络身份和持久存储，可创建、暂停、恢复及按策略删除；SandboxTemplate定义环境，SandboxClaim申领实例，SandboxWarmPool预热容量。底层隔离可交给gVisor或Kata Containers等RuntimeClass。</p>
+<p>Google Cloud在9月22日更新的GKE文档中提供托管Agent Sandbox附加组件，称Warm Pool可实现亚秒级分配，并支持稳定端点、默认拒绝网络策略及基于Pod快照的暂停/恢复。</p>
+<p><strong>成熟度需要区分：</strong>Kubernetes开源控制器和阿里云ACS操作文档已经公开，GKE也有可用指南；但快照、版本和区域支持存在预览或限制。公开资料没有给出阿里云生产客户规模、冷启动与Warm启动P99、隔离开销、逃逸事件或SLA。</p>
+
+<h3>② 为什么发生</h3>
+<p>编码、浏览器和数据分析Agent需要运行模型生成的代码、安装依赖、访问受控网络，并在工具等待期间保留文件系统和进程状态。普通无状态Pod结束后丢失上下文；长期专用虚拟机隔离强，却会带来较高启动时间与空闲成本。</p>
+<p>Warm Pool试图用预留的空闲实例换取低延迟申领，暂停/恢复则在任务等待外部工具或人类审批时释放部分资源。稳定身份和持久卷让Agent跨多轮工具调用继续工作，而不是每次重新构建环境。</p>
+<p><strong>业务根源是Agent从“调用模型”升级为“执行工作”。</strong>企业需要同时缩短任务启动时间、隔离不可信代码、保留长任务状态，并控制大量闲置会话的成本；这四项目标无法由传统无状态推理端点单独满足。</p>
+
+<h3>③ 改变了什么计算或数据特征</h3>
+<p>Agent基础设施形成两类不同资源：模型推理池产生规划与代码，Sandbox池在CPU、内存、浏览器或命令行工具上执行。后者常呈现短时计算突发、长时间等待和大量小状态；会话数量可能远高于同时活跃的GPU请求数。</p>
+<p>Warm Pool引入显式容量交换：预热越多，启动P99越低，但空闲CPU、内存和IP地址成本越高。暂停与快照减少长时间占用，却会制造存储写入、镜像恢复和元数据突发；数千个Agent同时恢复时，瓶颈可能是本地NVMe、共享存储或网络，而不是推理GPU。</p>
+<p>稳定网络身份还改变安全模型。每个Sandbox需要短期凭据、可撤销出口、租户标签和全链路日志。共享镜像与依赖缓存可以降低启动开销，但私有文件、工具令牌和执行结果不能跨会话泄露。</p>
+
+<h3>④ 触碰了哪个技术边界</h3>
+<p><strong>开始失效的假设是：Agent执行环境可以用普通Deployment或一次性Pod管理，容器命名空间足以隔离模型生成的任意代码。</strong></p>
+<p>第一道边界是生命周期语义。Agent通常是单实例、有身份且需恢复的工作负载；ReplicaSet自动复制或替换可能导致工具重复执行和外部副作用。SandboxClaim与稳定端点正是为“唯一会话”建立明确所有权。</p>
+<p>第二道边界是安全。Google的安装策略要求gVisor、非root、禁止特权模式、hostNetwork/hostPID/hostIPC、hostPath、额外Capabilities和服务账户令牌，并默认限制网络。说明仅靠普通容器边界不足以承载不可信代码；但gVisor或Kata仍不能替代应用级权限、秘密管理和工具幂等性。</p>
+<p>第三道边界是资源效率。Warm Pool会消耗闲置内存，快照会增加存储放大，内核级或虚拟机级隔离也有性能代价。云厂商尚未公开相同安全级别下的启动、运行、快照和恢复成本，因此“亚秒级”不能直接外推到复杂镜像或高并发生产任务。</p>
+
+<h3>⑤ 可能催生什么硬件架构、新的技术需要</h3>
+<ul>
+<li><strong>已出现：</strong>Kubernetes的Sandbox、Template、Claim和WarmPool资源模型，GKE托管附加组件，以及阿里云ACS的创建、控制器与Warm Pool路径已经公开。</li>
+<li><strong>高概率方向：</strong>GPU推理节点与Sandbox执行节点分池；后者采用高核数CPU、大容量内存、本地NVMe和高速镜像缓存，按信任级别选择gVisor、Kata或更强隔离。</li>
+<li><strong>高概率方向：</strong>会话状态分为内存热状态、可恢复快照和长期审计对象；调度器依据镜像、数据与快照位置恢复任务，避免把所有状态长期留在昂贵内存。</li>
+<li><strong>高概率方向：</strong>DPU、智能NIC或独立安全网关承担网络微分段、出口白名单、短期凭据和流量审计，使Sandbox被攻破时仍难以横向移动到推理或存储控制面。</li>
+<li><strong>尚待验证：</strong>Warm Pool在真实租户混合负载下的最佳规模、快照恢复一致性、隔离运行时对浏览器与编译任务的开销，以及单控制器或存储故障时的影响范围。</li>
+</ul>
+
+<blockquote><p><strong>架构师结论：</strong>Agent Sandbox的价值不是再造一种容器，而是把“有身份、能等待、可恢复、运行不可信代码”的Agent执行语义变成基础设施对象。超节点不应把所有Agent状态和工具计算塞进GPU域；推理、执行、快照与网络隔离分层后，才能同时控制启动P99、安全风险和每个完成任务成本。</p></blockquote>
+
+<p><strong>建议跟踪：</strong></p>
+<ul>
+<li>冷启动、Warm Pool分配、暂停和恢复的P50/P99，以及镜像大小与并发恢复对尾时延的影响；</li>
+<li>预热实例利用率、每完成任务的CPU/内存/NVMe成本、快照写放大和状态丢失率；</li>
+<li>隔离运行时开销、默认拒绝策略覆盖率、凭据撤销时间、逃逸或横向移动测试，以及控制器故障后的恢复范围。</li>
+</ul>
+
+<p><strong>来源：</strong><a href="https://github.com/kubernetes-sigs/agent-sandbox">Kubernetes SIG Apps：agent-sandbox开源项目</a>｜<a href="https://docs.cloud.google.com/kubernetes-engine/docs/concepts/machine-learning/agent-sandbox">Google Cloud：GKE Agent Sandbox架构说明（更新于2026年9月22日）</a>｜<a href="https://docs.cloud.google.com/kubernetes-engine/docs/how-to/how-install-agent-sandbox">Google Cloud：安装与安全策略</a>｜<a href="https://www.alibabacloud.com/help/en/cs/user-guide/create-an-agent-sandbox">阿里云：在ACS集群创建Agent Sandbox（更新于2026年9月15日）</a>｜<a href="https://yunqi.aliyun.com/2026/agenda">2026云栖大会官方议程（9月23日Agent Infra论坛）</a></p>
+
+<h2>今日架构主线</h2>
+<p><strong>Agent基础设施正在形成“推理计划—隔离执行—状态保存—结果验证”的完整流水线。</strong></p>
+<ul>
+<li>科学发现工作流把单个问题扇出为数百个并行假设，再把结果压缩到人类可验证的少量候选；</li>
+<li>Agent Sandbox为每个分支提供稳定身份、持久状态和不可信代码隔离，并用Warm Pool与快照控制启动和空闲成本；</li>
+<li>推理GPU不应承担CPU工具、浏览器等待和长期状态，数据中心也不能只按GPU并发估算Agent容量；</li>
+<li>真正的控制面必须理解任务图、证据来源、Sandbox状态、工具权限和下游人类或物理资源。</li>
+</ul>
+<p>两条信号共同指向新的系统指标：每个被验证成果需要多少推理Token、CPU工具时间、快照字节、人类复核和墙钟时间。<strong>只有分支带来的信息增益大于扇出、状态和隔离成本，多Agent与持久Sandbox才会形成净收益。</strong></p>
+
+<h2>未发现可信新增</h2>
+<p>本期优先核查9月24日云栖大会闭幕后公开资料及全球近24小时信息；以下“未发现”仅指截至本期可访问、可公开验证的来源。</p>
+<ul>
+<li><strong>云栖大会AL144/AL64专项：</strong>仍未找到阿里云正式产品文档、演讲PPT或可回看原视频披露AL144、AL64分布式NPO、ALink/SNPO、GPU—交换拓扑、HBD规模、单卡Scale-Up带宽、NPO速率、光源位置、正交互连、液冷或供电的新参数。因此不能依据展台标语或未署名转述与AL128做参数级比较。</li>
+<li><strong>SemiAnalysis：</strong>未发现9月24日新的独立高价值公开文章；9月21日推理数据移动文章与9月18日Engram实验此前已跟踪。</li>
+<li><strong>超节点与NPO/CPO/OCS：</strong>未核实到近24小时新的整机量产、互操作验收、客户部署、误码率、每比特功耗或现场可靠性数据。</li>
+<li><strong>240kW以上机柜液冷/供电：</strong>未核实到新的供回水温、流量、压降、母排保护、结构承载或FRU维护参数。</li>
+</ul>
+<p><strong>必查来源：</strong><a href="https://yunqi.aliyun.com/2026/agenda">2026云栖大会官方议程</a>｜<a href="https://yunqi.aliyun.com/2026/live">2026云栖大会官方直播</a>｜<a href="https://newsletter.semianalysis.com/archive">SemiAnalysis公开归档</a></p>
+</main></body>
+</html>
