@@ -5,7 +5,25 @@
     <link>https://github.com/YanLiang518/ai-supernode-rss</link>
     <description>每周长期可复用知识的公开、脱敏摘要；涉及非公开信息的内容不会发布。</description>
     <language>zh-cn</language>
+    <pubDate>Fri, 25 Sep 2026 17:04:00 +0800</pubDate>
+    <lastBuildDate>Fri, 25 Sep 2026 17:04:00 +0800</lastBuildDate>
     <ttl>15</ttl>
     <atom:link href="https://raw.githubusercontent.com/YanLiang518/ai-supernode-rss/main/ai-memory-feed.xml" rel="self" type="application/rss+xml"/>
+
+    <item>
+      <title>AI Memory 周报｜2026-09-25</title>
+      <link>https://raw.githubusercontent.com/YanLiang518/ai-supernode-rss/main/ai-memory-feed.xml</link>
+      <guid isPermaLink="false">ai-memory-2026-09-25</guid>
+      <pubDate>Fri, 25 Sep 2026 17:04:00 +0800</pubDate>
+      <description><![CDATA[
+        <h2>本周长期认知</h2>
+        <ul>
+          <li><strong>Agent基础设施要从“推理服务”扩展为“推理—执行—状态—验证”分层：</strong> 对长任务、多Agent和工具型工作负载，应分离GPU推理、CPU/工具执行、Sandbox、状态存储与验证资源，并优化端到端任务成本。公开参考：<a href="https://www.anthropic.com/news/claude-discovers-novel-enzyme-system">Anthropic</a>、<a href="https://github.com/kubernetes-sigs/agent-sandbox">Kubernetes agent-sandbox</a>。</li>
+          <li><strong>NPO/CPO成本模型应从$/Gbps扩展到系统级TCO：</strong> 需要同时计入器件数量、墙上功耗、光源FRU与冗余、连接数量、故障域、MTTR和备件成本；公开数据不足时不输出伪精确$/GPU结论。公开参考：<a href="https://www.huawei.com/en/news/2026/9/hc-ascend960-supernode">华为Atlas 960E</a>。</li>
+          <li><strong>光源位置与fiber attach应成为光互联架构的一等变量：</strong> 内置/外置光源以及光纤连接是否可现场拆卸，会直接影响故障域、FRU边界、污染控制、冗余和MTTR。公开参考：<a href="https://www.coherent.com/news/press-releases/showcases-optical-innovations-scale-ai-infrastructure-ecoc-2026">Coherent ECOC 2026</a>。</li>
+        </ul>
+        <p>私人Notion已更新。</p>
+      ]]></description>
+    </item>
   </channel>
 </rss>
