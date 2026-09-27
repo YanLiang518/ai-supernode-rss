@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>AI算力架构前沿简报｜2026年9月28日</title>
+<style>
+:root{color-scheme:light dark;--bg:#f6f8fb;--paper:#fff;--text:#172033;--muted:#5d6678;--line:#dce2ea;--link:#0b63ce;--box:#eef5ff;--quote:#f3f6fa}
+@media(prefers-color-scheme:dark){:root{--bg:#0d1117;--paper:#151b23;--text:#e6edf3;--muted:#9ba7b4;--line:#30363d;--link:#79b8ff;--box:#132238;--quote:#1b2430}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;line-height:1.78}
+main{max-width:920px;margin:0 auto;padding:48px 26px 72px;background:var(--paper);min-height:100vh}h1{font-size:2rem;line-height:1.25;margin:0 0 32px}h2{font-size:1.45rem;line-height:1.4;margin:40px 0 16px;padding-top:8px;border-top:1px solid var(--line)}h2:first-of-type{border-top:0;margin-top:0}h3{font-size:1.08rem;margin:28px 0 10px}p{margin:10px 0}ul{padding-left:1.4rem}li{margin:.55rem 0}a{color:var(--link);text-decoration:none}a:hover{text-decoration:underline}strong{font-weight:700}blockquote{margin:24px 0;padding:16px 18px;border-left:4px solid var(--link);background:var(--quote)}blockquote p{margin:0}hr{border:0;border-top:1px solid var(--line);margin:34px 0}.meta{color:var(--muted);margin-top:-20px;margin-bottom:30px}.summary{padding:16px 18px;background:var(--box);border:1px solid var(--line);border-radius:10px}
+@media(max-width:640px){main{padding:30px 18px 52px}h1{font-size:1.65rem}h2{font-size:1.28rem}}
+</style>
+</head>
+<body><main>
+<h1>《AI算力架构前沿简报｜2026年9月28日》</h1>
+<p class="meta">聚焦业务源头、模型与软件变化如何重塑计算、互联、存储、供电与冷却。</p>
+<h2>今日判断</h2>
+<p><strong>今天的两条信号都在改变“推理容量必须集中在一个数据中心、Scale-up必须困在一只铜互联机柜内”的假设。</strong> 云栖大会会后披露补全了磐久AL64分布式SNPO的工程轮廓：64卡正交超节点以3.2T NPX模块、铜光共Socket和两种光源路线，把Scale-up光路下沉到服务器内部；Google则用KV占用率而非普通网络负载，把三个跨区域GKE集群组织成一个推理容量池。</p>
+<p>前者扩大的是低时延内存语义互联的物理边界，后者扩大的是请求可被调度的地理边界。<strong>下一代推理系统需要同时管理两级拓扑：超节点内尽量降低GPU—交换机数据移动，超节点间则依据KV容量、区域时延、合规与故障域选择请求落点。</strong></p>
+
+<h2>信号总览</h2>
+<ul>
+<li><strong>磐久AL64把SNPO嵌入64卡正交超节点</strong>｜超节点/Scale-up光互联信号｜整机与模块已在云栖大会展示，处于规模部署验证；商用交付和可靠性数据待验证｜影响ALink拓扑、3.2T NPX、外置/内置光源、铜光兼容、板内光纤与FRU</li>
+<li><strong>Google以KV占用率跨区域调度GPU/TPU推理</strong>｜推理运行时/多集群调度信号｜GKE能力与17,000节点厂商基准已发布｜影响容量碎片、Prefix/KV局部性、跨区域P99、数据驻留及灾备</li>
+</ul>
+<hr>
+
+<h2>01｜磐久AL64用分布式SNPO突破铜互联机柜：Scale-up光路进入服务器内部与可维护性边界</h2>
+
+<h3>① 新变化是什么</h3>
+<p>2026年9月22日云栖大会技术主论坛发布磐久AL64分布式SNPO光互连超节点；9月24日至26日，媒体、硅光芯片及连接器生态资料进一步披露了此前缺失的工程参数。</p>
+<p>公开报道给出的整机轮廓包括：64卡正交架构、三盲插和免下架维护，配备51.2T SNPO光互连交换与64个800G光口；UAM计算模组最高支持3500W，CPU机头与xPU机尾解耦。厂商称Scale-up可从64卡无收敛扩展到1024卡，但没有公开1024卡完整拓扑、交换级数、有效带宽和客户验收。</p>
+<p>SNPO的基础单元为NPX模块，报道给出的尺寸为17.78mm×43.35mm×7mm，电接口为32×106.25Gbps，起步带宽约3.2T，光侧使用4个UTU16或MOFC16高密接口。模块提供两条路线：</p>
+<ul>
+<li>单模硅光＋ELSFP外置光源，报道功耗上限26W；</li>
+<li>多模VCSEL内置光源，报道功耗上限10W。</li>
+</ul>
+<p>NPX强调铜光共用同一Socket，并为224G、448G SerDes演进预留接口。曦智科技披露其3.2T/6.4T SNPO硅光芯片集收发于一体，包含16路53/106Gbaud调制器和16路探测器通道。</p>
+<p><strong>成熟度必须严格区分：</strong>整机、光引擎和板内光纤形态已公开展示；“开始规模部署验证”和“商用在即”来自大会报道及产业链口径，不等于已经完成规模客户交付。阿里云尚未发布完整数据手册、可靠性报告或正式可购配置，因此51.2T、功耗及1024卡扩展均应视为待官方文档和独立验收确认的公开披露。</p>
+
+<h3>② 为什么发生</h3>
+<p>大模型推理尤其是MoE、PD分离与长上下文，会让GPU间持续交换专家Token、激活和KV状态。AL128上一代路线已采用单级ALink交换与正交铜互联，在公开架构中为每GPU预留最高128条高速SerDes及14—28Tbit/s潜在互联带宽。铜的优势是成本和可维护性，但112G向224G、448G演进后，PCB和线缆可达距离、插损、Retimer功耗与布线空间迅速收紧。</p>
+<p>此前阿里云对AL128的判断是：当Scale-up域达到256卡、SerDes达到448G且光互联成本接近铜缆时，才会进入光互联时点。AL64说明工程路线开始提前分叉：不是等待整柜全部转光，而是用铜光共Socket让短距继续使用铜、长距和高损耗路径选择光。</p>
+<p><strong>业务根源是避免互联把昂贵算力切割成多个低利用率小域。</strong> 当单柜功率、结构或铜链路无法继续扩大时，若仍要维持内存语义和百纳秒级通信，就必须把光电转换靠近交换ASIC，并把光纤引入板内、机箱内和柜间。</p>
+
+<h3>③ 改变了什么计算或数据特征</h3>
+<p>SNPO没有改变模型本身，却改变了通信可放置的位置。原本GPU到交换机的高速电信号经过正交连接或CableTray；采用分布式SNPO后，较长路径可在ASIC附近转换为光，穿过机箱或机柜后再恢复为电。这样可减少高速PCB走线和部分Retimer，但会增加光纤、连接器、光源和链路遥测。</p>
+<p>对于MoE，收益取决于专家路由流量能否在64卡及更大域中保持低尾时延；对于PD分离，取决于KV或激活交接是否能在光链路上稳定传输；对于训练，取决于集合通信在故障链路、重传和拓扑降级时的有效带宽。51.2T整机交换数字本身不能说明每卡带宽、全双工口径或无收敛条件。</p>
+<p>双光源路线还形成两种不同运维模型。ELSFP将激光器从热环境中移出，便于独立更换和共享光源，但增加外部供光连接、分光与插损预算；VCSEL内置光源功耗更低、链路更紧凑，却把光源寿命和光引擎更换绑定在同一FRU中。</p>
+
+<h3>④ 触碰了哪个技术边界</h3>
+<p><strong>开始失效的假设是：Scale-up互联可以依靠正交铜连接和Retimer随SerDes速率与HBD规模持续线性扩展。</strong></p>
+<p>第一道边界是信号完整性与功耗。32×106.25Gbps电接口约为3.4Tbps原始线速，达到模块标称3.2T需要明确编码与有效载荷口径；向224G/448G演进后，同一Socket的损耗、串扰、参考时钟和FEC延时仍需实测。铜光兼容解决机械接口统一，不会自动保证不同介质具有相同链路预算。</p>
+<p>第二道边界是光学可靠性。板内采用大量UTU16/MOFC16、FAU和光纤阵列后，灰尘、弯曲半径、端面污染、振动、温度循环与液冷维护都会影响链路。公开资料没有给出插损分配、Pre-FEC BER、光源寿命、连接器插拔次数、现场清洁流程或单模块故障对多少GPU的影响。</p>
+<p>第三道边界是维护粒度。三盲插和免下架维护属于系统目标，但NPO靠近ASIC后，光引擎、光源、连接器或中板故障究竟更换NPX、板卡、Tray还是整机，决定真实MTTR。特别是内置VCSEL与外置ELSFP两条路线，不能共用同一可靠性和备件模型。</p>
+
+<h3>⑤ 可能催生什么硬件架构、新的技术需要</h3>
+<ul>
+<li><strong>已出现：</strong>AL64正交超节点、51.2T SNPO交换、3.2T NPX、铜光共Socket、单模外置光源和多模内置光源双路线已形成公开样机与生态方案。</li>
+<li><strong>高概率方向：</strong>64卡成为基础Scale-up Building Block；柜内短距保留铜，跨Tray或柜间高损耗路径使用SNPO，运行时按链路介质、交换级数与故障域放置模型分片。</li>
+<li><strong>高概率方向：</strong>光链路增加每通道光功率、温度、Pre-FEC BER和漂移遥测；RMC将其与GPU训练错误、重传和集合通信性能关联。</li>
+<li><strong>高概率方向：</strong>外置光源形成独立ELSFP SRU，光引擎作为板级FRU；内置VCSEL模块则需要更高的寿命筛选、冗余和可旁路能力。</li>
+<li><strong>高概率方向：</strong>连接器与光纤组件需要防尘盖、插拔工具、弯曲半径约束、液路隔离及可视化布线编码，生产测试从电眼图扩展到端到端光功率与BER。</li>
+<li><strong>尚待验证：</strong>AL64相对AL128究竟是新的64卡光互联域、分布式扩展单元还是独立产品线；1024卡拓扑、单卡有效带宽、端到端时延、光引擎良率和规模客户交付仍缺官方数据。</li>
+</ul>
+
+<blockquote><p><strong>架构师结论：</strong>AL64的关键不是卡数从128变成64，而是把光互联做成可分布复制的64卡Scale-up Block。它与AL128并非简单代际替代：AL128证明正交单级交换和铜互联的密度，AL64试图让同一ALink语义跨越铜的距离边界。采购前应先确认HBD、每卡带宽、光源FRU和单链路故障影响面，而不是只比较整机51.2T。</p></blockquote>
+
+<p><strong>建议跟踪：</strong></p>
+<ul>
+<li>阿里云正式数据手册中的GPU—交换拓扑、HBD、交换级数、每卡单向/双向有效带宽及51.2T口径；</li>
+<li>NPX的插损、每通道光功率、Pre-FEC BER、FEC、时延和3.2T/6.4T互操作；</li>
+<li>ELSFP与VCSEL两路线的FIT/MTBF、光源温度、功耗、FRU/SRU边界、清洁流程和单模块更换MTTR。</li>
+</ul>
+
+<p><strong>来源：</strong><a href="https://www.nbd.com.cn/articles/2026-09-24/4591171.html">每日经济新闻：曦智SNPO硅光芯片及AL64（2026年9月24日）</a>｜<a href="https://www.doit.com.cn/computing/851706412662853.html">DOIT：AL64与NPX公开参数（2026年9月22日）</a>｜<a href="https://c-fol.net/m/news/view.php?id=20260926114814">光纤在线：UTU连接器及AL64展台实物（2026年9月26日）</a>｜<a href="https://ue.aliyun.com/news/20251021">阿里云：AL128互联架构与光互联判断</a></p>
+
+<hr>
+
+<h2>02｜Google用KV占用率调度跨区域推理：容量池从单集群扩展为“模型状态感知”的全球资源</h2>
+
+<h3>① 新变化是什么</h3>
+<p>2026年9月21日，Google Cloud公布多集群GKE Inference Gateway的生产规模测试。系统把美国东部、美国西部和欧洲三个GKE集群放在一个全球虚拟IP之后，由多集群Gateway决定区域，再由区域内的LLM-d路由器处理内存感知调度。</p>
+<p>测试覆盖约17,000个计算节点，使用SGLang服务一个MoE基础模型。Google报告，三个集群扩展获得近线性吞吐增长，在高并发下保持99.9%请求成功率；Gateway吞吐为直接本地调用的99.5%，即路由开销低于1%。</p>
+<p>真正新增之处是路由信号：Endpoint Picker Proxy读取推理引擎暴露的KV Cache Token占用率，把它提交给负载均衡器；当区域KV容量趋紧时，请求被溢出到其他健康区域。架构兼容GPU、TPU、不同模型与运行时。</p>
+<p><strong>成熟度为正式能力及厂商基准。</strong> Google已发布配置文档和Gateway API、InferencePool、InferenceObjective等资源模型；但99.5%吞吐来自指定MoE、SGLang与网络环境，没有公开跨区域TTFT、传输费用、能耗、Prompt长度分布或第三方复现。</p>
+
+<h3>② 为什么发生</h3>
+<p>长上下文与Agent推理使单请求占用的KV容量快速增长，而GPU/TPU供应又常分散在不同集群和区域。传统网络负载均衡只看到连接数或CPU利用率，可能把请求送往“网络健康但HBM已被KV占满”的集群，造成排队、KV换出或拒绝服务；另一地区的加速器却可能空闲。</p>
+<p>云厂商希望把零散容量汇聚为统一商品，提高昂贵加速器的利用率和容灾能力。对客户而言，单一入口可以减少逐区域预留和手工流量切换；但只有额外网络时延与数据移动小于减少排队的收益，跨区域路由才有经济价值。</p>
+<p><strong>业务根源是加速器稀缺与KV容量碎片化。</strong> 当请求上下文从数万增长到数十万Token，最优落点不再由最近区域单独决定，而是由网络RTT、缓存命中、剩余HBM、模型副本和SLA共同决定。</p>
+
+<h3>③ 改变了什么计算或数据特征</h3>
+<p>多区域推理把调度拆成两级：全球Gateway选择集群，区域内路由器选择模型副本或Rank-0入口。对于张量并行多节点模型，Gateway还必须尊重LeaderWorkerSet拓扑，只向主服务Pod发送请求，而不能把一个模型并行组当成普通无状态副本。</p>
+<p>KV占用率成为显式调度信号后，容量规划从“GPU数量×Token/s”变成模型权重、活动KV、Prefix缓存和通信缓冲的联合预算。短请求可以填补碎片，长上下文请求则需提前保留连续容量；错误估计会在Decode中途触发换出或失败。</p>
+<p>跨区域溢出还改变数据路径。冷请求需要在远端重新Prefill；若Prefix或KV没有跨区域复制，网络只移动Prompt，代价是重复计算。若复制缓存，则会增加广域带宽、一致性、隐私与版本失效成本。Google公开测试说明请求路由开销很低，但没有证明跨区域缓存迁移同样低成本。</p>
+
+<h3>④ 触碰了哪个技术边界</h3>
+<p><strong>开始失效的假设是：推理后端像普通Web服务一样无状态，按请求数或网络连接做跨区域负载均衡即可。</strong></p>
+<p>第一道边界是状态局部性。模型权重和Prefix/KV在哪个区域，决定TTFT与重复Prefill成本。把请求导向空闲GPU可能降低排队，却因缓存未命中增加更多计算；系统必须比较两者，而不能只看KV剩余量。</p>
+<p>第二道边界是P99与数据驻留。美国东部发出的请求若溢出到欧洲，光纤RTT会直接进入TTFT；受监管数据也可能不允许跨区域。单一全球入口必须把延迟上限、区域许可和租户策略放入InferenceObjective。</p>
+<p>第三道边界是控制面规模。Google文档指出，多端口InferencePool会受到Backend Service的NEG上限约束；例如三可用区、八端口的Pool每集群消耗24个NEG，在50个NEG上限下只能聚合两个此类集群。说明“全球池”仍受云网络控制面资源限制，并非无限扩展。</p>
+
+<h3>⑤ 可能催生什么硬件架构、新的技术需要</h3>
+<ul>
+<li><strong>已出现：</strong>多集群GKE Inference Gateway、LLM-d两级路由、KV Token占用率遥测和跨区域单一入口已经形成可配置产品路径。</li>
+<li><strong>高概率方向：</strong>每个区域部署完整模型权重和热Prefix，全球层只路由新请求；长生命周期Agent尽量粘滞在原区域，故障时再从持久状态恢复。</li>
+<li><strong>高概率方向：</strong>调度指标扩展到KV字节、Prefix命中率、TTFT预测、Decode速率、网络RTT、区域电价与数据驻留，而不只使用GPU利用率。</li>
+<li><strong>高概率方向：</strong>HBM—CPU内存—NVMe的区域内KV分层先于广域KV复制；DPU或智能NIC承担缓存搬运、租户隔离和加密。</li>
+<li><strong>尚待验证：</strong>在1M上下文、跨洲用户、不同模型副本和真实缓存命中率下，近线性吞吐是否仍成立，以及灾难切换时重Prefill对P99与成本的影响。</li>
+</ul>
+
+<blockquote><p><strong>架构师结论：</strong>Google的变化不是把负载均衡器放到全球，而是让网络控制面开始理解模型内存状态。它把分散GPU/TPU变成逻辑容量池，却没有消除物理距离：KV局部性、区域RTT和数据驻留仍决定请求能否迁移。真正的优化目标应是每个完成任务的排队、重Prefill与广域字节总和。</p></blockquote>
+
+<p><strong>建议跟踪：</strong></p>
+<ul>
+<li>按区域与上下文长度拆分的TTFT、P99、KV命中率、重Prefill Token和跨区域流量费用；</li>
+<li>容量紧张、区域故障和模型升级时的会话粘滞、恢复时间及请求失败率；</li>
+<li>Gateway、NEG、InferencePool和模型并行组的实际控制面上限，以及GPU与TPU混合池的调度公平性。</li>
+</ul>
+
+<p><strong>来源：</strong><a href="https://cloud.google.com/blog/products/containers-kubernetes/gpu-and-tpu-utilization-with-multi-cluster-gke-inference-gateway">Google Cloud：多集群Inference Gateway基准（2026年9月21日）</a>｜<a href="https://docs.cloud.google.com/kubernetes-engine/docs/concepts/about-multi-cluster-inference-gateway">Google Cloud：多集群Inference Gateway架构文档</a>｜<a href="https://docs.cloud.google.com/kubernetes-engine/docs/how-to/setup-multicluster-inference-gateway">Google Cloud：配置、拓扑及NEG限制</a></p>
+
+<h2>今日架构主线</h2>
+<p><strong>推理系统正在形成“局部强耦合、全局状态感知”的两级扩展模式。</strong></p>
+<ul>
+<li>AL64用SNPO扩大单个内存语义Scale-up Block的物理覆盖范围，目标是减少GPU之间的通信等待；</li>
+<li>GKE Gateway不尝试把跨洲集群变成一个同步域，而是依据KV状态把完整请求分配给不同区域；</li>
+<li>前者需要极低时延、BER和光学可维护性，后者需要缓存局部性、区域策略与P99控制；</li>
+<li>两级架构的共同控制对象是“状态在哪里”：模型分片、专家、Prefix、KV以及故障后的恢复副本。</li>
+</ul>
+<p>未来超节点与云调度不能各自优化。超节点需要向上暴露真实带宽、故障域和可用内存；全球路由器需要据此判断一个请求应留在本地、进入另一个超节点，还是跨区域重建状态。<strong>只有局部光互联节省的数据移动与全局路由减少的排队同时兑现，扩展后的算力才会转化为任务吞吐。</strong></p>
+
+<h2>未发现可信新增</h2>
+<p>本期优先扫描9月27日，并回溯近7日补充会后技术资料；以下“未发现”仅指本次可访问和可公开验证的来源。</p>
+<ul>
+<li><strong>SemiAnalysis：</strong>未发现9月27日新的独立高价值公开文章；此前Engram与推理数据移动文章已分析。</li>
+<li><strong>AL144：</strong>会后报道出现CPU与GPU同Compute Node及2028路线描述，但没有阿里云正式数据手册、GPU—交换拓扑、HBD、单卡带宽、功耗或可靠性数据，本期不把展台路线图写成已交付产品。</li>
+<li><strong>CPO/OCS：</strong>未核实到近24小时新的量产互操作、客户规模部署、误码率、每比特功耗或现场MTTR数据。</li>
+<li><strong>240kW以上机柜液冷/供电：</strong>AL64公开报道给出UAM最高3500W，但未给出单柜持续IT功率、供回水温、流量、压降、母排保护或结构承载，不能据此确认240kW以上整柜工程参数。</li>
+</ul>
+<p><strong>必查来源：</strong><a href="https://newsletter.semianalysis.com/archive">SemiAnalysis公开归档</a>｜<a href="https://yunqi.aliyun.com/2026/live">2026云栖大会官方回放</a></p>
+
+</main></body>
+</html>
