@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>AI算力架构前沿简报｜2026年9月29日</title>
+<style>
+:root{color-scheme:light dark;--bg:#ffffff;--text:#18212f;--muted:#657083;--link:#075bc7;--line:#dfe5ec;--box:#f5f8fc;--quote:#eef5ff}
+@media(prefers-color-scheme:dark){:root{--bg:#101318;--text:#e7ecf3;--muted:#a8b2c1;--link:#8abfff;--line:#303846;--box:#171d26;--quote:#172337}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:16px/1.72 -apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif}main{max-width:900px;margin:0 auto;padding:52px 28px 80px}h1{font-size:2rem;line-height:1.3;margin:0 0 28px}h2{font-size:1.45rem;line-height:1.4;margin:38px 0 18px;border-bottom:1px solid var(--line);padding-bottom:9px}h3{font-size:1.08rem;margin:26px 0 8px}p{margin:10px 0}ul{padding-left:1.3rem}li{margin:7px 0}a{color:var(--link);text-decoration:none}a:hover{text-decoration:underline}strong{font-weight:700}blockquote{margin:24px 0;padding:16px 18px;border-left:4px solid var(--link);background:var(--quote)}blockquote p{margin:0}hr{border:0;border-top:1px solid var(--line);margin:34px 0}.meta{color:var(--muted);margin-top:-20px;margin-bottom:30px}
+@media(max-width:640px){main{padding:30px 18px 52px}h1{font-size:1.65rem}h2{font-size:1.28rem}}
+</style>
+</head>
+<body><main>
+<h1>《AI算力架构前沿简报｜2026年9月29日》</h1>
+<p class="meta">聚焦业务源头、模型与软件变化如何重塑计算、互联、存储、供电与冷却。</p>
+<h2>今日判断</h2>
+<p><strong>今天的两条信号共同说明，长程AI的核心约束正在从“每步计算多少”转向“完整状态放在哪里、如何被安全而及时地取回”。</strong> SemiAnalysis对GLM-5.3与HiSparse的分析表明，Top-k稀疏注意力可以减少核心注意力阶段读取的KV与带宽，却不会自动消除完整上下文的容量需求；Google与Meta则把个人AI从会话结束即清空的机密推理，推进到跨设备、跨会话的加密持久记忆。</p>
+<p>前者要求HBM、主存和互联共同管理可选择的KV，后者要求TEE、密钥、加密存储与查询引擎共同管理可解密的个人状态。<strong>下一代推理节点的竞争指标将不只是Token/s，而是状态驻留字节、跨层取回P99、解密与认证开销，以及每个长周期任务的可恢复性。</strong></p>
+
+<h2>信号总览</h2>
+<ul>
+<li><strong>稀疏注意力没有消除完整KV容量墙</strong>｜模型/运行时/内存架构信号｜SemiAnalysis新分析与HiSparse论文、SGLang实现已公开；收益依赖具体上下文、并发与主机链路｜影响HBM容量、CPU DRAM、KV分层、GPU—主机互联与调度</li>
+<li><strong>Google与Meta把持久个人记忆纳入机密云计算</strong>｜业务/隐私/数据架构信号｜技术架构、白皮书与Meta工程实现已公开；具体产品覆盖、容量和SLA仍待披露｜影响CPU/GPU TEE、远程证明、加密存储、向量查询、密钥管理与可观测性</li>
+</ul>
+<hr>
+
+<h2>01｜稀疏注意力减少每步读取却保留完整KV：推理节点从“更大HBM”转向可预测的HBM—主存层级</h2>
+
+<h3>① 新变化是什么</h3>
+<p>2026年9月28日，SemiAnalysis发布对GLM-5.3稀疏注意力、KV卸载与真实服务路径的系统分析。其核心结论是：Top-k稀疏注意力只让核心SDPA阶段读取少量相关Token，<strong>索引器仍通常需要让完整上下文可被选择，因此计算与带宽下降不等于KV总容量同步下降。</strong></p>
+<p>这一判断可由8月7日公开的HiSparse论文交叉验证。HiSparse把每个请求的完整KV历史保存在主机内存，在GPU侧维持固定大小缓存；融合CUDA内核在Decode图中完成命中检测、LRU替换和主机到设备取回，并利用跨层选择共享做逐层预取。论文报告其已合入上游SGLang，在DSA、NSA和Quest三类稀疏注意力、H200/B200/GH200平台上测试，长上下文峰值生成吞吐最高提升4.7倍，同时保持相近单Token时延。该数字是论文特定配置的上限，不是所有负载的保证。</p>
+<p>Z.ai公开仓库显示，GLM-5.3为744B总参数、40B激活参数；其基础模型沿用GLM-5.2。GLM-5.2的IndexShare每四个稀疏注意力层共享一个索引器，在1M上下文下将索引相关每Token FLOPs降至原来的约1/2.9。SemiAnalysis进一步披露，在一组B200服务测试中，并发从8升至16时，Prompt复用中来自GPU内存的份额由90.3%降到54.8%，来自主机内存的份额由6.0%升至40.3%，总体缓存命中仍超过95%。</p>
+<p><strong>成熟度必须区分：</strong>GLM-5.3、IndexShare和SGLang路径已经公开；HiSparse是研究实现并已进入开源运行时。4.7倍吞吐及上述命中率来自论文或SemiAnalysis测试，不代表任意模型、上下文和PCIe/NVLink-C2C配置都能复现。</p>
+
+<h3>② 为什么发生</h3>
+<p>长程Agent会反复携带代码库、工具输出和会话历史。Dense Attention在Decode时读取全部KV，序列增长会同时推高计算和内存流量；稀疏注意力通过只计算Top-k相关Token降低每步成本，使更长上下文在经济上可行。</p>
+<p>但业务需要的是“记得住且能及时找回”，不是只减少一次矩阵运算。若为了保证任意历史Token仍可被索引而把完整KV长期留在HBM，单请求容量依然随上下文线性增长，并发首先撞上容量墙；若直接丢弃冷KV，又会改变模型输出或迫使重新Prefill。</p>
+<p><strong>本简报判断：变化根源是长上下文的价值从连续全量关注转向按需召回。</strong> 这允许计算稀疏化，却把经济问题转移到更便宜内存能否在Top-k选中后按时送达。系统优化目标因此从“避免访问冷状态”变成“允许冷状态离开HBM，但不让缺页拖垮P99”。</p>
+
+<h3>③ 改变了什么计算或数据特征</h3>
+<p>稀疏注意力把一次Decode拆成两个不同访问阶段：</p>
+<ul>
+<li>索引阶段需要在完整历史上计算或复用相关性信息，访问范围大但每Token数据较轻；</li>
+<li>稀疏SDPA只读取Top-k KV，访问量小，但选中位置随请求和层变化，呈随机、时延敏感的细粒度读取。</li>
+</ul>
+<p>当完整KV放在主存、热子集放在HBM时，缓存未命中会触发主机到GPU搬运。层间共享索引可以让运行时提前知道下一层所需Token，以预取覆盖部分I/O；但并发、路由变化或热点漂移会增加未命中，导致Decode节奏被最慢一次取回控制。</p>
+<p>这也改变了容量规划。HBM不再按“总上下文字节×并发”全额配置，而要按热KV、索引状态、模型权重、通信缓冲和目标命中率联合配置；主机DRAM则从普通溢出层变成推理关键路径。NUMA位置、PCIe/NVLink-C2C有效带宽、页粒度和DMA队列深度开始直接影响Token间隔。</p>
+
+<h3>④ 触碰了哪个技术边界</h3>
+<p><strong>开始失效的假设是：注意力算子变稀疏后，KV容量与带宽问题会按同一比例自然消失。</strong></p>
+<p>第一道边界是容量与选择语义。只要任意历史位置仍可能进入Top-k，系统就必须保留完整、精确的KV或可重建表示。稀疏SDPA减少活动工作集，但不会自动减少长期状态。</p>
+<p>第二道边界是互联尾时延。HiSparse的无I/O理想实验显示，解析与替换机制本身几乎不增加单Token成本，剩余代价主要来自主机—设备I/O。这意味着在PCIe带宽不足、NUMA跨Socket或突发并发下，缓存缺页可能把计算节省换成更长TPOT。</p>
+<p>第三道边界是指标解释。SemiAnalysis的同一分析显示，某些最低成本配置在约150 Token/s响应速度下仍出现14—19秒P90 TTFT，而加入两秒TTFT约束后最优硬件与成本曲线会变化。只比较每百万Token成本或Decode吞吐，会掩盖Prefill、排队与KV恢复代价。</p>
+
+<h3>⑤ 可能催生什么硬件架构、新的技术需要</h3>
+<ul>
+<li><strong>已出现：</strong>IndexShare减少重复索引，HiSparse把完整KV保存在主机内存并以固定HBM缓存承载热条目；SGLang已接入该路径。</li>
+<li><strong>高概率方向：</strong>推理节点提高CPU DRAM容量、通道数与到GPU的双向带宽，按GPU或Superchip建立本地KV域，避免跨Socket取回。</li>
+<li><strong>高概率方向：</strong>运行时按层、请求和预测复用率执行预取、批量Gather与LRU/学习型替换；调度器把缓存命中概率和主机链路拥塞纳入Batch与副本选择。</li>
+<li><strong>高概率方向：</strong>DPU、DMA引擎或GPU侧持久内核承担KV地址解析、压缩、加密和搬运，减少CPU控制面抖动；NVMe只承载可容忍更高恢复时延的冷状态。</li>
+<li><strong>尚待验证：</strong>CXL或远端内存池能否在多租户长上下文下提供足够可预测的P99，以及稀疏索引质量、缓存命中和模型任务质量之间的最优点。</li>
+</ul>
+
+<blockquote><p><strong>架构师结论：</strong>稀疏注意力并没有让“内存墙”消失，而是把它从每步全量带宽墙改造成完整容量与随机取回墙。选型时应先测Top-k命中、每Token主机取回字节和TPOT尾延迟，再决定购买更多HBM、增加主存带宽还是引入更深层KV缓存。</p></blockquote>
+
+<p><strong>建议跟踪：</strong></p>
+<ul>
+<li>不同上下文、并发和Top-k下的GPU缓存命中率、每Token主机取回字节、TPOT P50/P99与TTFT；</li>
+<li>PCIe、NVLink-C2C及不同NUMA放置下的有效带宽、DMA占用和GPU等待比例；</li>
+<li>在相同任务质量和SLA下，全HBM、DRAM分层与NVMe冷层的设备数、功耗和每完成任务成本。</li>
+</ul>
+
+<p><strong>来源：</strong><a href="https://newsletter.semianalysis.com/p/sparse-savings-persistent-demand-inside-glm53">SemiAnalysis：GLM-5.3稀疏注意力与内存分析（2026年9月28日）</a>｜<a href="https://arxiv.org/abs/2608.07009">HiSparse论文（2026年8月7日）</a>｜<a href="https://github.com/zai-org/GLM-5">Z.ai：GLM-5系列官方仓库与架构说明</a></p>
+
+<hr>
+
+<h2>02｜个人AI获得服务器端持久记忆：机密计算从无状态推理扩展为“TEE内查询＋设备持钥”的状态系统</h2>
+
+<h3>① 新变化是什么</h3>
+<p>2026年9月23日，Google DeepMind更新Private AI Compute架构，宣布将引入可跨设备、跨会话使用的服务器端持久记忆。个人数据存入专用加密存储，解密所需密钥只由用户设备持有；请求通过端到端加密通道进入安全Enclave，数据只在隔离内存中临时解密，新增上下文随后立即重新加密。Google同时发布更新白皮书、服务器软件防篡改公开记录及独立审计信息。</p>
+<p>同日，Meta披露面向AI眼镜的Private Processing工程实现。系统以CPU和GPU TEE组成机密虚拟机，通过匿名凭据、第三方OHTTP中继、RA-TLS远程证明和公开透明度账本建立不可定向的连接；需要持久记忆时，结果以用户提供的密钥加密后保存。Meta还把存储引擎与语义向量搜索、多会话Join放进TEE，避免外部数据库暴露访问模式或把大量密文反复搬入Enclave。</p>
+<p><strong>真正新增的是从“Stateless”到“Stateful”的信任边界变化。</strong> Google明确指出此前私有云推理在任务结束后清空上下文；Meta 2025年的WhatsApp Private Processing也强调无状态和前向安全。此次两家公司都把跨天、跨设备的个人状态纳入机密计算路径。</p>
+<p><strong>成熟度需要区分：</strong>Google发布的是即将支持的技术能力与架构；Meta称系统已经构建，并为AI眼镜的流式转写、上下文搜索和长期回忆提供基础，但未披露具体产品上线范围、用户规模、存储容量、性能或SLA。不能写成所有个人AI功能已经使用持久机密记忆。</p>
+
+<h3>② 为什么发生</h3>
+<p>眼镜、手机和电脑上的个人助手若要跨天理解偏好、回忆场景并主动执行任务，就必须保留长期上下文。完全本地处理具有强隐私优势，却受电池、散热、模型规模和存储限制；普通云端记忆可扩展，但运营方、宿主系统或被定向的服务器可能看到内容和访问模式。</p>
+<p>短期无状态TEE只能保护一次请求。让设备每次上传全部历史会增加网络、Prefill和延迟，也无法高效完成向量检索或多会话关联。把持久存储与查询引擎移入硬件隔离边界，试图同时获得云端容量、前沿模型能力和类似端侧的密钥控制。</p>
+<p><strong>业务根源是个人AI的收入与使用频率依赖连续性，而连续性又会显著放大隐私和监管风险。</strong> 厂商要进入全天候、穿戴式和跨设备场景，必须证明记忆不仅被加密，还不会因运维人员、宿主软件或定向路由而轻易暴露。</p>
+
+<h3>③ 改变了什么计算或数据特征</h3>
+<p>个人AI状态不再只是一次会话的KV Cache，而是长期存在的多模态事件、摘要、向量索引、偏好与行动记录。其写入可能来自连续语音或视觉流，读取则是小粒度、用户特定且具有强时间局部性的语义检索；跨设备使用还要求版本、一致性和密钥可用性。</p>
+<p>Meta指出，若用普通加密数据库，外部系统仍能观察读写频率和共同访问记录；复杂向量搜索和多会话Join还需把大量密文搬进TEE。将存储引擎置于TEE后，查询在CPU/GPU加密内存内完成，只输出必要结果，但这会扩大Enclave常驻内存、索引和事务日志需求。</p>
+<p>请求路径也比普通推理更长：匿名认证、OHTTP中继、远程证明、设备密钥解封、TEE内检索、GPU推理、重新加密和持久化依次进入关键路径。跨模型调用时，TEE之间还需相互证明并通过RA-TLS传输。P99不再只由GPU排队决定。</p>
+
+<h3>④ 触碰了哪个技术边界</h3>
+<p><strong>开始失效的假设是：机密AI只需保护一段短时推理，会话结束后清空状态即可同时获得隐私与可运维性。</strong></p>
+<p>第一道边界是受保护内存与查询性能。TEE内存容量、加密带宽和页错误开销有限；个人记忆增长后，全部热索引不一定能常驻。若频繁从外部密文存储调页，访问模式和尾时延仍可能暴露或恶化。</p>
+<p>第二道边界是密钥可用性与恢复。设备持钥意味着云运营方无法直接恢复明文，但用户更换、丢失或离线设备时，如何安全同步、轮换和撤销密钥会决定记忆能否使用。Google与Meta没有公开完整恢复、删除和多设备冲突SLA。</p>
+<p>第三道边界是可观测性。Meta明确指出运营人员不能附加调试器、导出内存或查看触发故障的输入。强隔离减少泄露面，却使故障定位、容量调优和模型质量评估更困难；允许过多日志又会破坏机密保证。</p>
+<p>第四道边界是侧信道与可验证性。TEE、远程证明和透明度账本能缩小对运营方的信任，但不会自动消除访问模式、流量大小、硬件漏洞或供应链风险。两家公司公开的是设计保证，仍需持续第三方验证。</p>
+
+<h3>⑤ 可能催生什么硬件架构、新的技术需要</h3>
+<ul>
+<li><strong>已出现：</strong>设备持钥的加密持久存储、CPU/GPU TEE、RA-TLS、透明度账本、非定向路由及TEE内查询引擎已形成公开架构；Meta描述了跨CPU/GPU信任边界和存储内置实现。</li>
+<li><strong>高概率方向：</strong>节点形成“机密CPU检索与事务层＋机密GPU推理层＋密文持久存储”，通过证明过的高速通道传递最小工作集。</li>
+<li><strong>高概率方向：</strong>按用户或小租户分片的向量索引与元数据缓存在加密DRAM，本地NVMe保存密文段，远端对象存储承担冷备；DPU或安全NIC负责OHTTP、流量隔离和密钥封装，但不得获得明文。</li>
+<li><strong>高概率方向：</strong>硬件需要更大的受保护内存、可证明的GPU固件、低开销内存加密、机密DMA及跨CPU/GPU证明；运维侧发展隐私预算化遥测、合成故障重放和可验证二进制发布。</li>
+<li><strong>尚待验证：</strong>向量搜索、多会话Join和模型推理共置时的容量、吞吐与P99；密钥丢失/轮换、多设备冲突、数据删除以及区域故障后的恢复路径。</li>
+</ul>
+
+<blockquote><p><strong>架构师结论：</strong>持久机密记忆把个人AI的数据面从“把一次Prompt安全送进GPU”升级为“让长期状态只在被证明的CPU/GPU边界内可查询”。这会提高TEE内存、加密存储和证明控制面的权重；验收必须覆盖密钥生命周期、查询P99、故障恢复和可验证性，而不能只看模型是否在机密模式下运行。</p></blockquote>
+
+<p><strong>建议跟踪：</strong></p>
+<ul>
+<li>每用户记忆规模、热索引驻留率、TEE内向量检索/Join P50与P99及加密内存带宽；</li>
+<li>远程证明、OHTTP、密钥解封和跨TEE通信各自增加的TTFT与失败率；</li>
+<li>设备丢失、密钥轮换、区域故障和软件升级时的记忆可用性、删除证明及恢复时间。</li>
+</ul>
+
+<p><strong>来源：</strong><a href="https://deepmind.google/blog/advancing-private-ai-compute-with-secure-server-side-memory/">Google DeepMind：Private AI Compute持久服务器记忆（2026年9月23日）</a>｜<a href="https://engineering.fb.com/2026/09/23/security/private-processing-meta-ai-glasses/">Meta Engineering：AI眼镜Private Processing（2026年9月23日）</a>｜<a href="https://engineering.fb.com/2025/04/29/security/whatsapp-private-processing-ai-tools/">Meta：2025年无状态Private Processing基线</a></p>
+
+<h2>今日架构主线</h2>
+<p><strong>长程AI正在产生两类“完整状态”：模型运行需要完整可选择的KV，个人助手需要完整可授权的长期记忆。</strong></p>
+<ul>
+<li>稀疏注意力缩小每一步真正读取的KV，却仍要求完整历史可被索引；</li>
+<li>机密持久记忆缩小每次查询真正解密的数据，却仍要求完整个人状态可被安全保存；</li>
+<li>两者都需要热状态靠近计算、冷状态留在更便宜容量层，并以预取、索引和权限控制决定何时移动；</li>
+<li>两者的失败模式也相似：命中率下降、跨层搬运或密钥/证明失败都会把平均效率转化为P99长尾。</li>
+</ul>
+<p>因此，下一代推理系统不应只画GPU拓扑，还要画清状态拓扑：哪些字节在HBM、DRAM、TEE、NVMe与对象存储，谁能选择、谁能解密、迁移需要多少时间，以及故障后能否重建。<strong>真正的系统优势将来自“让完整状态存在，但只把必要、被授权且及时的数据送到计算处”。</strong></p>
+
+<h2>未发现可信新增</h2>
+<p>本期优先扫描9月28日，并回溯近7日核查必查专题；以下“未发现”仅指本次可访问和可公开验证的来源。</p>
+<ul>
+<li><strong>SemiAnalysis：有新增。</strong>9月28日GLM-5.3稀疏注意力与内存分析已入选；其中硬件成本数字属于其自有模型和指定测试，不作为通用采购结论。</li>
+<li><strong>超节点与Scale-up：</strong>未发现相较昨日AL64/SNPO新增的官方拓扑、HBD、单卡有效带宽或规模交付证据；会后转述不重复入选。</li>
+<li><strong>NPO/CPO/OCS：</strong>未核实到新的量产互操作、客户部署、Pre-FEC BER、每比特功耗或现场MTTR数据。</li>
+<li><strong>240kW以上机柜液冷/供电：</strong>未核实到新的供回水温、流量、压降、母排保护、结构承载或FRU维护参数。</li>
+<li><strong>设施合作：</strong>LG于9月28日加入NVIDIA Partner Network的电力与冷却优选伙伴计划，但未披露新的机柜功率、液冷工况或已验收项目，因此不单列。</li>
+<li><strong>推理云：</strong>Cerebras与Gimlet Labs宣布计划在2026年稍后上线最高3000 Token/s的云服务，但首个数据中心尚未上线、缺少模型与SLA实测，不把目标写成已交付性能。</li>
+</ul>
+<p><strong>必查来源：</strong><a href="https://newsletter.semianalysis.com/archive">SemiAnalysis公开归档</a>｜<a href="https://www.lgcorp.com/media/release/30610">LG电力与冷却合作公告（2026年9月28日）</a>｜<a href="https://www.cerebras.ai/press-release/gimlet-labs-adds-cerebras-to-deliver-ultrafast-ai-inference-through-gimlet-cloud-deployment">Cerebras与Gimlet Labs公告（2026年9月28日）</a></p>
+
+</main></body>
+</html>
