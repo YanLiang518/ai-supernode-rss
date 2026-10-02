@@ -6,12 +6,139 @@
     <description>聚焦 AI 超节点、GPU/加速芯片、Scale-up 互联、NPO/CPO、液冷、供电与头部厂商架构动态。</description>
     <language>zh-cn</language>
     <pubDate>Fri, 02 Oct 2026 05:00:00 +0800</pubDate>
-    <lastBuildDate>Fri, 02 Oct 2026 05:00:00 +0800</lastBuildDate>
+    <lastBuildDate>Sat, 03 Oct 2026 05:00:00 +0800</lastBuildDate>
     <ttl>15</ttl>
     <atom:link href="https://raw.githubusercontent.com/YanLiang518/ai-supernode-rss/main/feed.xml" rel="self" type="application/rss+xml"/>
 
 
   <item>
+      <title>AI算力架构前沿简报｜2026年10月3日</title>
+      <link>https://raw.githubusercontent.com/YanLiang518/ai-supernode-rss/main/archive/2026-10-03.html</link>
+      <guid isPermaLink="false">ai-supernode-brief-2026-10-03</guid>
+      <pubDate>Sat, 03 Oct 2026 05:00:00 +0800</pubDate>
+      <description><![CDATA[
+<h2 style="font-size:22px;margin:28px 0 12px">今日判断</h2>
+<p><strong>今天的主线是：AI基础设施正在把原本静态的约束——机架功率、芯片所在地和冷却预算——改造成可调度资源。</strong>Aolani与Karman尝试在Blackwell机架上用毫秒级功率编排释放配电余量；腾讯据报通过Oracle东南亚数据中心取得约10万颗中国境内不可获得的先进芯片；新加坡的热带数据中心试验则把发电余热、吸收式制冷和自动控制纳入同一多兆瓦验证平台。</p>
+<p>三条信号的成熟度差异很大：第一条处于联合PoC，第二条是尚未获双方确认的媒体报道，第三条是研究试验与厂商建模。它们共同指向一个架构变化：<strong>调度器未来不仅要看到GPU和网络，还要看到实时功率、热容量、数据主权、广域链路及故障恢复成本；真正可售的算力，是在这些约束下仍能持续完成任务的算力。</strong></p>
+
+<h2 style="font-size:22px;margin:30px 0 12px">信号总览</h2>
+<ul style="padding-left:22px;margin:8px 0 18px">
+  <li><strong>Aolani＋Karman动态编排Blackwell机架功率</strong>｜供电控制/算力运营信号｜联合PoC；33%与50%收益均为厂商口径｜影响机架超配、功率遥测、作业调度、PSU/母线/UPS和液冷控制。</li>
+  <li><strong>腾讯据报以五年租约取得Oracle东南亚约10万颗先进芯片</strong>｜采购/部署方式信号｜FT引述知情人士，Reuters未能独立核实｜影响跨境训练、数据分层、广域网络、加密与多园区控制面。</li>
+  <li><strong>新加坡STDCT 2.0扩展为多兆瓦热带AI数据中心试验</strong>｜冷却/能源系统信号｜实地试验平台；97MW等数字来自1GW参考设计建模｜影响余热驱动制冷、功冷协同、热带水耗与控制稳定性。</li>
+</ul>
+<hr>
+
+<h2 style="font-size:24px;line-height:1.4;margin:36px 0 14px">01｜动态功率编排进入Blackwell机架PoC：固定铭牌容量开始变成可实时复用的算力预算</h2>
+<h3 style="font-size:18px;margin:20px 0 6px">① 新变化是什么</h3>
+<p>2026年10月1日，新加坡Neocloud Aolani宣布把Karman（原Utilidata）的动态功率编排平台接入其基础设施，并在NVIDIA Blackwell平台上开展联合概念验证。平台结合高分辨率计量、本地处理与AI，基于定制NVIDIA Jetson Orin Nano，在机架侧测量并动态分配高密GPU负载的可用功率。</p>
+<p>Karman称，其北美首个商业部署已从既有供电设施中释放33%更多计算容量；双方公告标题提出“同等配电下增加50%算力”，Karman还宣称通过毫秒级控制提高50% tokens/W。<strong>这些都是厂商口径：Aolani的Blackwell项目仍是PoC，未公开GPU数量、机架功率、测量窗口、负载组合、性能损失或第三方验证，不能把50%写成已实现结果。</strong></p>
+
+<h3 style="font-size:18px;margin:20px 0 6px">② 为什么发生</h3>
+<p>AI园区通常按设备铭牌峰值、冗余和安全裕量配置变压器、UPS、母线与机架PDU，但真实训练和推理并不会让所有GPU在所有时刻同步达到峰值。为了避免断路器动作和上游过载，运营商往往留下不能出售的“搁浅功率”；与此同时，新增电网容量需要多年。</p>
+<p><strong>本简报判断：</strong>这项合作的商业目标是把保守的静态裕量变成可计量、可限速、可出售的统计复用容量，以缩短算力上线时间并提高每MW收入。它不是凭空降低芯片能耗，而是在作业功率峰值不完全相关时，用更快的控制减少闲置余量。</p>
+
+<h3 style="font-size:18px;margin:20px 0 6px">③ 改变了什么计算或数据特征</h3>
+<p>机架功率从固定上限变成时间序列约束。训练的集合通信、Checkpoint后恢复、频率升降以及推理突发会形成不同的功率波形；调度器必须预测作业同时性，并在毫秒级局部控制与秒至分钟级集群调度之间分层响应。</p>
+<p>可售容量因此不再等于“额定MW÷单柜铭牌功率”，而取决于负载相关性、允许的性能降级、测量精度和控制响应。若多个机架在同步训练阶段同时冲高，统计复用收益会迅速消失；若Decode、CPU工具和训练作业错峰，余量则可能被更充分利用。功率封顶还会改变GPU频率、Token延迟和液冷流量，必须把电气遥测与任务SLA关联。</p>
+
+<h3 style="font-size:18px;margin:20px 0 6px">④ 触碰了哪个技术边界</h3>
+<p><strong>开始失效的假设是：机架和园区只能按所有设备同时达到最坏峰值来静态配置，功率控制与算力调度彼此独立。</strong></p>
+<p>首先触碰的是保护与控制时延边界。Jetson侧控制必须快于危险功率阶跃，又不能与GPU固件、PSU、BBU、UPS或设施控制器相互振荡。其次是热惯性边界：短时电功率可以超配，但冷板、CDU和水系统具有不同响应速度，电气安全不等于结温与供回水窗口安全。最后是SLA边界：频繁限频可保住母线，却可能恶化训练完成时间或推理P99。</p>
+<p>33%与50%收益尚未给出基线定义，也没有证明在Blackwell高并发、故障切换或整群同步阶段可持续兑现；这是本条最关键的待验证项。</p>
+
+<h3 style="font-size:18px;margin:20px 0 6px">⑤ 可能催生什么硬件架构、新的技术需要</h3>
+<ul style="padding-left:22px">
+  <li><strong>已出现：</strong>高分辨率计量＋Jetson边缘计算＋机架级动态分配的Karman平台，以及面向Blackwell的联合PoC。</li>
+  <li><strong>高概率方向：</strong>RMC/BMC、智能PDU、GPU遥测、CDU与集群调度器形成闭环；毫秒级控制负责保护，秒级调度负责迁移、降频与错峰。</li>
+  <li><strong>高概率方向：</strong>机架按“可保证功率＋可抢占功率”双层售卖；DPU或独立管理控制器保存租户优先级、功率预算和故障策略，避免控制面依赖业务网络。</li>
+  <li><strong>尚待验证：</strong>极端同步负载下的安全余量、控制失效时的硬件兜底、与液冷控制的耦合稳定性，以及单位任务而非瞬时tokens/W的净收益。</li>
+</ul>
+<blockquote style="margin:16px 0;padding:12px 16px;border-left:4px solid currentColor"><strong>架构师结论：</strong>动态功率编排把“搁浅MW”变成一种可调度资源，但它本质上是以更复杂的控制面换取更高资产利用率。验收不能只看多装了多少GPU，必须验证在保护动作、热约束和P99不恶化的条件下，完成任务数量是否真的增加。</blockquote>
+<p><strong>建议跟踪：</strong></p>
+<ul style="padding-left:22px"><li>同一园区功率上限下的任务完成量、训练时间、推理P99与平均/峰值功率；</li><li>功率测量采样率、控制闭环时延、限频次数、误动作率及控制器故障后的硬件保护路径；</li><li>GPU功率、PSU/母线/UPS余量、冷板入口温度与CDU流量的联合时间序列。</li></ul>
+<p style="font-size:14px">来源：<a href="https://www.aolani.com/newsroom/aolani-karman-ai-compute-capacity-power-orchestration">Aolani官方公告（2026年10月1日）</a>｜<a href="https://www.karman.co/press-release/aolani-karman-partnership">Karman官方公告（2026年10月1日）</a></p>
+<hr>
+
+<h2 style="font-size:24px;line-height:1.4;margin:36px 0 14px">02｜腾讯据报转向东南亚五年算力租约：先进芯片约束把超节点边界从园区内推向跨境数据路径</h2>
+<h3 style="font-size:18px;margin:20px 0 6px">① 新变化是什么</h3>
+<p>Reuters 10月1日转述Financial Times报道称，腾讯已与Oracle签署其最大海外算力租赁协议，在东南亚多个Oracle数据中心使用约10万颗中国境内无法获得的先进AI芯片；租期五年，估值约70亿美元，约30%预付。</p>
+<p><strong>成熟度必须严格限定为媒体报道。</strong>报道引述知情人士，Reuters明确表示无法立即独立核实，Oracle与腾讯也未回应。芯片型号、数据中心国家、网络拓扑、训练或推理用途、实际启用日期及数据合规安排均未公开；不能把约10万颗写成已经全部上线。</p>
+
+<h3 style="font-size:18px;margin:20px 0 6px">② 为什么发生</h3>
+<p>腾讯扩大大模型训练与部署，但先进加速器的地域可得性受到出口管制和供应限制。五年租约可用长期承诺换取芯片、机房和电力的确定性，并避免自行在海外从零建设园区；Oracle则以大客户预付款和长期利用率支撑资本开支。</p>
+<p><strong>本简报判断：</strong>业务驱动力不是简单“出海”，而是把芯片不可得风险转换成可计价的云租约风险。代价是计算与数据不再位于同一法律、网络和运维边界，模型训练的真实成本会包含跨境数据准备、长期容量锁定、合规及退出迁移。</p>
+
+<h3 style="font-size:18px;margin:20px 0 6px">③ 改变了什么计算或数据特征</h3>
+<p>如果用于训练，海量语料、多模态数据、模型权重和Checkpoint必须在东南亚园区就近落地；频繁从中国内地远程读取会受广域带宽、时延和政策限制。更合理的形态是把原始或授权数据经过筛选、脱敏和版本化后复制到海外数据层，在当地完成强耦合计算，再把经批准的模型工件或结果回传。</p>
+<p>如果用于推理，用户流量、KV与应用状态可能按地区分流，控制面要处理模型版本一致性、缓存冷启动和跨区域故障切换。五年租约还跨越多个芯片代际，负载画像会从当前模型逐步迁移到未来模型，容量必须支持训练、Prefill、Decode及多模态之间的重新分配。</p>
+
+<h3 style="font-size:18px;margin:20px 0 6px">④ 触碰了哪个技术边界</h3>
+<p><strong>开始失效的假设是：采购到GPU就等于获得可用算力，数据、软件团队和合规边界可继续留在原地。</strong></p>
+<p>第一道边界是数据重力：10万卡级计算会放大训练数据、Checkpoint和模型分发流量，广域链路无法替代园区内存储Fabric。第二道边界是控制与故障域：多个Oracle站点需要统一调度，但不能让一次区域网络中断导致全局作业失去状态。第三道边界是长期锁定：五年合同覆盖硬件折旧、代际升级和需求变化，若接口、数据格式或退出带宽未预先定义，迁移成本可能抵消芯片可得性收益。</p>
+<p>由于合同本身尚未获双方确认，上述架构影响属于基于报道规模的推演，而非已披露部署事实。</p>
+
+<h3 style="font-size:18px;margin:20px 0 6px">⑤ 可能催生什么硬件架构、新的技术需要</h3>
+<ul style="padding-left:22px">
+  <li><strong>媒体报道的解法：</strong>通过Oracle多个东南亚数据中心取得长期海外加速器容量，而非把芯片运入中国。</li>
+  <li><strong>高概率方向：</strong>形成“国内数据治理/开发控制面＋海外训练或推理数据平面”，在海外配置大容量对象存储、并行文件系统、Checkpoint缓存和密钥隔离。</li>
+  <li><strong>高概率方向：</strong>跨站任务采用异步复制与局部恢复，强耦合并行限制在单一低时延Fabric内；DPU/智能NIC承担加密、租户隔离与可审计的数据出口。</li>
+  <li><strong>尚待验证：</strong>芯片型号、站点、网络与存储配置、数据驻留规则、实际规模上线节奏，以及五年内的代际升级与退出条款。</li>
+</ul>
+<blockquote style="margin:16px 0;padding:12px 16px;border-left:4px solid currentColor"><strong>架构师结论：</strong>当先进芯片通过海外租约获得时，超节点的可用性取决于“芯片＋数据＋合规＋广域恢复”的组合。10万颗卡的名义数量只有在数据能合法、及时地到达，并能在多站点故障后恢复时，才会变成有效训练或推理产出。</blockquote>
+<p><strong>建议跟踪：</strong></p>
+<ul style="padding-left:22px"><li>Oracle与腾讯是否正式确认、具体站点/芯片型号、首批上线时间与可用芯片数量；</li><li>训练数据、Checkpoint和模型工件的日均/峰值跨境字节、复制时间与合规审批时延；</li><li>单站故障后的作业恢复范围、模型版本一致性，以及合同中的升级、性能SLA和退出数据搬迁能力。</li></ul>
+<p style="font-size:14px">来源：<a href="https://www.reuters.com/world/china/chinas-tencent-leases-100000-chips-oracle-accelerate-ai-push-ft-reports-2026-10-01/">Reuters转述FT并说明尚未独立核实（2026年10月1日）</a></p>
+<hr>
+
+<h2 style="font-size:24px;line-height:1.4;margin:36px 0 14px">03｜热带AI数据中心转向“发电—余热—制冷—控制”联合验证：冷却电力不再是固定附加项</h2>
+<h3 style="font-size:18px;margin:20px 0 6px">① 新变化是什么</h3>
+<p>2026年10月2日，Johnson Controls宣布加入由新加坡国立大学设计与工程学院主导的Sustainable Tropical Data Centre Testbed 2.0（STDCT 2.0）。该平台位于裕廊岛，在真实高温高湿环境测试AI数据中心技术；Yokogawa同期宣布参与把平台扩展为多兆瓦试验设施，提供集成能源管理、自动化与可靠性能力。</p>
+<p>Johnson Controls公布一套1GW数据中心参考设计：使用吸收式制冷机利用现场发电中原本损失为余热的57%能量，建模显示可额外释放最高97MW AI计算容量，并把制冷用电降低最高44%；集成方案还称非IT能耗可比传统冷却低最高50%。<strong>这些数字来自厂商建模参考设计，不是STDCT 2.0现场实测结果；试验平台的目标正是验证其可部署性。</strong></p>
+
+<h3 style="font-size:18px;margin:20px 0 6px">② 为什么发生</h3>
+<p>热带地区全年高温高湿，依赖低温室外空气的免费冷却空间有限；AI机柜又把功率密度和热通量推高。新加坡同时受到电力、水和土地约束，新批准的数据中心容量必须用更少的非IT能耗支撑更多计算。</p>
+<p>现场发电通常把大量低品位热排到环境。如果热量的温度和稳定性足以驱动吸收式制冷，就可能减少压缩机制冷所需电力，把同一并网或发电容量中的更多MW留给服务器。<strong>变化根源是可用电力比冷却设备本身更稀缺，因此冷却系统开始以“能释放多少IT MW”而非单一COP衡量。</strong></p>
+
+<h3 style="font-size:18px;margin:20px 0 6px">③ 改变了什么计算或数据特征</h3>
+<p>发电、吸收式制冷、冷冻/冷却水、CDU与GPU负载形成耦合时间序列。训练作业可能数小时维持高热负荷，推理则更突发；余热供给、吸收式制冷输出和冷却水温度不能瞬时等比例变化。控制系统需要预测IT负载，并在电制冷、热驱动制冷、储冷或功率封顶之间切换。</p>
+<p>这会把供回水温、湿球温度、水质、流量、泵功和冷凝风险带入算力调度。若服务器可在更高冷板入口温度运行，余热利用与冷机效率可能改善；但高湿环境下任何低于露点的表面都提高结露风险。工作负载的功率阶跃因此不仅冲击母线，也会冲击热控闭环。</p>
+
+<h3 style="font-size:18px;margin:20px 0 6px">④ 触碰了哪个技术边界</h3>
+<p><strong>开始失效的假设是：冷却是独立于发电与计算的固定比例负载，按峰值选好设备后即可静态运行。</strong></p>
+<p>第一道边界是热品位：余热温度不足或波动过大时，吸收式制冷的有效COP与容量会下降。第二道边界是水和环境：热带冷却塔的蒸发、水处理和接近湿球温度能力可能成为新的限制。第三道边界是控制稳定性：发电机、冷机、泵、CDU和GPU分别有不同惯性；过度追随短时负载可能造成振荡或把故障放大。</p>
+<p>97MW约相当于1GW名义规模的9.7%，但公开资料未说明1GW口径是发电输入、输出还是IT负载，也未公开余热温度、吸收式冷机COP、供回水条件和水耗。因此不能把该比例直接用于项目容量规划。</p>
+
+<h3 style="font-size:18px;margin:20px 0 6px">⑤ 可能催生什么硬件架构、新的技术需要</h3>
+<ul style="padding-left:22px">
+  <li><strong>已出现：</strong>STDCT 2.0实地热带试验平台、Johnson Controls热管理方案，以及Yokogawa参与的多兆瓦集成能源与自动化验证。</li>
+  <li><strong>高概率方向：</strong>园区建立发电余热母线、吸收式与电制冷混合冷站、储冷及机架液冷三级系统，由统一控制器按负载与气象条件优化。</li>
+  <li><strong>高概率方向：</strong>GPU调度器读取冷机可用容量、湿球温度、CDU余量和水系统告警；高密机柜配置露点、泄漏、水质与压差传感器，并保留电制冷或功率封顶作为失效兜底。</li>
+  <li><strong>尚待验证：</strong>多兆瓦实测PUE/WUE、余热温度与可用小时数、混合冷站切换P99、故障模式，以及高密液冷机柜的具体供回水和维护参数。</li>
+</ul>
+<blockquote style="margin:16px 0;padding:12px 16px;border-left:4px solid currentColor"><strong>架构师结论：</strong>余热驱动制冷的价值不是“免费冷却”，而是把原本由压缩机消耗的电力让给IT。只有现场试验证明热源、气候、用水、液冷和控制系统在同一负载曲线下稳定运行，建模中的97MW才可能转化为可售算力。</blockquote>
+<p><strong>建议跟踪：</strong></p>
+<ul style="padding-left:22px"><li>STDCT 2.0的IT MW、机柜密度、供回水温、吸收式冷机COP、PUE/WUE与测试季节；</li><li>余热温度/流量与GPU负载的时间匹配，以及电制冷切换、储冷和功率封顶的响应时间；</li><li>结露、泄漏、水质、泵/冷机故障时的影响范围和平均修复时间。</li></ul>
+<p style="font-size:14px">来源：<a href="https://en.antaranews.com/news/433839/johnson-controls-joins-the-sustainable-tropical-data-centre-testbed-20-to-advance-next-generation-ai-infrastructure">Johnson Controls加入STDCT 2.0的发布稿（2026年10月2日）</a>｜<a href="https://en.antaranews.com/news/433844/yokogawa-to-assist-the-scale-up-of-tropical-climate-ai-data-center-testbed-into-a-multi-megawatt-pilot-facility">Yokogawa多兆瓦试验说明（2026年10月2日）</a>｜<a href="https://cde.nus.edu.sg/stdct/">新加坡国立大学STDCT项目页</a></p>
+
+<h2 style="font-size:22px;margin:34px 0 12px">今日架构主线</h2>
+<p><strong>今天三条信息都在把“可用算力”从一项设备库存，改写成一个受实时约束的系统状态。</strong></p>
+<ul style="padding-left:22px"><li>动态功率编排在单个园区内复用峰值不同时出现的电力余量；</li><li>海外长期租约跨越地理与监管边界，把芯片可得性换成数据移动和合同锁定；</li><li>热带试验把发电余热和冷却电力纳入算力预算，使热控能力成为可调度输入。</li></ul>
+<p>三者最终都需要一个跨层控制面：它理解作业优先级、数据位置、功率与热容量、链路和故障域，并把风险映射到任务完成时间。<strong>未来的核心指标不是“装了多少GPU”或“签了多少MW”，而是在给定电力、气候、合规和故障约束下，能够稳定完成多少满足SLA的训练与推理任务。</strong></p>
+
+<h2 style="font-size:22px;margin:30px 0 12px">未发现可信新增</h2>
+<p>本期优先扫描10月2日，并回溯近7日核查必查专题；以下“未发现”仅指本次可访问、可公开验证的来源。</p>
+<ul style="padding-left:22px">
+  <li><strong>SemiAnalysis：</strong>未发现10月2日新的独立高价值公开文章；9月28日及此前内容不重复。</li>
+  <li><strong>超节点、NPO/CPO/OCS：</strong>未核实到新的整机量产、互操作验收、现场误码率、每比特功耗或FRU可靠性数据。</li>
+  <li><strong>240kW以上机柜液冷/供电：</strong>STDCT 2.0属于多兆瓦设施级试验，但尚未披露单柜功率、供回水温、流量、压降、母排保护、结构承载或不停机维护参数，因此不把设施建模数字写成高密机柜规格。</li>
+  <li><strong>云栖大会后续：</strong>仍未发现阿里云正式文档补充AL144/AL64、ALink/SNPO、GPU—交换拓扑、HBD规模、单卡Scale-up带宽、NPO光源、正交互连或液冷供电参数；不以展台标语替代正式规格。</li>
+</ul>
+<p style="font-size:14px">必查来源：<a href="https://newsletter.semianalysis.com/archive">SemiAnalysis公开归档</a>｜<a href="https://yunqi.aliyun.com/2026/">2026云栖大会官方网站</a></p>
+
+      ]]></description>
+    </item>
+<item>
 <title>AI算力架构前沿简报｜2026年10月2日</title>
 <link>https://raw.githubusercontent.com/YanLiang518/ai-supernode-rss/main/archive/2026-10-02.html</link>
 <guid isPermaLink="false">ai-supernode-brief-2026-10-02</guid>
