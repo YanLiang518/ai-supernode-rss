@@ -5,12 +5,126 @@
     <link>https://github.com/YanLiang518/ai-supernode-rss</link>
     <description>聚焦 AI 超节点、GPU/加速芯片、Scale-up 互联、NPO/CPO、液冷、供电与头部厂商架构动态。</description>
     <language>zh-cn</language>
-    <pubDate>Tue, 06 Oct 2026 05:00:00 +0800</pubDate>
-    <lastBuildDate>Tue, 06 Oct 2026 05:00:00 +0800</lastBuildDate>
+    <pubDate>Wed, 07 Oct 2026 05:00:00 +0800</pubDate>
+    <lastBuildDate>Wed, 07 Oct 2026 05:00:00 +0800</lastBuildDate>
     <ttl>15</ttl>
     <atom:link href="https://raw.githubusercontent.com/YanLiang518/ai-supernode-rss/main/feed.xml" rel="self" type="application/rss+xml"/>
 
-  <item>
+    <item>
+      <title>AI算力架构前沿简报｜2026年10月7日</title>
+      <link>https://raw.githubusercontent.com/YanLiang518/ai-supernode-rss/main/archive/2026-10-07.html</link>
+      <guid isPermaLink="false">ai-supernode-brief-2026-10-07</guid>
+      <pubDate>Wed, 07 Oct 2026 05:00:00 +0800</pubDate>
+      <description><![CDATA[
+
+<h2 style="font-size:22px;margin:28px 0 12px">今日判断</h2>
+<p><strong>今天的两条信号分别从电力和模型两端拆掉了一个旧假设：AI容量不再只是“买到多少GPU”，模型规模也不再能用“总参数量”直接映射为每Token计算。</strong>Google用20年购电承诺支持现有核电机组增容，并把需求响应写入合作框架；Mistral Large 4则以1万亿总参数、约490亿激活参数进入公开预览，计划在月底开放权重。</p>
+<p>共同的架构含义是：<strong>资源必须按实际激活来组织。</strong>电力侧要区分不可削减在线推理与可移峰训练，模型侧要区分必须常驻的完整专家池与每Token实际访问的专家。下一代控制面需要同时理解功率预算、任务SLA、专家位置、内存层级和故障域。</p>
+
+<h2 style="font-size:22px;margin:30px 0 12px">信号总览</h2>
+<ul style="padding-left:22px;margin:8px 0 18px">
+<li><strong>Google以3.59GW长期协议绑定核电增容与负荷柔性</strong>｜电力/商业模式/园区控制信号｜890MW为计划新增核电容量、最早2028年交付；另有2.7GW现有电力的15年协议｜影响能源Block、需求响应、功率感知调度和跨代机房投资。</li>
+<li><strong>Mistral Large 4把1万亿总参数与约490亿激活参数带入私有部署</strong>｜模型/推理/主权部署信号｜公开预览已上线；权重计划月底发布，确切日期与许可仍待最终文件｜影响MoE专家放置、HBM容量、All-to-All互联、量化和分层权重存储。</li>
+</ul>
+<hr>
+
+<h2 style="font-size:24px;line-height:1.4;margin:36px 0 14px">01｜Google把新增核电与需求响应写进3.59GW协议：AI园区从购电客户变成可调度的电力系统参与者</h2>
+
+<h3 style="font-size:18px;margin:20px 0 6px">① 新变化是什么</h3>
+<p>2026年10月6日，Google与Constellation Energy宣布长期能源合作。核心由两部分组成：其一是<strong>20年购电协议</strong>，支持Constellation在Illinois、Pennsylvania和New Jersey的11台核电机组升级汽轮机、蒸汽发生器及数字控制系统，计划新增<strong>890MW</strong>可靠容量；其二是PJM区域内<strong>2,700MW、15年</strong>的现有机组能源供应协议。两者合计3,590MW，但只有890MW属于新增发电能力。</p>
+<p>首个增容项目目标在2028年交付，Google称全部890MW计划在2032年底前上线。Constellation预计为此投入超过43亿美元。协议还明确提出需求响应：在电网紧张时削减非关键负荷，并探索新发电、储能和负荷柔性。</p>
+<p><strong>成熟度必须区分：</strong>商业协议已经签署；890MW是跨多个在运核电站的增容计划，不是今天已经可供某个Google园区使用的IT功率。2.7GW主要为既有发电资产提供长期收入确定性，也不能写成新增3.59GW。</p>
+
+<h3 style="font-size:18px;margin:20px 0 6px">② 为什么发生</h3>
+<p>PJM的新增负荷与电源建设节奏失配，容量价格已显著上升，并提出大型数据中心“自带电力”或在峰值时接受远程削减的方向。Google若只签普通购电合同，新增AI负荷的发电、输电和可靠性成本仍可能转嫁给其他用户，从而增加审批、费率和社区阻力。</p>
+<p>核电增容利用既有站址、并网、人员和供应链，通常比新建大型电站更快；长期购电承诺则为Constellation的设备改造提供融资确定性。对Google而言，这既锁定长期可靠电源，也用需求响应证明数据中心能在电网压力下承担一部分动态责任。</p>
+<p><strong>本简报判断：</strong>变化根源是“可用MW”已成为AI增长的先决条件。大型算力客户开始通过长期资本、发电增量和负荷柔性共同换取接入权，而不是只在机房边界购买电量。</p>
+
+<h3 style="font-size:18px;margin:20px 0 6px">③ 改变了什么计算或数据特征</h3>
+<p>需求响应会把AI作业显式分成不同电力等级。在线搜索、广告、实时语音和低延迟推理需要保留功率；训练、离线推理、数据预处理、Checkpoint整理及低优先级批处理可在电网事件中降频、暂停或迁移。</p>
+<p>这使算力负荷从“稳定高底载”变成带策略的可调曲线。调度器不仅要看空闲GPU，还要预测未来数分钟至数小时的功率爬坡、任务检查点成本、备用容量和恢复冲击。大量机架同时恢复会形成新的功率阶跃与网络突发，不能简单在电网事件结束后全量重启。</p>
+<p>Google与Constellation还计划把Gemini Enterprise用于选址、潮流建模、许可、资产健康、停机检修和调度优化。这里的AI并非给数据中心供电本身，而是试图缩短发电增容的工程与运维周期；其效果尚无公开基准。</p>
+
+<h3 style="font-size:18px;margin:20px 0 6px">④ 触碰了哪个技术边界</h3>
+<p><strong>开始失效的假设是：数据中心只要获得名义电力合同，就可以把负荷形态和新增供电责任留给电网。</strong></p>
+<p>第一道边界是电力交付时间。GPU平台约数年换代，而20年购电协议和核电资产跨越多个计算代际；如果母线、液冷和机柜接口不能复用，长期锁定的能源资产会被短周期硬件改造吞噬价值。</p>
+<p>第二道边界是可削减性。功率上限可以在秒级改变，但大规模训练未必能在同样时间安全Checkpoint；在线推理若没有跨站冗余，也不能随意削减。公开协议没有给出可削减MW、通知时间、持续时长或违约条件。</p>
+<p>第三道边界是地域映射。890MW来自六个核电站、11台机组并注入PJM电网，不等于一条专线把同等功率送到单一园区。节点约束、输电拥塞和数据中心所在区域仍会决定真正可交付的IT MW。</p>
+
+<h3 style="font-size:18px;margin:20px 0 6px">⑤ 可能催生什么硬件架构、新的技术需要</h3>
+<ul style="padding-left:22px">
+<li><strong>已出现：</strong>长期购电、现有核电增容、需求响应和AI辅助能源运维被组合成同一合作框架；这是商业与控制框架，不等于新增容量已上线。</li>
+<li><strong>高概率方向：</strong>园区按“能源Block＋计算Block＋热管理Block”独立验收，每个Block绑定实际可用MW、母线、CDU、网络、任务等级和投产日期。</li>
+<li><strong>高概率方向：</strong>作业调度器与UPS/BESS、BMS、DCIM、CDU及公用事业信号共享遥测；训练先Checkpoint、批处理延迟，在线推理保留功率与冷却余量。</li>
+<li><strong>高概率方向：</strong>机房采用跨代可复用的高压配电、Manifold和光纤边界，使20年能源资产不被单代GPU整柜锁定。</li>
+<li><strong>尚待验证：</strong>890MW逐站交付曲线、实际分配给Google负荷的比例、需求响应的MW/秒与持续时长，以及Gemini在核电增容和运维中的量化收益。</li>
+</ul>
+<blockquote style="margin:16px 0;padding:12px 16px"><strong>架构师结论：</strong>Google购买的不是简单电量，而是“新增发电＋长期资产存续＋可调负荷”的组合权利。未来AI园区的竞争力取决于能否把关键任务与可削减任务分层，并在功率事件中保持有序暂停和恢复。</blockquote>
+<p><strong>建议跟踪：</strong></p>
+<ul style="padding-left:22px"><li>11台机组的逐年增容MW、实际商业运行日期及输电节点；</li><li>数据中心可削减负荷比例、通知时间、最大爬坡率和恢复功率阶跃；</li><li>同一能源Block下的有效Token/MWh、Checkpoint损失、跨站迁移时间和BESS使用率。</li></ul>
+<p style="font-size:14px">来源：<a href="https://www.googlecloudpresscorner.com/2026-10-06-Google-and-Constellation-Announce-Landmark-Agreement-to-Bring-890-MW-of-New-Nuclear-Capacity-to-PJM-Grid-as-Part-of-Long-Term-Power-Deal">Google与Constellation联合公告（2026年10月6日）</a>｜<a href="https://blog.google/company-news/why-were-backing-americas-existing-nuclear-plants/">Google对核电增容和交付时间的说明</a>｜<a href="https://www.reuters.com/business/energy/google-enters-massive-36-gw-power-deal-with-constellation-energy-2026-10-06/">Reuters：3.59GW协议结构与PJM背景核实</a></p>
+<hr>
+
+<h2 style="font-size:24px;line-height:1.4;margin:36px 0 14px">02｜Mistral Large 4把万亿总参数与约490亿激活参数分离：私有部署先碰到权重容量和专家互联，而非峰值算力</h2>
+
+<h3 style="font-size:18px;margin:20px 0 6px">① 新变化是什么</h3>
+<p>2026年10月6日，Mistral发布Mistral Large 4（内部昵称“Le Chonk”）公开预览。Mistral在Hugging Face的预告页将其描述为<strong>1万亿参数、原生多模态</strong>模型，每Token激活约<strong>490亿参数</strong>；若计入Embedding与输出层，活动参数约520亿。</p>
+<p>模型目前通过受监控接口提供，Mistral表示将在10月底开放权重。公开来源对确切日期存在差异：Reuters报道10月27日，Hugging Face页面显示10月31日预计发布；因此本期只确认“月底计划”，不把权重写成已经可下载。</p>
+<p>Le Monde报道，该模型使用约4,000颗高端芯片训练，Mistral将其等效功率描述为约10MW；这些是公司向媒体提供的口径。官方尚未公开完整模型卡、上下文长度、专家总数与每Token激活专家数、精度、训练Token、权重体积、许可和独立系统基准。Mistral宣称的性能仍待第三方复现。</p>
+
+<h3 style="font-size:18px;margin:20px 0 6px">② 为什么发生</h3>
+<p>Mistral需要同时解决两个商业问题：缩小与美国、中国前沿模型的能力差距，以及为欧洲政府和企业提供可在自有基础设施运行、不会因外部API政策变化而中断的模型。</p>
+<p>但欧洲模型公司可获得的训练集群规模通常小于美国头部实验室。MoE让模型总容量扩大到万亿级，同时把每Token计算限制在约五百亿活动参数；开放权重则把推理资本支出和运维责任转移给客户、主权云及托管伙伴。</p>
+<p><strong>本简报判断：</strong>变化根源不是追求“万亿参数”标签，而是在有限训练资源下扩大知识与专家容量，并用私有部署换取主权、安全和客户可控性。代价是客户必须自行承担完整专家池的存储、路由和可靠性。</p>
+
+<h3 style="font-size:18px;margin:20px 0 6px">③ 改变了什么计算或数据特征</h3>
+<p>该模型把两种规模明确分开：<strong>常驻规模</strong>接近1万亿参数，决定权重文件、HBM/主存容量、加载时间和故障恢复；<strong>活动规模</strong>约490亿参数，决定单Token主要矩阵计算。活动参数只占总参数的一小部分，并不意味着未激活专家可以从系统中消失。</p>
+<p>如果专家分布在多颗加速器上，路由器会把Token发送给不同设备并汇聚结果，通信更接近突发All-to-All，而不是规则的Dense All-Reduce。热点专家、语言和多模态输入可能造成负载偏斜，使最慢GPU决定整个Batch完成时间。</p>
+<p>原生多模态还会带来图像或视频预处理、大Prompt Prefill和不同长度请求。私有部署的真实资源需求因此取决于量化精度、专家放置、Batch、上下文、路由熵和KV容量，不能用“490亿激活参数”直接等同于一台普通500亿Dense模型。</p>
+
+<h3 style="font-size:18px;margin:20px 0 6px">④ 触碰了哪个技术边界</h3>
+<p><strong>开始失效的假设是：模型每Token只计算约五百亿参数，推理硬件就只需按五百亿参数配置。</strong></p>
+<p>第一道边界是内存容量。完整专家池必须可访问；若全部常驻HBM，设备数量可能由权重容量而非计算决定。若把冷专家放到CPU内存或NVMe，路由失配与冷启动又会放大P99。</p>
+<p>第二道边界是Scale-up互联。专家并行需要低时延、高双向带宽和拥塞控制；平均带宽充足仍可能被热点专家、跨交换层跳数或单链路故障拖慢。Mistral尚未公开推理拓扑及有效All-to-All数据。</p>
+<p>第三道边界是可部署性。开放权重只解决访问权，不自动提供量化、集合通信、监控、安全更新和故障恢复。模型计划尚未公开最终许可和完整文件，当前不能确认所有企业都能按预期修改或商用。</p>
+
+<h3 style="font-size:18px;margin:20px 0 6px">⑤ 可能催生什么硬件架构、新的技术需要</h3>
+<ul style="padding-left:22px">
+<li><strong>已出现：</strong>1万亿总参数、约490亿活动参数和原生多模态的公开预览；月底开放权重属于厂商计划，尚未完成。</li>
+<li><strong>高概率方向：</strong>私有推理节点按“HBM热专家＋CPU内存温专家＋NVMe冷权重”分层，并根据真实路由频率动态复制热点专家。</li>
+<li><strong>高概率方向：</strong>Scale-up Fabric针对All-to-All配置独立队列、拓扑感知专家放置和链路退化策略；调度器把语言、模态、专家热点与KV大小共同纳入Batch。</li>
+<li><strong>高概率方向：</strong>权重加载、量化和恢复通过DPU/智能NIC及本地NVMe卸载，模型版本、专家映射和许可信息进入整机验收。</li>
+<li><strong>尚待验证：</strong>专家数量与路由方式、上下文长度、权重精度和体积、最低可用GPU数、All-to-All字节、真实P99、许可及10月底实际发布内容。</li>
+</ul>
+<blockquote style="margin:16px 0;padding:12px 16px"><strong>架构师结论：</strong>Large 4说明MoE推理要同时为“全部知识容量”和“每Token活动计算”付费。采购前应先测专家驻留、路由偏斜和KV预算，再决定扩大Scale-up域、量化还是分层加载；只看活动参数会系统性低估内存与互联。</blockquote>
+<p><strong>建议跟踪：</strong></p>
+<ul style="padding-left:22px"><li>最终权重、许可、上下文、专家总数/激活数、精度与文件体积；</li><li>不同语言和模态下的专家路由熵、热点稳定性、All-to-All字节及最慢设备等待；</li><li>相同质量与P99下的GPU数、HBM/主存/NVMe占用、冷专家命中和每任务能耗。</li></ul>
+<p style="font-size:14px">来源：<a href="https://huggingface.co/mistralai/Mistral-Large-4.0-1T05-A52B">Mistral Hugging Face预告页：总参数与活动参数</a>｜<a href="https://www.reuters.com/world/china/mistral-ceo-says-new-ai-model-beats-chinese-ones-some-areas-2026-10-06/">Reuters：公开预览、开放权重计划与能力声明核实</a>｜<a href="https://www.lemonde.fr/en/economy/article/2026/10/06/mistral-ai-unveils-new-ai-model-aimed-at-narrowing-the-gap-with-top-chinese-competitors_6758318_19.html">Le Monde：训练规模、资源与欧洲主权背景</a></p>
+
+<h2 style="font-size:22px;margin:34px 0 12px">今日架构主线</h2>
+<p><strong>电力系统与MoE模型都在从“按峰值整体配置”转向“按实际激活动态分配”。</strong></p>
+<ul style="padding-left:22px">
+<li>Google的协议用长期新增供电覆盖基线容量，再用需求响应处理高峰与非关键负荷；</li>
+<li>Mistral用完整专家池保存能力容量，但每Token只激活其中一小部分；</li>
+<li>两者都要求更精细的控制面：前者调度任务与MW，后者调度Token与专家；</li>
+<li>两者都不能只看平均值，电网侧要看功率阶跃与恢复，模型侧要看热点专家与尾时延。</li>
+</ul>
+<p>下一代AI基础设施应把“实际激活资源”作为共同指标：每个任务激活多少专家、占用多少HBM和网络字节、消耗多少可用MW，以及在削减或故障后需要多少时间恢复。<strong>只有动态分配带来的利用率收益大于控制、迁移和尾延迟成本，柔性电力与稀疏模型才会兑现为更低任务成本。</strong></p>
+
+<h2 style="font-size:22px;margin:30px 0 12px">未发现可信新增</h2>
+<p>本期优先扫描2026年10月6日，并回溯近7日与此前简报去重；以下“未发现”仅指本次可公开验证来源。</p>
+<ul style="padding-left:22px">
+<li><strong>SemiAnalysis：</strong>未发现10月6日新的独立高价值公开文章；最近的中国数据中心模型文章未提供新的可公开验证超节点工程参数，不重复。</li>
+<li><strong>超节点新品：</strong>未核实到近24小时新的整柜量产、客户验收或有效集合通信数据。AMD关于2027年扩大供应、Marvell远期营收预测均未改变已知系统拓扑，因此不单列。</li>
+<li><strong>NPO/CPO/OCS：</strong>未核实到新的量产互操作、客户部署、Pre-FEC BER、每比特功耗或现场MTTR数据；OCP会前预告不等于产品验收。</li>
+<li><strong>240kW以上机柜液冷/供电：</strong>未发现新的供回水温、流量、压降、母排保护、结构承载和FRU维护完整参数。</li>
+<li><strong>云栖大会后续：</strong>未发现AL144/AL64、ALink/SNPO、NPO光源、正交互连或整柜液冷供电的新官方工程参数。</li>
+</ul>
+<p style="font-size:14px">必查来源：<a href="https://newsletter.semianalysis.com/archive">SemiAnalysis公开归档</a>｜<a href="https://yunqi.aliyun.com/2026/">2026云栖大会官方网站</a></p>
+
+      ]]></description>
+    </item>
+<item>
       <title>AI算力架构前沿简报｜2026年10月6日</title>
       <link>https://raw.githubusercontent.com/YanLiang518/ai-supernode-rss/main/archive/2026-10-06.html</link>
       <guid isPermaLink="false">ai-supernode-brief-2026-10-06</guid>
@@ -158,8 +272,7 @@
 
       ]]></description>
     </item>
-
-  <item>
+<item>
       <title>AI算力架构前沿简报｜2026年10月5日</title>
       <link>https://raw.githubusercontent.com/YanLiang518/ai-supernode-rss/main/archive/2026-10-05.html</link>
       <guid isPermaLink="false">ai-supernode-brief-2026-10-05</guid>
@@ -303,9 +416,7 @@
 
       ]]></description>
     </item>
-
-
-  <item>
+<item>
       <title>AI算力架构前沿简报｜2026年10月4日</title>
       <link>https://raw.githubusercontent.com/YanLiang518/ai-supernode-rss/main/archive/2026-10-04.html</link>
       <guid isPermaLink="false">ai-supernode-brief-2026-10-04</guid>
