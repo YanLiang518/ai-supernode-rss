@@ -5,12 +5,141 @@
     <link>https://github.com/YanLiang518/ai-supernode-rss</link>
     <description>聚焦 AI 超节点、GPU/加速芯片、Scale-up 互联、NPO/CPO、液冷、供电与头部厂商架构动态。</description>
     <language>zh-cn</language>
-    <pubDate>Fri, 09 Oct 2026 05:00:00 +0800</pubDate>
-    <lastBuildDate>Fri, 09 Oct 2026 05:00:00 +0800</lastBuildDate>
+    <pubDate>Sat, 10 Oct 2026 05:00:00 +0800</pubDate>
+    <lastBuildDate>Sat, 10 Oct 2026 05:00:00 +0800</lastBuildDate>
     <ttl>15</ttl>
     <atom:link href="https://raw.githubusercontent.com/YanLiang518/ai-supernode-rss/main/feed.xml" rel="self" type="application/rss+xml"/>
 
     <item>
+      <title>AI算力架构前沿简报｜2026年10月10日</title>
+      <link>https://raw.githubusercontent.com/YanLiang518/ai-supernode-rss/main/archive/2026-10-10.html</link>
+      <guid isPermaLink="false">ai-supernode-brief-2026-10-10</guid>
+      <pubDate>Sat, 10 Oct 2026 05:00:00 +0800</pubDate>
+      <description><![CDATA[
+
+<h2 style="font-size:22px;margin:28px 0 12px">今日判断</h2>
+<p><strong>今天的两条信号共同表明，AI基础设施正在同时形成“Agent身份域”和“高压直流电力域”。</strong>Google把持续数小时或数天的多Agent、独立Workspace身份、四类记忆、多模型路由、沙箱和项目级费用封顶合并为企业运行时；Acbel则把100kW输出压进1OU，并同时面向±400V/800V与既有50V直流架构。</p>
+<p>前者让模型可以替换，但身份、状态和权限持续存在；后者让机柜功率继续上升，但电压、转换与保护边界必须重新划分。<strong>下一代AI工厂的核心控制面，既要知道“哪个Agent以什么身份做了什么”，也要知道“哪个电力Block在什么故障条件下还能维持多少有效算力”。</strong></p>
+
+<h2 style="font-size:22px;margin:30px 0 12px">信号总览</h2>
+<ul style="padding-left:22px;margin:8px 0 18px">
+<li><strong>Google Gemini把持久Agent、独立身份、分层记忆与多模型路由组合成企业运行时</strong>｜Agent/云基础设施/治理信号｜正式发布，部分行业版本处于预览；性能、错误率与长期成本仍主要为厂商口径｜影响推理分池、状态存储、工具沙箱、身份传播、审计与费用控制。</li>
+<li><strong>Acbel展示100kW/1OU高压直流与72kW/50V Power Shelf</strong>｜供电/机柜架构信号｜产品已公开、将在OCP Global Summit展示；效率曲线、冗余、保护及客户验收数据待确认｜影响±400V/800V母线、50V末级供电、PDU、液冷电源和故障隔离。</li>
+</ul>
+<hr>
+
+<h2 style="font-size:24px;line-height:1.4;margin:36px 0 14px">01｜Gemini把Agent从“用户会话”变成独立数字身份：推理系统需要围绕长期状态、权限和模型切换重构</h2>
+
+<h3 style="font-size:18px;margin:20px 0 6px">① 新变化是什么</h3>
+<p>2026年10月8日，Google Cloud发布面向企业工作的Gemini agent。官方定义的重点不是单次聊天，而是一个可在云端持续执行、跨Workspace、Microsoft 365、Slack、命令行及第三方应用工作的统一Agent。任务关闭终端后仍可运行数小时或数天，并可动态创建各自拥有临时身份的子Agent，执行并行或串行步骤。</p>
+<p>更重要的变化是“coworker agent”：它拥有独立Workspace账户、邮箱、日历、Drive、目录身份和持久存储，以自己的身份出现在文档版本历史和审计记录中，只访问团队明确分享的内容。运行时可在Gemini与Anthropic Claude模型间选择，未来计划加入其他私有和开放模型；项目还可设置实时费用上限，系统同时追踪Token与Sandbox成本，触发上限后暂停Agent。</p>
+<p>Google同时把记忆明确拆为四类：当前任务的Session Memory、结构化知识的Semantic Memory、工作方法的Procedural Memory，以及历史执行的Episodic Memory。<strong>成熟度必须区分：</strong>平台与功能已正式公布，金融和法律行业版本仍为预览；公开资料没有给出长任务恢复率、多模型路由准确率、跨模型缓存代价、Sandbox利用率或独立生产审计。</p>
+
+<h3 style="font-size:18px;margin:20px 0 6px">② 为什么发生</h3>
+<p>企业Agent正在从“用户发起一次请求”变成可被邮件、事件或日程触发，并跨多套系统持续推进的工作者。若Agent一直借用发起人的身份，人员离职、权限变化、多人协作和责任追踪都难以处理；如果每次模型升级都重建上下文与工具连接，模型进步反而增加迁移成本。</p>
+<p>Google因此把Agent层与模型层解耦：身份、工具、技能、记忆和业务上下文留在平台中，每个步骤再选择合适模型。这样可以把简单任务路由到较低成本模型，把高不确定性步骤升级到强模型，同时保持同一任务身份与审计链。</p>
+<p><strong>本简报判断：</strong>商业根源是让Agent成为可分配预算、可授予权限、可审计和可替换模型的企业资源。真正被产品化的不是某一个模型，而是“长期任务＋身份＋状态＋工具＋费用”的运行时。</p>
+
+<h3 style="font-size:18px;margin:20px 0 6px">③ 改变了什么计算或数据特征</h3>
+<p>这类负载不再是同质Prompt—Response。一个主Agent可扇出多个子Agent，部分步骤重Prefill，部分步骤长Decode，另一些时间在等待数据库、浏览器、邮件或人类批准。GPU利用呈短时突发，CPU沙箱、网络连接、对象存储、元数据和身份服务却需在整个任务生命周期保持可恢复。</p>
+<p>四类记忆具有不同访问模式。Session状态要求低延迟恢复；Semantic Memory偏向检索和更新；Procedural Memory需要版本控制与安全审批；Episodic Memory规模持续增长但多数为冷数据。把它们全部保存在上下文或HBM会快速挤压Batch，把它们全部放入冷存储又会放大恢复P99。</p>
+<p>多模型路由使同一任务在不同Tokenizer、上下文格式和缓存语义之间迁移。模型可以替换，身份和审计链却不能断裂；工具凭据、记忆版本与输出来源必须跟随任务，而不是跟随某一张GPU或某一个模型端点。</p>
+<p>项目级费用封顶还把成本控制引入调度关键路径。运行时不仅要预测Token，还要估算Sandbox、工具、存储和重试；达到上限时需要在一致点暂停并可继续，而不能简单终止进程。</p>
+
+<h3 style="font-size:18px;margin:20px 0 6px">④ 触碰了哪个技术边界</h3>
+<p><strong>开始失效的假设是：企业Agent只是用户会话的延伸，模型、权限和上下文可以绑定在同一个短生命周期请求里。</strong></p>
+<p>第一道边界是身份传播。Agent拥有邮箱和独立账户后，会收到消息、创建文件并触发下游工作；OAuth映射、最小权限、凭据撤销与日志归因必须跨Workspace、SaaS、MCP服务器和Sandbox保持一致。官方描述了加密证明、细粒度权限和审计，但没有公开撤权传播P99、权限缓存失效或跨系统回滚结果。</p>
+<p>第二道边界是状态一致性。多Agent并发更新共享文档、任务图和记忆时，重复执行、冲突写入或部分失败会产生外部副作用。云端持久运行不等于自动具备Exactly-once语义；邮件、付款、工单等工具仍需要幂等键、检查点和人工审批。</p>
+<p>第三道边界是多模型可移植性。路由到不同模型可能降低成本，却会改变Token数、工具调用格式、拒绝行为和任务质量。Google没有公开Smart Routing的升级率、误路由率、跨模型重做成本或相同任务质量基线。</p>
+<p>第四道边界是记忆治理。Semantic与Episodic Memory长期累积后，会遇到删除、保留期、权限继承、数据驻留和“撤回已学信息”的问题。能够记住更多并不等于应该无限保留。</p>
+
+<h3 style="font-size:18px;margin:20px 0 6px">⑤ 可能催生什么硬件架构、新的技术需要</h3>
+<ul style="padding-left:22px">
+<li><strong>已出现：</strong>持久云端执行、动态子Agent、独立Workspace身份与存储、四类记忆、多模型Smart Routing、Sandbox计费和项目级费用封顶已被组合进同一企业平台。</li>
+<li><strong>高概率方向：</strong>推理资源按短Prompt高并发、长上下文Prefill、复杂规划和低时延Decode分池；CPU/浏览器Sandbox与GPU池解耦，Agent等待工具时释放昂贵KV。</li>
+<li><strong>高概率方向：</strong>记忆形成“HBM活动KV＋主存热Session＋NVMe语义索引＋对象存储审计历史”分层；缓存键包含Agent身份、模型、Tokenizer、工具集和权限版本。</li>
+<li><strong>高概率方向：</strong>DPU或独立安全网关承载短期凭据、网络微分段、MCP出口与审计，使被攻破的Sandbox不能横向进入记忆和控制面。</li>
+<li><strong>尚待验证：</strong>长任务故障恢复率、四类记忆的真实容量与一致性、多模型路由净节省、权限撤销后的缓存清理，以及费用封顶触发时的安全暂停点。</li>
+</ul>
+<blockquote style="margin:16px 0;padding:12px 16px"><strong>架构师结论：</strong>Agent拥有独立身份后，最昂贵的资源不再只是Token，而是可持续、可撤销且可审计的任务状态。硬件与云平台应按“每个完成并合规交付的任务”配置推理、Sandbox、存储和身份服务，而不是只按峰值Token/s扩容。</blockquote>
+<p><strong>建议跟踪：</strong></p>
+<ul style="padding-left:22px">
+<li>每个完整任务的模型路由比例、升级/返工率、Token、Sandbox秒、工具调用和总成本；</li>
+<li>子Agent扇出下的任务完成P50/P99、状态检查点字节、恢复时间与重复副作用率；</li>
+<li>权限撤销、人员离职或模型切换后的凭据传播、缓存失效、记忆删除与审计完整性。</li>
+</ul>
+<p style="font-size:14px">来源：<a href="https://cloud.google.com/blog/products/ai-machine-learning/welcome-to-gemini-at-work-2026">Google Cloud：Gemini agent、持久执行、身份、记忆、路由与成本控制（2026年10月8日）</a>｜<a href="https://blog.google/innovation-and-ai/infrastructure-and-cloud/google-cloud/gemini-at-work/">Google官方简报：Gemini agent发布</a>｜<a href="https://www.reuters.com/business/google-cloud-introduces-gemini-agent-work-ai-race-heats-up-2026-10-08/">Reuters：产品、模型选择与企业集成核实</a></p>
+<hr>
+
+<h2 style="font-size:24px;line-height:1.4;margin:36px 0 14px">02｜100kW电源压进1OU并跨向800V：高密机柜从“并联更多50V Shelf”转向分层高压直流</h2>
+
+<h3 style="font-size:18px;margin:20px 0 6px">① 新变化是什么</h3>
+<p>Acbel于2026年10月9日公布将在OCP Global Summit展示两类AI数据中心电源：</p>
+<ul style="padding-left:22px">
+<li><strong>高压直流方案：</strong>100kW Power Shelf在1OU内提供100kW输出，搭配其PDU可按客户架构配置为±400V或800V直流；</li>
+<li><strong>既有50V方案：</strong>19英寸72kW Power Shelf采用12kW模块，模块功率密度最高102W/in³，并取得80 PLUS Ruby认证；</li>
+<li><strong>演进方向：</strong>公司正在开发液冷电源，以应对电源模块自身的热密度。</li>
+</ul>
+<p>作为对照，OCP当前公开的Acbel 19英寸产品为33kW/1RU、50V输出，峰值效率97.5%，采用6个可热插拔5.5kW模块，多Shelf并联后支持100kW以上应用。新发布的72kW方案在单Shelf功率上显著上移，而100kW/1OU则把高压直流直接带到机架配电边界。</p>
+<p><strong>成熟度必须区分：</strong>100kW、72kW和电压形态来自厂商发布，实物将在10月13—15日大会展示。公开资料未给出100kW Shelf的输入电压、转换方向、效率曲线、模块数量、N+1降额、保护、短路能量、热插拔、尺寸重量或客户验收；“可配置为±400V或800V输出”也不能等同于两种数据中心架构已经互操作。</p>
+
+<h3 style="font-size:18px;margin:20px 0 6px">② 为什么发生</h3>
+<p>50V母线在100kW时对应约2000A，在300kW时约6000A；即使分成多个Shelf和母排支路，铜截面、连接器、压降、热损耗和故障电流都会迅速增加。继续把更多低压Shelf并联，可以维持成熟生态，却会占用OU、扩大母排与连接器数量，并增加均流和维护复杂度。</p>
+<p>若同样100kW改用800V直流，理想电流约125A；采用±400V双极架构，也能在保持对地电压边界的同时传送800V线间电压。高压直流因此把大电流铜损和空间压力前移到绝缘、保护和末级转换设计。</p>
+<p><strong>本简报判断：</strong>厂商同时展示800V与50V不是路线摇摆，而是在承认迁移期需要两层架构：园区或机架入口用高压减少电流，计算Tray附近仍可能转换为50V或更低电压，既服务新一代MW级机柜，也兼容现有ORV3设备。</p>
+
+<h3 style="font-size:18px;margin:20px 0 6px">③ 改变了什么计算或数据特征</h3>
+<p>GPU集群的电力负载不是稳定电阻。训练同步、推理Batch、升降频、Checkpoint和故障恢复会造成毫秒到分钟级阶跃；机柜功率密度越高，电压下陷、整流器限流和母线振荡越可能放大成算力降频或作业失败。</p>
+<p>100kW/1OU让电力Block可以更接近计算Block：三套100kW Shelf名义上即可对应300kW级机柜，但实际还必须为N+1、效率、环境温度和瞬态留余量。若单Shelf故障导致整片100kW负载迁移，其保护选择性和计算降载速度比静态效率更关键。</p>
+<p>高压母线降低长距离电流，却使末级DC/DC转换、绝缘监测、预充、直流断路和弧光控制进入机架。液冷电源则会把电气与液路维护耦合：更高功率密度可节省风道，但泄漏检测、冷却冗余和FRU更换必须与PDU保护共同设计。</p>
+
+<h3 style="font-size:18px;margin:20px 0 6px">④ 触碰了哪个技术边界</h3>
+<p><strong>开始失效的假设是：AI机柜可以持续通过增加50V Power Shelf和母排截面线性扩到数百千瓦，而不改变电压层级与保护体系。</strong></p>
+<p>第一道边界是电流与铜损。100kW在50V侧约2000A，而在800V侧约125A，电流理论上相差16倍；但这并不意味着总损耗自动降低16倍，因为新增末级转换、开关器件和冷却同样消耗功率。</p>
+<p>第二道边界是直流保护。高压直流没有交流自然过零，开断、预充、接地故障、绝缘监测和维修放电更困难。±400V与单极800V在对地电压、故障模式和PDU结构上不同，不能只看线间电压相同。</p>
+<p>第三道边界是冗余颗粒度。100kW Shelf提高密度，也放大单个Shelf或PDU故障的影响面。厂商没有说明模块级还是Shelf级N+1、满载下单模块退出后的持续能力，以及故障隔离会否触发整个机柜降额。</p>
+<p>第四道边界是热管理。72kW与100kW压入1OU后，电源自身数千瓦级损耗可能集中在很小体积；厂商已提出液冷方向，但未给出冷板、冷却液、供回液、QD、漏液与带电维护边界。</p>
+
+<h3 style="font-size:18px;margin:20px 0 6px">⑤ 可能催生什么硬件架构、新的技术需要</h3>
+<ul style="padding-left:22px">
+<li><strong>已出现：</strong>100kW/1OU、±400V/800V可配置PDU、72kW/50V Shelf、12kW Ruby模块及液冷电源开发路线已经公开；工程细节与量产验收仍待披露。</li>
+<li><strong>高概率方向：</strong>园区交流进入整流层后，以800V或±400V送至机架，再在Rack/Tray级转换为50V或板级电压；计算Block、电力Block和冷却Block按100kW左右颗粒度组合。</li>
+<li><strong>高概率方向：</strong>RMC与电源控制器共享GPU功率、母线电压、模块温度和CDU余量；发生电源模块或液路故障时，先进行毫秒级功率封顶，再迁移或恢复作业。</li>
+<li><strong>高概率方向：</strong>高压直流Shelf采用双路输入、选择性保护、绝缘监测、预充和可验证放电；末级转换器与液冷Manifold形成明确FRU边界。</li>
+<li><strong>尚待验证：</strong>100kW方案的输入输出拓扑、全负载效率、峰值与持续功率、模块数量、N+1能力、短路保护、热插拔，以及液冷电源的水力和维修参数。</li>
+</ul>
+<blockquote style="margin:16px 0;padding:12px 16px"><strong>架构师结论：</strong>100kW/1OU不是“800V已经定型”的证据，而是低压大电流架构逼近空间与铜损边界的明确产品信号。采购与机房设计应先确定故障隔离、末级转换和维护边界，再比较电压与峰值功率数字。</blockquote>
+<p><strong>建议跟踪：</strong></p>
+<ul style="padding-left:22px">
+<li>100kW Shelf的输入/输出、模块数量、效率曲线、功率因数、瞬态响应和N+1降额；</li>
+<li>±400V与800V的接地、绝缘监测、预充、短路选择性、弧光测试和维修放电时间；</li>
+<li>在真实GPU负载阶跃及单模块故障下的母线波动、GPU降频、任务损失与恢复时间。</li>
+</ul>
+<p style="font-size:14px">来源：<a href="https://en.prnasia.com/releases/global/acbel-to-showcase-high-density-power-solutions-for-ai-data-centers-at-ocp-global-summit-2026-551002.shtml">Acbel：100kW、72kW Power Shelf与液冷电源路线（2026年10月9日）</a>｜<a href="https://www.opencompute.org/marketplace/facilities-physical-infrastructure/acbel-19-33kw-power-shelf/">Open Compute Project：Acbel既有33kW/50V Shelf公开规格</a>｜<a href="https://www.opencompute.org/news/explore-22-tracks-at-the-2026-ocp-global-summit/">OCP Global Summit 2026：800V、1MW级机柜与电力专题</a></p>
+
+<h2 style="font-size:22px;margin:34px 0 12px">今日架构主线</h2>
+<p><strong>AI工厂正在形成两个此前相互独立、如今必须联动的控制域：数字身份与物理电力。</strong></p>
+<ul style="padding-left:22px">
+<li>Agent控制面决定任务由哪个身份、模型和Sandbox执行，状态放在哪一层，何时暂停或恢复；</li>
+<li>电力控制面决定计算Block从哪一级电压取电，故障时如何隔离和限功率，以及多少算力可以继续运行；</li>
+<li>两者都从粗粒度共享转向可计量Block：项目有费用封顶，机柜有100kW级电力单元；</li>
+<li>两者也都扩大了状态空间：更多Agent、模型、权限与记忆组合，对应更多电压、PDU、转换器和冷却组合。</li>
+</ul>
+<p>系统级验收应把它们连接起来：模拟Agent扇出造成的推理功率阶跃，同时注入模型限流、Sandbox故障或电源模块退出，测量任务完成率、权限完整性、母线波动、GPU降额与恢复时间。<strong>真正可运营的Agent基础设施，必须在预算、权限和电力任一边界触发时，都能安全暂停、降级并恢复。</strong></p>
+
+<h2 style="font-size:22px;margin:30px 0 12px">未发现可信新增</h2>
+<p>本期优先扫描2026年10月9日，并回溯近7日与此前简报去重；以下“未发现”仅指本次可公开验证来源。</p>
+<ul style="padding-left:22px">
+<li><strong>SemiAnalysis：</strong>未发现10月9日新的独立高价值公开文章；不使用搜索摘要或二次转述代替原文。</li>
+<li><strong>超节点整机：</strong>未核实到近24小时新的完整超节点量产、客户验收、MFU或有效集合通信数据。Google本期信号属于Agent平台，Acbel属于供电部件。</li>
+<li><strong>NPO/CPO/OCS：</strong>未发现新的量产互操作、客户部署、Pre-FEC BER、每比特功耗或现场MTTR数据；Upscale昨日的NPO/CPO仍为路线图。</li>
+<li><strong>240kW以上液冷：</strong>昨日Nidec 300kW/4U CDU已分析；本期未出现新的供回水温、流量、压降、泵曲线、冷却液或N+1降级参数。</li>
+<li><strong>云栖大会后续：</strong>未发现AL144/AL64、ALink/SNPO、NPO光源、正交互连或整柜液冷供电的新官方工程参数。</li>
+</ul>
+<p style="font-size:14px">必查来源：<a href="https://newsletter.semianalysis.com/archive">SemiAnalysis公开归档</a>｜<a href="https://www.opencompute.org/events/ocp-summit/2026-ocp-global-summit/">OCP Global Summit 2026</a>｜<a href="https://yunqi.aliyun.com/2026/">2026云栖大会官方网站</a></p>
+      ]]></description>
+    </item>
+<item>
       <title>AI算力架构前沿简报｜2026年10月9日</title>
       <link>https://raw.githubusercontent.com/YanLiang518/ai-supernode-rss/main/archive/2026-10-09.html</link>
       <guid isPermaLink="false">ai-supernode-brief-2026-10-09</guid>
@@ -5396,5 +5525,5 @@
         <p>真正分水岭是断路保护、接地、预充电、直流拉弧、模块热插拔以及GPU功率阶跃能否形成统一规范。</p>
       ]]></description>
     </item>
-</channel>
+  </channel>
 </rss>
