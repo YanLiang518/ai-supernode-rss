@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>AI算力架构前沿简报｜2026年10月11日</title>
+<style>
+:root{color-scheme:light dark;--bg:#f6f7f9;--card:#fff;--text:#17202a;--muted:#5f6b76;--line:#d9dee5;--link:#075dcc;--quote:#eef4ff}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;line-height:1.75}
+main{max-width:920px;margin:0 auto;padding:42px 22px 64px}
+article{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:36px 44px;box-shadow:0 8px 30px rgba(0,0,0,.05)}
+h1{font-size:30px;line-height:1.3;margin:0 0 8px}h2{font-size:23px;line-height:1.45;margin:36px 0 12px;border-bottom:1px solid var(--line);padding-bottom:8px}h3{font-size:18px;margin:22px 0 6px}
+p{margin:8px 0 15px}ul{padding-left:24px}li{margin:7px 0}a{color:var(--link);overflow-wrap:anywhere}hr{border:0;border-top:1px solid var(--line);margin:30px 0}
+.meta{color:var(--muted);margin-bottom:24px}blockquote{margin:18px 0;padding:14px 18px;background:var(--quote);border-left:4px solid var(--link);border-radius:8px}
+@media (prefers-color-scheme:dark){:root{--bg:#0d1117;--card:#161b22;--text:#e6edf3;--muted:#9ba7b4;--line:#30363d;--link:#79c0ff;--quote:#16243a}}
+@media(max-width:680px){main{padding:18px 10px 40px}article{padding:24px 18px;border-radius:10px}h1{font-size:25px}h2{font-size:21px}}
+</style>
+</head>
+<body>
+<main><article>
+<h1>AI算力架构前沿简报｜2026年10月11日</h1>
+<p class="meta">2026年10月11日 · 中文全文归档</p>
+<h2>今日判断</h2>
+<p><strong>今天最值得关注的不是“800V直流”又多了一次路线宣示，而是高压母线开始通过两种不同GaN拓扑，直接下沉到靠近GPU的6V供电边界。</strong>onsemi于10月9日公开一套1200V垂直GaN方案：800V直降6V，标称20kW、峰值24.5kW，预计效率96%、功率密度2.6kW/in³；Navitas与Microchip则在10月5日公布采用16颗650V GaN、堆叠半桥和数字控制的800V→6V参考设计，目标为1MHz、最高96%效率和2100W/in³。</p>
+<p>两者都仍是展示或参考设计，不是已量产并通过客户机柜验收的电源。真正的架构变化是：<strong>行业不再只讨论如何把800V送到机架，而开始竞争“在哪里降压、减少几级转换、故障由哪个FRU隔离，以及约1kW级转换损耗如何被冷却”。</strong></p>
+
+<h2>信号总览</h2>
+<ul>
+<li><strong>800V→6V直转换进入20kW级硬件验证</strong>｜供电/机架/GPU电源信号｜onsemi演示方案与Navitas—Microchip参考平台已公开；效率、可靠性和量产成熟度仍待第三方及客户验证｜影响高压直流母线、Tray级DC/DC、GaN/SiC选型、热管理、热插拔和故障隔离。</li>
+</ul>
+<hr>
+
+<h2>01｜800V开始直接下沉到6V、20kW：GPU电源从“多级降压链”转向高压近负载转换</h2>
+
+<h3>① 新变化是什么</h3>
+<p>2026年10月9日，onsemi发布其将在OCP Global Summit展示的“Grid-to-Core”电源组合。其中最具架构意义的是一套<strong>800V直流转6V直流</strong>的1200V垂直GaN方案：</p>
+<ul>
+<li>标称输出20kW，峰值输出24.5kW；</li>
+<li>预计效率96%，功率密度2.6kW/in³；</li>
+<li>采用非堆叠一次侧与半匝矩阵变压器，后者相对参考变压器缩小20%；</li>
+<li>以五相功率级和T形板卡形态靠近Compute Tray与GPU。</li>
+</ul>
+<p>同一发布还给出两种800V→50V中间母线方案：6kW SiC JFET方案峰值效率超过98%、功率密度2.5kW/in³；12kW GaN堆叠LLC方案在600kHz下满载效率98.0%、峰值98.8%，输入范围700—900V。这使“直接到6V”和“先到50V”可以在同一技术组合中比较，而不是被写成非此即彼的路线。</p>
+<p>此前的10月5日，Navitas与Microchip也发布800V→6V参考平台。它采用16颗650V、17mΩ GaN FET，在一次侧使用堆叠半桥，结合200MHz数字信号控制器、78ps分辨率PWM、最高40MSPS ADC与硬件安全器件；目标为1MHz、最高96%效率和2100W/in³，并计划提供参考板、软件和设计文档。</p>
+<p><strong>成熟度必须严格区分：</strong>onsemi把96%明确写为“预计效率”，并称方案在OCP展示；Navitas—Microchip提供的是面向开发者的参考设计。两者都没有公开完整效率曲线、输入瞬态、GPU负载阶跃、EMI、寿命、量产良率或客户机柜验收数据，不能写成800V直降6V已经大规模商用。</p>
+
+<h3>② 为什么发生</h3>
+<p>高密GPU机柜若长期以50V分配100kW，理想电流约2000A；300kW约6000A。更多并联Shelf、母排和连接器可以继续扩容，但铜损、压降、占用空间、均流和故障电流都会迅速上升。把主干提高到800V后，100kW理想电流约125A，可显著降低长距离传输的电流与铜负担。</p>
+<p>问题随后转移到末端：GPU核心只需要个位数伏特甚至更低电压。传统路线先把800V转换为50V，再由50V转换到6V或板级电压；直接转换试图删除一个中间级，减少器件、母排和累计转换损耗，并缩短电源到GPU的距离，以改善负载瞬态。</p>
+<p><strong>本简报判断：</strong>厂商的商业目标是把800V生态从Power Rack和Busbar推进到可被服务器ODM采用的Compute Tray模块。谁能同时交付功率器件、控制、保护、热设计和参考板，谁就更可能定义新一代GPU板的电源机械边界，而不仅是销售单颗GaN器件。</p>
+
+<h3>③ 改变了什么计算或数据特征</h3>
+<p>AI训练和推理负载会因同步、Batch、升降频、Checkpoint及故障恢复产生快速功率阶跃。电压比从800V到6V约为133:1；要在20kW级保持GPU附近电压稳定，控制环路、变压器寄生参数、板级电感与输出电容必须共同响应，而不能只比较稳态效率。</p>
+<p>若20kW是输出功率且效率为96%，则输入约20.83kW，转换器自身损耗约0.83kW；若24.5kW峰值仍保持96%，损耗约1.02kW。<strong>这是按厂商目标值计算的理论量级，不是实测热数据。</strong>它说明即使删除一级转换，Tray附近仍可能集中近1kW热量，电源冷板、风道或液冷接口会直接影响GPU可用功率。</p>
+<p>两种拓扑还会形成不同故障与维护特征。Navitas使用650V器件堆叠一次侧，需要电压均衡和堆叠器件控制；onsemi使用1200V垂直GaN的非堆叠一次侧，目标是减少均压复杂度。前者强调现有GaN器件、数字控制与完整参考平台，后者强调更高耐压器件和更小磁性件。公开资料尚不足以判断哪一种在真实机柜中拥有更好的效率、成本或可靠性。</p>
+
+<h3>④ 触碰了哪个技术边界</h3>
+<p><strong>开始失效的假设是：800V只属于机房或Power Rack，Compute Tray仍可沿用成熟的50V输入与多级转换，而不承担高压设计责任。</strong></p>
+<p>第一道边界是绝缘、爬电距离和维护安全。把800V送进Tray，会把触电、直流拉弧、预充、放电、连接器盲插和污染等级要求带到服务器内部。更短电源路径减少铜，却扩大了高压部件与GPU板共存的安全设计范围。</p>
+<p>第二道边界是转换效率与热密度。96%在消费电源中很高，但20kW时仍对应约833W损耗。若电源与GPU共享冷却回路，任何泵、冷板或快速接头故障都可能同时削弱计算与供电；若独立冷却，又会增加空间和FRU复杂度。</p>
+<p>第三道边界是瞬态与稳定性。更少转换级意味着更短能量路径，但也减少中间母线对扰动的缓冲。GPU负载突变、上游800V波动和BESS/整流器控制可能跨层耦合；稳态峰值效率不能证明在0.1—20Hz功率振荡、毫秒级负载阶跃或单模块退出时仍稳定。</p>
+<p>第四道边界是可靠性与故障域。直接转换把高压开关、磁性件、数字控制和低压大电流输出合并在一个模块中。模块故障究竟只损失一块GPU板、一个Tray还是整条母线，取决于Hot Swap、熔断、固态断路和旁路边界。onsemi公开了独立800V Hot Swap方案的20A持续30分钟、输出短路和高dv/dt测试，但尚未给出与20kW直转换模块组合后的完整失效验证。</p>
+
+<h3>⑤ 可能催生什么硬件架构、新的技术需要</h3>
+<ul>
+<li><strong>已出现：</strong>OCP已形成800V设施与机架架构；onsemi、Navitas和Microchip又把800V→6V推进到20kW级展示或参考硬件，并同时提供数字控制、硬件认证及Hot Swap等配套方向。</li>
+<li><strong>高概率方向：</strong>机柜同时保留两类Tray：成熟平台使用800V→50V中间母线，再做板级降压；高密新平台在Compute Tray内直接800V→6V或12V，以负载瞬态、FRU和冷却条件决定路线，而不是全行业一次切换。</li>
+<li><strong>高概率方向：</strong>电源模块与GPU板、冷板和Rack Management Controller形成联合设计；调度器读取母线电压、GaN结温、转换器余量和冷却流量，在硬件保护动作前先限制GPU功率。</li>
+<li><strong>高概率方向：</strong>800V模块需要可信启动、签名固件、遥测、快速故障隔离和可验证放电；参考设计中的硬件Root of Trust会从“可选安全功能”变成联网电源控制器的基本要求。</li>
+<li><strong>尚待验证：</strong>20kW连续输出下的全温效率、功率密度口径、EMI、负载阶跃、并联均流、单模块故障、GaN寿命、冷却条件、热插拔和现场MTTR。</li>
+</ul>
+<blockquote><strong>架构师结论：</strong>800V架构的竞争焦点已经从“主干电压是否可行”下沉到“最后一百多倍降压如何实现”。直接800V→6V只有在删除一级转换带来的收益，大于高压近板设计、约1kW模块热量和更复杂保护的成本时，才会成为默认方案；应以完整Tray的效率、瞬态、故障和维修数据验收，而不是以单颗GaN或峰值功率密度判断。</blockquote>
+<p><strong>建议跟踪：</strong></p>
+<ul>
+<li>20kW连续输出在700—900V输入、不同环境和冷却条件下的效率曲线、损耗分布与结温；</li>
+<li>GPU真实负载阶跃下的6V跌落、恢复时间、控制环路稳定性，以及多模块并联和单模块退出行为；</li>
+<li>800V连接器、预充、Hot Swap、短路选择性、绝缘监测、放电时间、EMI和FRU更换边界；</li>
+<li>同一GPU Tray上“800V→50V→6V”与“800V→6V”两条路线的端到端效率、体积、成本、可用性和MTTR。</li>
+</ul>
+<p>来源：<a href="https://www.onsemi.com/company/newsroom/blog/innovation/from-grid-to-core-powering-ai">onsemi：Grid-to-Core、800V→50V与800V→6V方案（2026年10月9日）</a>｜<a href="https://www.globenewswire.com/news-release/2026/10/05/3374545/0/en/navitas-and-microchip-collaborate-to-deliver-800v-reference-design-for-next-generation-ai-data-centers.html">Navitas与Microchip：800V→6V参考设计（2026年10月5日）</a>｜<a href="https://www.opencompute.org/news/powering-the-next-era-of-ai-how-google-microsoft-and-nvidia-are-standardizing-and-accelerating-the-industry-transition-to-lvdc/">OCP：Google、Microsoft与NVIDIA的800V开放架构及两种部署路径</a></p>
+
+<h2>今日架构主线</h2>
+<p><strong>AI机柜的供电边界正在从“设施把电送到机架”继续下沉到“电源拓扑与GPU板共同设计”。</strong></p>
+<ul>
+<li>800V主干降低长距离电流，却把绝缘、保护和末级转换带到Compute Tray；</li>
+<li>直接到6V可删除中间级，但20kW、96%仍产生约0.83kW理论损耗，热管理没有消失；</li>
+<li>1200V非堆叠垂直GaN与650V堆叠半桥代表不同器件成熟度、控制和可靠性权衡；</li>
+<li>真正验收对象应是“母线—转换器—GPU—冷却—控制器”完整电力链，而不是单个峰值效率。</li>
+</ul>
+<p>下一代超节点调度器也需要理解电源余量：当转换器温度、母线或液冷接近边界时，先进行细粒度GPU功率封顶、Batch整形或任务迁移，再触发硬件保护。<strong>计算调度和电源控制若继续分离，机柜功率越高，瞬态与故障造成的无效算力就越大。</strong></p>
+
+<h2>未发现可信新增</h2>
+<p>本期优先扫描2026年10月10日，并回溯近7日与此前简报去重；以下“未发现”仅指本次可公开验证来源。</p>
+<ul>
+<li><strong>SemiAnalysis：</strong>未发现10月10日新的独立高价值公开文章；不使用搜索摘要或付费内容转述替代原文。</li>
+<li><strong>超节点整机：</strong>未核实到近24小时新的量产整机、客户验收、MFU、集合通信有效带宽或故障恢复数据。</li>
+<li><strong>NPO/CPO/OCS：</strong>未核实到新的量产互操作、客户部署、误码率、每比特功耗或现场可靠性数据。</li>
+<li><strong>液冷：</strong>未发现新的240kW以上单柜供回水温、流量、压降、冷却液、QD、冗余或FRU维护参数。电源功率密度上升强化了液冷需求，但本期来源未给出完整水力条件。</li>
+<li><strong>OCP大会预告：</strong>微软已列出AI训练功率振荡、跨云GPU互联和安全等议题，但技术演讲尚未发生；本期不把议程标题当作新规格。会后将按公开演讲、规范和实测数据继续核验。</li>
+<li><strong>业务与融资：</strong>Nuvacore融资、NVIDIA与Reflection AI谈判及AI债务市场变化没有披露足以改变现有硬件拓扑的已交付技术参数，本期不单列。</li>
+</ul>
+<p>必查来源：<a href="https://techcommunity.microsoft.com/blog/azureinfrastructureblog/microsoft-at-ocp-global-summit-2026/4562337">Microsoft at OCP Global Summit 2026</a>｜<a href="https://newsletter.semianalysis.com/archive">SemiAnalysis公开归档</a></p>
+</article></main>
+</body>
+</html>
