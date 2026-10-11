@@ -5,11 +5,143 @@
     <link>https://github.com/YanLiang518/ai-supernode-rss</link>
     <description>聚焦 AI 超节点、GPU/加速芯片、Scale-up 互联、NPO/CPO、液冷、供电与头部厂商架构动态。</description>
     <language>zh-cn</language>
-    <pubDate>Sun, 11 Oct 2026 05:00:00 +0800</pubDate>
-    <lastBuildDate>Sun, 11 Oct 2026 05:00:00 +0800</lastBuildDate>
+    <pubDate>Mon, 12 Oct 2026 05:00:00 +0800</pubDate>
+    <lastBuildDate>Mon, 12 Oct 2026 05:00:00 +0800</lastBuildDate>
     <ttl>15</ttl>
     <atom:link href="https://raw.githubusercontent.com/YanLiang518/ai-supernode-rss/main/feed.xml" rel="self" type="application/rss+xml"/>
 
+    <item>
+      <title>AI算力架构前沿简报｜2026年10月12日</title>
+      <link>https://raw.githubusercontent.com/YanLiang518/ai-supernode-rss/main/archive/2026-10-12.html</link>
+      <guid isPermaLink="false">ai-supernode-brief-2026-10-12</guid>
+      <pubDate>Mon, 12 Oct 2026 05:00:00 +0800</pubDate>
+      <description><![CDATA[
+<h2>今日判断</h2>
+<p><strong>今天两条OCP开幕前信号显示，AI基础设施正在从“单部件刷新”转向可重复装柜的功率—冷却—网络Block。</strong>Delta给出2MW开放In-Row CDU和3.6MW、800VDC LTL CDU的成组工程参数；Broadcom则把102.4T交换、800G NIC、液冷交换机和第三代CPO带入ORV3与多个系统伙伴的展示。</p>
+<p>前者将冷却域从单柜扩大到整排，并把CDU泵与800V供电耦合；后者将网络成熟度从交换芯片带宽推进到板卡、光引擎、冷却与机架集成。<strong>共同边界不是峰值MW或Tb/s，而是一个Block发生泵、滤芯、光引擎、交换板或电源故障时，影响多少GPU、能否在线隔离，以及性能下降是否可被调度器感知。</strong></p>
+
+<h2>信号总览</h2>
+<ul>
+<li><strong>Delta把液冷扩展到2MW开放In-Row与3.6MW、800VDC LTL CDU</strong>｜设施/液冷/供电信号｜产品与2027年量产目标已公开；系统级能效、水力曲线及客户验收待验证｜影响冷却故障域、500GPM管路、过滤、热插拔泵、800V电机及行级冗余。</li>
+<li><strong>Broadcom以多伙伴ORV3演示整合102.4T交换、800G NIC、液冷与第三代CPO</strong>｜Scale-up/Scale-out/光互联信号｜产品和展会系统已公布；互操作、链路可靠性和生产部署数据未公开｜影响以太网超节点、交换机液冷、224G铜、CPO维护及开放机架验证。</li>
+</ul>
+<hr>
+
+<h2>01｜Delta把冷却Block扩到整排：2MW开放CDU与3.6MW、800VDC泵系统进入产品化</h2>
+<h3>① 新变化是什么</h3>
+<p>2026年10月8日，Delta公布将在OCP Global Summit展示一组从园区到芯片的供电与液冷方案。其中新增参数最完整的是Project Deschutes Open In-Row CDU：</p>
+<ul>
+<li>最高2MW散热能力；</li>
+<li>3°C Approach Temperature；</li>
+<li>最高500GPM流量，约1893L/min；</li>
+<li>80psi可用压力，约5.5bar；</li>
+<li>N+1无轴封泵、双路电源；</li>
+<li>泵和滤芯可热插拔，旁通过滤精度0.2μm，并配置通流式膨胀罐；</li>
+<li>计划于2027年第一季度量产。</li>
+</ul>
+<p>Delta还公开一套3.6MW Liquid-to-Liquid CDU，采用800VDC供电和三台可热插拔25kW电泵，目标是支持不停机运行；同时展示3MW GoCool系统、4U In-Rack CDU、GPU与交换芯片微通道冷板以及面向垂直供电的双面冷却。</p>
+<p><strong>成熟度必须分开：</strong>参数和量产目标已经由厂商发布，但本期没有客户现场数据，也没有完整泵曲线、二次侧供回液温度、设计ΔT、冷却液、水质、N+1降级流量、换热器压降或全年能耗。3.6MW是热移除能力，不等于单柜功率，也不能写成已经交付3.6MW超节点。</p>
+
+<h3>② 为什么发生</h3>
+<p>当机柜进入200—300kW甚至更高功率后，单柜CDU会重复占用空间、电源、控制器和维护点；其故障率与备件数量随机柜数增长。把CDU扩大到整排，可以共享泵、换热器、过滤和膨胀容积，并通过预制管路加快部署。</p>
+<p>代价是故障域同步扩大：一个2MW CDU按240kW机柜计算，名义上可覆盖约8个满功率机柜；3.6MW则对应约15个。实际数量还要扣除冗余、温差、环境与降额。冷却Block一旦退出，受影响的GPU不再是一柜几十或上百颗，而可能是整排上千颗。</p>
+<p><strong>本简报判断：</strong>Delta把供电、微电网、800V母线和液冷放在同一“Grid-to-Chip”组合中，目标是按可复制的MW级Block交付AI工厂，而不是分别销售CDU和Power Shelf。800V泵还允许冷却设备直接接入未来直流数据厅，减少独立低压供电层，但同时把冷却可用性纳入高压直流保护体系。</p>
+
+<h3>③ 计算或数据特征如何变化</h3>
+<p>500GPM约为31.5kg/s水流量。若2MW热负载全部由水带走，按水比热粗算，主回路所需温升约15.1°C；若设计ΔT为10°C，则同样500GPM只能搬运约1.32MW。<strong>这只是热平衡推算，不代表厂商的二次侧设计点</strong>，因为公开的3°C是Approach Temperature，不是供回液ΔT。</p>
+<p>这一区分直接影响GPU部署：CDU“2MW铭牌”只有在规定流量、压差、一次水温和二次供回温差同时满足时才成立。实际GPU功率会随训练同步、推理Batch和降频变化，热负载具有分钟级波动；行级CDU需要在部分负载下调泵速并维持各柜流量平衡，避免近端支路抢流、远端冷板缺流或控制振荡。</p>
+<p>0.2μm旁通过滤说明微通道冷板已把颗粒物和堵塞风险推到系统级。旁路过滤不会让全部主流量实时通过滤芯，其净化速度取决于旁路比例、颗粒产生率和滤芯压差；若只看过滤精度而不看循环周转时间，无法判断冷板长期可靠性。</p>
+<p>3.6MW CDU的三台25kW泵若同时满载，泵额定功率合计75kW，相当于热移除能力的约2.1%。这不是完整CDU能效，因为泵不一定同时满载，且尚未计入控制、换热及上游设施能耗，但它给出了冷却辅助功耗的量级边界。</p>
+
+<h3>④ 触碰了哪项技术边界</h3>
+<p><strong>开始失效的假设是：CDU容量只要大于机柜热负载，冷却系统就可以独立于GPU拓扑和故障域设计。</strong></p>
+<p>第一道边界是水力分配。500GPM与80psi意味着主管、阀门、软管、Manifold和QD必须在高流量下控制压降、流速、振动与水锤。一个行级CDU覆盖多柜后，任何支路阀门动作都会改变其他机柜工作点。</p>
+<p>第二道边界是可维护性。热插拔泵和滤芯减少计划停机，但更换过程中仍会改变流量、压差和颗粒分布；“支持零停机目标”不等于已经证明任意单泵、单电源或滤芯故障下都保持3.6MW能力。</p>
+<p>第三道边界是电气—液路共因故障。800V泵减少配电转换，却把直流母线、泵驱动和冷却故障耦合。如果计算与CDU共用同一800V保护区，母线故障可能同时失去算力和散热；需要双路供电、选择性保护、蓄能和安全降载共同切断这一共因路径。</p>
+<p>第四道边界是控制延迟。GPU可以在毫秒级改变功率，水温和流量响应则慢得多。RMC、CDU和作业调度若没有共享余量与故障遥测，热保护只能在温度已经上升后被动降频。</p>
+
+<h3>⑤ 可能催生何种硬件技术与架构</h3>
+<ul>
+<li><strong>已出现：</strong>2MW开放In-Row CDU、3.6MW/800VDC LTL CDU、N+1无轴封泵、双路供电、热插拔泵与滤芯及0.2μm旁通过滤已经形成公开产品路线。</li>
+<li><strong>高概率方向：</strong>AI工厂按“2—4MW冷却Block＋对应电力Block＋若干计算柜”预制交付；网络与作业调度尽量把同一强同步训练域限制在可独立维持的冷却故障域内。</li>
+<li><strong>高概率方向：</strong>CDU控制器向RMC暴露泵余量、支路流量、滤芯压差、Approach、一次水条件和预计降额时间；GPU先按柜、Tray或任务优先级限功率，再进入硬件温控。</li>
+<li><strong>高概率方向：</strong>800V冷却泵采用与计算电源分离的保护分区、双路母线或短时储能，防止一次电气故障同时关闭计算与散热。</li>
+<li><strong>尚待验证：</strong>2MW与3.6MW在不同ΔT和一次水温下的持续能力、N+1降级曲线、泵更换瞬态、过滤周转时间、水锤、噪声、全年辅助能耗及客户现场MTTR。</li>
+</ul>
+<blockquote><strong>架构师结论：</strong>MW级行级CDU的主要价值是减少重复设备并加快AI工厂交付，但它同时把冷却故障放大为多柜事件。验收不能只看MW和GPM，应把“单泵退出—流量重分配—GPU限功率—任务恢复”作为完整测试序列。</blockquote>
+<p><strong>建议跟踪：</strong></p>
+<ul>
+<li>500GPM对应的设计ΔT、一次/二次供回液温度、换热器压降和全泵曲线；</li>
+<li>单泵、单电源、滤芯堵塞及支路关闭时的剩余MW、瞬态压差和受影响机柜数；</li>
+<li>0.2μm旁路比例、全系统净化周转时间、颗粒计数、冷板堵塞率和滤芯更换周期；</li>
+<li>泵、控制器及设施侧能耗，按不同IT负载计算局部pPUE与每有效训练Token的冷却成本。</li>
+</ul>
+<p>来源：<a href="https://www.prnewswire.com/news-releases/delta-to-showcase-energy-saving-grid-to-chip-infrastructure-solutions-for-sustainable-ai-at-ocp-global-summit-2026-302902203.html">Delta：Grid-to-Chip供电与液冷产品参数（2026年10月8日）</a>｜<a href="https://www.opencompute.org/news/explore-22-tracks-at-the-2026-ocp-global-summit/">OCP：2026大会液冷、电力与机架技术范围</a></p>
+<hr>
+
+<h2>02｜102.4T交换与CPO进入多伙伴ORV3展示：网络芯片竞争上移到可装柜、可冷却和可维护的系统</h2>
+<h3>① 新变化是什么</h3>
+<p>2026年10月8日，Broadcom公布其OCP Global Summit组合，包括Tomahawk 6、Tomahawk Ultra、Jericho 4、Thor Ultra 800G与Thor 2 400G AI NIC，以及第三代Tomahawk 6-Davisson CPO。</p>
+<p>比产品清单更值得关注的是系统落点：Broadcom称将与超过15家伙伴展示方案；Accton/Edgecore和Alpha Networks展示Tomahawk 6，其中Alpha为液冷系统；Celestica、Delta与Micas分别展示102.4T Tomahawk 6-Davisson CPO。发布同时把这些组件放入ORV3机架，并列出224G AEC、Scale-up Ethernet传输、MRC多路径可靠连接和光Fabric配置等技术议题。</p>
+<p><strong>成熟度必须区分：</strong>Tomahawk 6等芯片此前已经发布，102.4T和CPO也不是本周首次出现。本次新增信号是多个系统伙伴把交换、液冷和第三代CPO带到机架级演示；但发布没有给出跨厂互操作结果、有效集合通信带宽、光功耗、BER、链路修复、现场可用度或客户部署规模。</p>
+
+<h3>② 为什么发生</h3>
+<p>交换ASIC达到102.4T后，系统瓶颈不再只是硅片交换容量。若使用64个1.6T端口或更多低速拆分，面板、SerDes损耗、光模块功耗、散热和布线会共同限制可用带宽。CPO把光引擎靠近交换芯片以缩短信号路径，液冷则为高功率交换板和光电封装提供热余量。</p>
+<p>与此同时，AI网络分成三类需求：机架或Pod内Scale-up追求低时延和强同步；数据中心内Scale-out追求大规模无损与拥塞控制；跨园区Scale-across需要深缓存、路由和故障绕行。Broadcom把Tomahawk Ultra、Tomahawk 6、Jericho 4与Thor NIC组合展示，目标是用同一以太网生态覆盖三层，而不是让每层采用完全独立的协议、NIC和运维体系。</p>
+<p><strong>本简报判断：</strong>商业竞争正在从“卖102.4T芯片”变成“让ODM能在ORV3或Open Rack Wide中交付可冷却、可布线、可测试的AI网络Block”。多伙伴展示降低单一系统厂商锁定，但真正开放性仍取决于软件、遥测和故障诊断能否跨厂一致。</p>
+
+<h3>③ 计算或数据特征如何变化</h3>
+<p>大模型训练的All-Reduce、All-to-All和MoE专家路由对丢包、尾时延和拓扑不均衡敏感；推理则同时存在重Prefill、KV搬运和小Batch低时延流量。102.4T峰值只有在端口、NIC、拥塞控制和作业放置共同工作时才能转化为有效Token。</p>
+<p>CPO改变故障与数据路径：可插拔光模块把光电器件放在面板并可独立更换；CPO缩短高速电连接，却把光引擎、交换ASIC、封装和冷却耦合。一个光通道失效时，系统需要判断是激光源、光纤、连接器、光引擎还是交换硅问题，并决定按通道降级、重路由还是更换整板。</p>
+<p>224G AEC则试图延长铜在机柜内的使用边界。它增加Retimer、功耗和遥测，却可能避免短距离光转换。因而网络控制面需要同时理解被动铜、AEC、可插拔光和CPO的不同误码、延迟与维修成本，不能把所有端口视为同质链路。</p>
+
+<h3>④ 触碰了哪项技术边界</h3>
+<p><strong>开始失效的假设是：交换芯片流片并达到102.4T后，网络系统只需增加端口和光模块即可线性扩展。</strong></p>
+<p>第一道边界是前面板与热密度。1.6T端口数量、连接器、光功耗和液冷接口共同争夺机箱空间；交换芯片、光引擎与电源的热耦合会决定持续速率，而不是数据手册峰值。</p>
+<p>第二道边界是CPO可维护性。多家ODM展示CPO说明系统生态扩大，但并未证明光引擎、外置激光、连接器、冷板或交换板具有统一FRU边界。若单通道故障必须更换昂贵交换板，功耗收益可能被MTTR与备件成本抵消。</p>
+<p>第三道边界是协议与互操作。Scale-up Ethernet、MRC、SRv6和不同拥塞控制机制可以提高利用率，但跨NIC、交换机与NOS组合是否保持相同语义，仍需要可重复的集合通信、故障注入和遥测测试。</p>
+<p>第四道边界是“展示”与“部署”的差距。多个展台出现同一CPO平台证明供应链正在形成，却不能替代量产良率、光纤装配、污染控制、老化、Pre-FEC BER和现场故障数据。</p>
+
+<h3>⑤ 可能催生何种硬件技术与架构</h3>
+<ul>
+<li><strong>已出现：</strong>102.4T Tomahawk 6、液冷交换系统、800G NIC及第三代TH6-Davisson CPO已进入多家ORV3系统伙伴的展示组合。</li>
+<li><strong>高概率方向：</strong>Scale-up、Scale-out和Scale-across继续共享以太网管理与遥测框架，但采用不同交换芯片、缓存深度、链路介质与拥塞策略；调度器按网络故障域放置MoE与强同步作业。</li>
+<li><strong>高概率方向：</strong>机柜内短距由被动铜和224G AEC竞争，跨柜由可插拔光、NPO或CPO分层；选择依据从链路BOM扩展到功耗、BER、FRU和生产测试时间。</li>
+<li><strong>高概率方向：</strong>CPO交换机需要外置激光冗余、逐通道功率与BER遥测、光路旁路、板级液冷快换及无尘装配和维护规范。</li>
+<li><strong>尚待验证：</strong>多伙伴系统的真实互操作、102.4T持续有效负载、集合通信尾时延、液冷条件、CPO每比特功耗、光源拓扑、链路可用度和现场MTTR。</li>
+</ul>
+<blockquote><strong>架构师结论：</strong>多ODM展示比单颗交换芯片发布更接近产品成熟，但仍只是“可集成”的证据，不是“可大规模运营”的证据。下一步应看同一套NIC、NOS和集合通信负载能否跨不同ORV3交换系统运行，并在光通道、泵或交换板故障后保持可预测退化。</blockquote>
+<p><strong>建议跟踪：</strong></p>
+<ul>
+<li>Tomahawk 6液冷系统和TH6-Davisson CPO的持续功耗、冷却液条件、端口配置与有效吞吐；</li>
+<li>CPO光源位置、冗余、Pre-FEC BER、通道级降级、板卡更换范围和MTTR；</li>
+<li>224G AEC与光链路在长度、延迟、功耗、误码、Retimer数量和生产测试上的边界；</li>
+<li>Scale-up Ethernet、MRC和多路径故障注入下的All-Reduce/All-to-All P99及任务恢复时间。</li>
+</ul>
+<p>来源：<a href="https://investors.broadcom.com/news-releases/news-release-details/broadcom-redefines-ai-infrastructure-industry-leading-networking">Broadcom：OCP网络、NIC、液冷与CPO展示组合（2026年10月8日）</a>｜<a href="https://www.opencompute.org/news/explore-22-tracks-at-the-2026-ocp-global-summit/">OCP：Scale-up、1.6T、CPO与开放机架议题</a></p>
+
+<h2>今日架构主线</h2>
+<p><strong>AI工厂的工程颗粒度正在统一到MW级基础设施Block和100T级网络Block，但控制与故障隔离尚未同步标准化。</strong></p>
+<ul>
+<li>Delta把泵、过滤、换热和800V供电组合成2—3.6MW冷却域；</li>
+<li>Broadcom与ODM把交换、NIC、铜/光互联和液冷组合成ORV3网络域；</li>
+<li>更大的共享Block减少重复设备并提高密度，却会扩大单点退出影响的GPU数量；</li>
+<li>真正需要开放的不只是机械尺寸和端口，还包括余量遥测、降级状态、故障定位和调度接口。</li>
+</ul>
+<p>下一代超节点应让RMC和集群调度器同时看到冷却与网络健康度：泵余量不足时限制对应机柜功率，光通道退化时重新放置通信密集作业，并把“降额但可运行”作为正式状态。<strong>Block规模越大，系统价值越依赖局部故障能否被限制，而不是峰值规格能否继续增大。</strong></p>
+
+<h2>未发现可信新增</h2>
+<p>本期优先扫描2026年10月11日，并回溯近7日与历史简报去重；以下“未发现”仅指本次可公开验证来源。</p>
+<ul>
+<li><strong>SemiAnalysis：</strong>未发现10月11日新的独立高价值公开文章。</li>
+<li><strong>完整超节点：</strong>未核实到近24小时新的量产整机、客户验收、MFU、集合通信有效带宽或大规模故障恢复数据。</li>
+<li><strong>NPO/OCS：</strong>未出现新的NPO或OCS量产互操作、客户部署、Pre-FEC BER、光源寿命或现场MTTR数据；Broadcom本期为CPO与以太网系统展示。</li>
+<li><strong>OCP大会：</strong>大会于美国当地10月12日开幕；本期引用的是厂商开幕前正式发布。议程中的1MW机柜、800V直供、NPO/CPO、448G铜和功率振荡等内容尚无演讲实测，不提前写成结论。</li>
+<li><strong>业务消息：</strong>Nuvacore融资和NVIDIA与Reflection AI谈判没有已交付产品参数，不单列为架构信号。</li>
+</ul>
+<p>必查来源：<a href="https://www.opencompute.org/events/ocp-summit/2026-ocp-global-summit/">2026 OCP Global Summit</a>｜<a href="https://newsletter.semianalysis.com/archive">SemiAnalysis公开归档</a></p>
+      ]]></description>
+    </item>
     <item>
       <title>AI算力架构前沿简报｜2026年10月11日</title>
       <link>https://raw.githubusercontent.com/YanLiang518/ai-supernode-rss/main/archive/2026-10-11.html</link>
