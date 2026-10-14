@@ -1,1 +1,72 @@
-<!doctype html><html lang="zh-CN"><head><meta charset="UTF-8"><meta name="color-scheme" content="light dark"><title>AI算力架构前沿简报｜2026年10月14日</title></head><body><main><article><h1>AI算力架构前沿简报｜2026年10月14日</h1><p>OCP 2026：Meta开放网络、AMD Helion、Intel GPU D-series、800VDC供电与液冷架构。</p></article></main></body></html>
+<!doctype html><html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>AI算力架构前沿简报｜2026年10月14日</title><style>:root{color-scheme:light dark;--bg:#f7f8fa;--fg:#18202a;--muted:#5f6b78;--card:#fff;--line:#d8dee6;--link:#0759c7;--quote:#eef4ff}@media(prefers-color-scheme:dark){:root{--bg:#0f1318;--fg:#e7edf4;--muted:#a7b2bf;--card:#171d24;--line:#303a46;--link:#82b8ff;--quote:#17253a}}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--fg);font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;line-height:1.75}main{max-width:920px;margin:0 auto;padding:32px 22px 72px}article{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:34px}h1{font-size:30px;line-height:1.3;margin:0 0 8px}h2{font-size:23px;line-height:1.45;margin:36px 0 14px;border-bottom:1px solid var(--line);padding-bottom:8px}h3{font-size:18px;margin:22px 0 6px}p{margin:8px 0 14px}ul{padding-left:24px}li{margin:6px 0}a{color:var(--link)}blockquote{margin:18px 0;padding:14px 18px;background:var(--quote);border-left:4px solid var(--link);border-radius:6px}.meta{color:var(--muted);margin-bottom:26px}hr{border:0;border-top:1px solid var(--line);margin:28px 0}@media(max-width:680px){main{padding:14px 10px 44px}article{padding:22px 16px;border-radius:10px}h1{font-size:25px}h2{font-size:21px}}</style></head><body><main><article><h1>AI算力架构前沿简报｜2026年10月14日</h1><p class="meta">2026年10月14日｜AI算力、推理、互联、供电与液冷架构跟踪</p>
+<h2>今日判断</h2>
+<p><strong>OCP 2026首批系统发布显示，AI基础设施正在从同构GPU机架转向异构计算池、多平面开放网络与MW级供电/冷却Block的协同设计。</strong>Meta把多平面Scale-out、以太网Scale-up、跨园区网络和交换平台管理接口放入一条开放路线；AMD Helion将Agent执行所需CPU与模型推理GPU分离或组合；Intel D-series用高容量、350W PCIe风冷卡补充推理选择；Rittal与Bosch则把800VDC、机架和液冷组合成开发中的MW级基础设施单元。</p>
+<p><strong>共同边界是：更大的网络域、更高的机架功率和更多异构资源，只有在遥测、调度、故障隔离与维护接口共同设计时，才能转化为有效工作量。</strong></p>
+<h2>信号总览</h2>
+<ul>
+<li><strong>Meta开放AI网络：</strong>液冷102.4T交换、多平面Fabric、以太网Scale-up与OSPA管理规范。</li>
+<li><strong>AMD Helion：</strong>CPU-only Agent执行机架及CPU+GPU企业机架。</li>
+<li><strong>Intel GPU D-series：</strong>350W PCIe风冷推理卡，平台设计最高480GB LPDDR5X。</li>
+<li><strong>Rittal/Bosch 800VDC：</strong>最高2MW设计目标的Power Sidecar与超过1MW CDU。</li>
+</ul>
+<hr>
+<h2>01｜Meta把AI网络推向多平面与开放以太网</h2>
+<h3>① 新变化是什么</h3>
+<p>Meta在OCP Summit公布IcePack液冷网络机架与IceCube交换刀片，后者提供102.4Tb/s交换容量和128×800G非阻塞端口，采用Tomahawk 6C或Spectrum-6，并使用FBOSS与OCP SAI。Flattened Planar Fabric让每颗GPU以8条100G链路接入8个独立网络平面，目标是将传统三层Clos压缩为两层。现有Tahan以四台51.2T交换机连接16颗加速器，下一代以102.4T硅片规划72颗加速器/柜。</p>
+<p>Meta、Microsoft与Alibaba还共同牵头OSPA v1.0，覆盖上电顺序、传感器、枚举、带外管理、固件更新与诊断；MetaRoCE实现与一致性测试工具也进入开放阶段。</p>
+<h3>② 为什么发生</h3>
+<p>大规模训练跨越单柜、楼宇乃至园区。三层Clos会增加跳数、交换功耗和布线，多平面则让NIC、交换机和主机共同识别故障平面并重新分配带宽。</p>
+<h3>③ 计算或数据特征如何变化</h3>
+<p>FPF把路径选择前移到NIC，集合通信从依赖单一网络树转向多个独立平面。跨园区BAG又让RTT、路径可用带宽和缓冲成为调度输入。102.4T芯片容量不等于每套系统都提供102.4T外部有效带宽，端口映射与超额订阅仍需核实。</p>
+<h3>④ 触碰哪项技术边界</h3>
+<p><strong>失效的假设是：只要更换更大交换芯片，传输、控制面和运维可以保持不变。</strong>逐包喷洒要求端点处理乱序；平面故障后的有效带宽、集合通信恢复和路径振荡必须验证；OSPA标准化管理层，不代表不同ASIC的缓冲、拥塞与NOS行为自动一致。</p>
+<h3>⑤ 可能催生什么架构</h3>
+<ul><li><strong>已出现：</strong>液冷102.4T交换、多平面Scale-out、以太网Scale-up以及OSPA、ESUN、MetaRoCE分层开放路线。</li><li><strong>高概率方向：</strong>NIC路径选择、交换拥塞信号和主机作业调度联合优化，网络机架成为独立维护Block。</li><li><strong>待验证：</strong>多平面P99、故障注入恢复、OSPA跨厂实现及72加速器端口映射。</li></ul>
+<blockquote><strong>架构师结论：</strong>Meta的价值不只是102.4T，而是把多平面、Scale-up Ethernet、跨区域网络和平台标准化放进同一开放路线。</blockquote>
+<p>来源：<a href="https://engineering.fb.com/2026/10/12/open-source/ocp-summit-2026-powering-ai-with-open-innovations-in-scale-up-scale-out-and-scale-across-networks/">Meta Engineering：OCP 2026网络架构</a></p>
+<hr>
+<h2>02｜AMD Helion把Agent执行从GPU机架中拆出来</h2>
+<h3>① 新变化是什么</h3>
+<p>AMD发布Helion Agentic AI参考设计。Hyperscale CPU-only形态以第六代EPYC提供最高32,768个CPU核心，连接独立推理设施；Enterprise all-in-one形态整合EPYC、最高16颗MI350P GPU及最高102Tb/s网络，采用21英寸ORv3、44OU机架并支持风冷或直接液冷。伙伴配置仍在开发，计划于2026年11月推出。</p>
+<h3>② 为什么发生</h3>
+<p>Agent工具调用、代码、浏览器、沙箱、检索与状态管理大量使用CPU、内存、存储和网络。把执行容器全部放在GPU节点会造成GPU等待和CPU/I/O不足，因此执行池和模型池需要独立伸缩。</p>
+<h3>③ 计算或数据特征如何变化</h3>
+<p>容量输入从GPU数量扩展为并发Agent、工具时间、模型调用次数、状态字节与端到端P99。分池可以提高利用率，但网络RTT、模型排队和状态迁移进入关键路径。</p>
+<h3>④ 触碰哪项技术边界</h3>
+<p><strong>失效的假设是：Agent规模增长应同比例增加GPU。</strong>真实瓶颈可能是CPU核、内存带宽、沙箱启动、IOPS或模型服务P99。Token Router还必须处理质量、隐私、上下文兼容和失败回退。</p>
+<h3>⑤ 可能催生什么架构</h3>
+<ul><li><strong>已出现：</strong>CPU-only Agent机架与CPU+GPU一体机架参考设计。</li><li><strong>高概率方向：</strong>CPU Agent Pool＋GPU Inference Pool＋共享状态与检索层。</li><li><strong>待验证：</strong>节点与内存拓扑、功率预算、Token Router收益和伙伴实机数据。</li></ul>
+<blockquote><strong>架构师结论：</strong>Agent基础设施不等于更大的GPU集群；应按工作流瓶颈拆池，再由网络与调度组织成统一服务。</blockquote>
+<p>来源：<a href="https://www.amd.com/en/newsroom/press-releases/2026-10-12-amd-unveils-helion-rack-scale-reference-designs.html">AMD官方：Helion Agentic AI机架路线</a></p>
+<hr>
+<h2>03｜Intel D-series以350W PCIe卡争取高容量推理</h2>
+<h3>① 新变化是什么</h3>
+<p>Intel公布GPU D-series技术细节：Xe3P架构、最高1.3PFLOPS FP8、1.5TB/s内存带宽、350W PCIe风冷形态；Intel品牌卡为160GB LPDDR5X，ODM平台设计可扩至480GB。产品处于客户送样阶段。</p>
+<h3>② 为什么发生</h3>
+<p>部分推理服务首先需要容纳更大权重、KV或更多模型副本，而不必追求训练级计算密度。LPDDR容量和PCIe形态旨在复用既有服务器、降低设施门槛。</p>
+<h3>③ 计算或数据特征如何变化</h3>
+<p>大容量降低模型跨卡分片需求，却不等于Decode吞吐同比增加。权重与KV访问、Batch和多卡PCIe拓扑仍决定有效Token/s。</p>
+<h3>④ 触碰哪项技术边界</h3>
+<p><strong>失效的假设是：大内存本身能够保证高吞吐。</strong>LPDDR容量、带宽、PCIe通信和350W风冷持续性能必须作为整体验证。</p>
+<h3>⑤ 可能催生什么架构</h3>
+<ul><li><strong>已出现：</strong>高容量PCIe风冷推理卡与高核心数CPU机架。</li><li><strong>高概率方向：</strong>按模型容量、KV、P99与Token成本分层选择推理硬件。</li><li><strong>待验证：</strong>ODM 480GB配置、多卡拓扑、真实模型吞吐和整机功耗。</li></ul>
+<blockquote><strong>架构师结论：</strong>D-series的差异化在于每瓦容纳多少推理状态及能否复用PCIe风冷服务器，经济性仍需真实模型验证。</blockquote>
+<p>来源：<a href="https://newsroom.intel.com/artificial-intelligence/intel-advances-open-agentic-ai-infrastructure-at-ocp-global-summit">Intel官方：D-series与开放Agent基础设施</a></p>
+<hr>
+<h2>04｜Rittal与Bosch展示800VDC Power Sidecar</h2>
+<h3>① 新变化是什么</h3>
+<p>Rittal展示采用Bosch电力电子与RiLineX母线的800VDC Power Sidecar，模块化方案目标最高2MW；配套直接液冷CDU公布能力超过1MW。Power Sidecar仍是开发演示，2MW供电和1MW以上冷却不能合并写成已验证的2MW完整系统。</p>
+<h3>② 为什么发生</h3>
+<p>机架功率上升后，54V大电流会放大铜排、接点温升和并联支路。2MW在800V下理想电流约2500A，在54V下约37kA，提高电压有利于MW级Block模块化。</p>
+<h3>③ 计算或数据特征如何变化</h3>
+<p>供电与冷却需按同一Block规划，但电力MW和散热MW不是同一指标；CDU能力仍取决于流量、温差、压降和冗余。</p>
+<h3>④ 触碰哪项技术边界</h3>
+<p><strong>失效的假设是：提高母线电压会自然得到更安全、更高效的机架。</strong>800VDC必须解决直流开断、电弧、绝缘监测、预充、选择性保护和安全维护；机械可替换也不等于带电热插拔。</p>
+<h3>⑤ 可能催生什么架构</h3>
+<ul><li><strong>已出现：</strong>800VDC Power Sidecar、母线整合与MW级CDU开发路线。</li><li><strong>高概率方向：</strong>800VDC电力Block与对应冷却Block共同交付和验收。</li><li><strong>待验证：</strong>完整持续负载、效率、故障切断、短路/电弧测试和CDU降级曲线。</li></ul>
+<blockquote><strong>架构师结论：</strong>800VDC让MW级配电更容易模块化，但不会消除电力工程复杂度；验收必须覆盖保护、冷却降级、计算限功率与恢复顺序。</blockquote>
+<p>来源：<a href="https://www.rittal.com/com-en/newsroom/news/detail/rittal-at-ocp-global-summit-2026">Rittal官方：800VDC Power Sidecar与CDU方案</a></p>
+<h2>今日架构主线</h2>
+<p><strong>异构计算池＋多层开放网络＋MW级供电/冷却Block正在成为AI工厂的新组合。</strong>系统指标需要从单部件峰值上移到端到端P99、集合通信退化、Agent任务完成率、每有效Token能耗、保护选择性与真实MTTR。</p>
+<h2>未发现可信新增</h2>
+<ul><li>未把9月云栖大会旧材料重新包装为近24小时信息。</li><li>未核实到新的NPO/CPO量产BER、外置光源寿命、客户互操作或现场MTTR。</li><li>Meta 72加速器路线仍是预览，Helion配置在开发，Intel D-series处于送样，Rittal Power Sidecar为开发演示。</li></ul></article></main></body></html>
