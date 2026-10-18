@@ -5,10 +5,107 @@
     <link>https://github.com/YanLiang518/ai-supernode-rss</link>
     <description>聚焦 AI 超节点、GPU/加速芯片、Scale-up 互联、NPO/CPO、液冷、供电与头部厂商架构动态。</description>
     <language>zh-cn</language>
-    <pubDate>Sun, 18 Oct 2026 05:00:00 +0800</pubDate>
-    <lastBuildDate>Sun, 18 Oct 2026 05:00:00 +0800</lastBuildDate>
+    <pubDate>Mon, 19 Oct 2026 05:00:00 +0800</pubDate>
+    <lastBuildDate>Mon, 19 Oct 2026 05:00:00 +0800</lastBuildDate>
     <ttl>15</ttl>
     <atom:link href="https://raw.githubusercontent.com/YanLiang518/ai-supernode-rss/main/feed.xml" rel="self" type="application/rss+xml"/>
+    <item>
+      <title>AI算力架构前沿简报｜2026年10月19日</title>
+      <link>https://raw.githubusercontent.com/YanLiang518/ai-supernode-rss/main/archive/2026-10-19.html</link>
+      <guid isPermaLink="false">ai-supernode-brief-2026-10-19</guid>
+      <pubDate>Mon, 19 Oct 2026 05:00:00 +0800</pubDate>
+      <description><![CDATA[
+<h2>今日判断</h2>
+<p><strong>今天最值得补入的OCP会后信号，是PCIe 7正在从“主板上的高速总线”扩展为跨机箱、跨机架的铜—光连续连接层。</strong>Astera Labs的Aries 7不只包含Retimer和Redriver，还把智能铜缆、NPO/LPO光驱动器与TIA纳入同一系列，覆盖从厘米级PCB走线到50米以上光链路，并由同一套COSMOS软件做监测与动态调节。</p>
+<p>公开产品页给出的光电边界包括128Gb/s PAM4通道，以及9通道、单向1.15T的PL7090L光驱动器。这说明PCIe/CXL类Load/Store连接正在获得与Scale-up Ethernet相似的“按距离选择铜或光”能力。但它还不是已经量产的光互连系统：产品计划2026年第四季度向部分客户送样，公开资料没有激光器、光引擎、连接器、误码率、功耗、延迟、FEC后恢复或FRU边界。</p>
+<p><strong>真正的架构意义是：下一代板卡可以用标准信号调理Footprint延后决定Redriver、Retimer、铜缆还是光链路；代价是验证对象从一条电链路扩展为端到端光电链路、固件、遥测和故障恢复。</strong></p>
+<p>近24小时没有其他足够高价值且具备新增参数的独立发布，本期不为数量补入重复的融资、会议标题或无规格产品。</p>
+
+<h2>信号总览</h2>
+<ul>
+  <li><strong>Aries 7把PCIe 7信号调理扩展到NPO/LPO与50米以上光链路</strong>｜PCIe/光互连/NPO信号｜器件系列与产品参数已发布，计划2026年第四季度送样；完整光引擎、功耗、误码和系统可靠性待验证｜影响板级Footprint、铜光边界、跨机架PCIe、光引擎集成、遥测及FRU设计</li>
+</ul>
+
+<hr>
+
+<h2>01｜PCIe 7从板内铜互联走向跨机架光链路：NPO开始承担Load/Store级连接而不只是网络端口</h2>
+
+<h3>① 新变化是什么</h3>
+<p>Astera Labs在OCP Global Summit 2026展示Aries 7 PCIe信号调理系列。该系列覆盖：</p>
+<ul>
+  <li>Smart Retimer，用于损耗较高、需要完整链路恢复的电通道；</li>
+  <li>Smart Redriver，用较低功耗进行均衡和眼图监测；</li>
+  <li>Smart Cable Module，用于AEC、ACC及铜缆连接；</li>
+  <li>Smart Optical Driver与Optical TIA，面向高密度NPO和LPO；</li>
+  <li>Smart Gearbox，用于不同PCIe代际之间的带宽和Lane数量匹配。</li>
+</ul>
+<p>厂商给出的整体目标是128Gb/s连接，从厘米级PCB走线延伸到50米以上光纤。公开的PL7090L为9通道单向光驱动器，每通道最高128Gb/s PAM4，总数据率1.15T；光驱动器与TIA均面向NPO/LPO集成，并支持COSMOS链路遥测和动态调节。</p>
+<p>Aries 7 Retimer和Redriver还支持OCP Signal Conditioner Standard Footprint。板卡设计者可先冻结焊盘、供电和管理接口，再根据实际通道损耗选择Redriver或Retimer，从而减少高速链路变化导致的PCB重设计。</p>
+<p><strong>成熟度必须严格区分：</strong>产品系列、接口方向和器件参数已经公开，Astera计划在2026年第四季度向部分Hyperscaler、OEM及NPO客户送样；更广泛供应要等平台完成认证。AMD和Intel验证的是此前PCIe 4至6代Aries Retimer，不能据此写成PCIe 7光产品已经通过量产平台验证。</p>
+
+<h3>② 为什么发生</h3>
+<p>PCIe每一代翻倍后，电通道损耗、串扰和封装逃逸难度快速上升。128Gb/s PAM4下，同一块板上的连接器、过孔和数十厘米走线都可能消耗大量通道预算；机箱间铜缆更难兼顾距离、线径、弯曲和功耗。</p>
+<p>与此同时，AI系统希望把加速器、CPU、内存池和网络接口拆成可独立演进的资源。若PCIe只能停留在单机箱内，资源解耦仍要通过以太网或专用Fabric重新封装；若PCIe光链路可以跨机架，系统就有机会保持Load/Store和设备枚举语义，把远端加速器或内存作为Fabric设备访问。</p>
+<p>厂商的直接目标是用同一套器件与管理软件覆盖板内、线缆和光链路，降低多供应商PHY、固件和监控工具拼接造成的验证周期。</p>
+<p><strong>本简报判断：</strong>PCIe 7光连接的主要价值不是简单把链路拉长，而是把“铜还是光”的决策推迟到系统详细设计阶段，使同一主板或交换板可派生机内、机柜内和跨柜版本。但这种灵活性只有在Footprint、电源、热设计和软件接口真正一致时才成立。</p>
+
+<h3>③ 计算与数据特征如何变化</h3>
+<p>PCIe光链路承载的不是普通网络报文，而是设备发现、DMA、Load/Store事务、中断和错误恢复。与Scale-out网络相比，数据流通常具有更小事务、更强顺序要求和更低尾延迟容忍度；瞬时链路抖动可能直接表现为设备超时或加速器停顿。</p>
+<p>在GPU、内存池和NIC之间使用PCIe 7后，单Lane速率提高并不保证应用带宽线性增加。交换拓扑、Lane汇聚、协议开销、IOMMU地址转换和对端设备并发都会影响有效吞吐。跨机架距离还会增加传播时延，但在50米量级，光纤传播本身通常不是唯一瓶颈，光电转换、Retimer、交换和软件路径同样重要。</p>
+<p>Aries 7的9通道器件也提示NPO集成方式可能按多芯片拼接形成x8、x16或更高密度端口，而不是一颗器件完成完整PCIe端口。由此产生的时钟、Lane偏斜、供电、热耦合和良率必须在光引擎级处理。</p>
+
+<h3>④ 触碰了哪项技术边界</h3>
+<p><strong>开始失效的假设是：PCIe是机箱内电互联，跨机架资源必须转换为以太网、InfiniBand或专用Scale-up协议。</strong></p>
+<p>第一道边界是信号恢复位置。Redriver功耗和延迟较低，但不能重新定时和隔离所有抖动；Retimer能重建信号，却增加功耗、延迟、固件和故障点。线性NPO/LPO又把模拟链路延伸到光引擎，必须明确主芯片SerDes、Driver、TIA和光器件各自承担多少均衡与监控。</p>
+<p>第二道边界是错误语义。Astera公开资料为Retimer列出FEC监测和FLIT级错误修正，为光Driver/TIA列出诊断及动态调节，但没有给出Pre-FEC BER、Uncorrectable Error、链路Flap后的训练时间或设备是否需要重新枚举。对于PCIe设备，短暂失链的影响可能比网络端口丢包更严重。</p>
+<p>第三道边界是光源和可维护性。当前发布只覆盖Driver和TIA，没有定义激光器是内置、外置还是ELSFP，也未定义光引擎、连接器、防尘结构和FRU/SRU边界。若NPO光引擎与交换ASIC或PCIe Switch共板，光器件失效可能扩大维修范围；如果采用外置光源，又增加光路、监控和插拔风险。</p>
+<p>第四道边界是标准兼容。OCP标准Footprint可以减少板卡重设计，却不能保证不同厂商器件具有相同功耗、散热、固件和通道能力。“焊盘兼容”不等于无需重新做SI、PI、热与可靠性验证。</p>
+<p>第五道边界是跨机架故障域。将PCIe延伸50米以上，可以提高资源池化程度，也可能让一个Root Complex、交换芯片或光链路故障影响多个机架。系统必须支持链路隔离、设备热移除、备用路径及上层任务恢复。</p>
+
+<h3>⑤ 可能催生何种硬件技术或架构</h3>
+<ul>
+  <li><strong>已出现：</strong>覆盖Retimer、Redriver、智能铜缆、光Driver与TIA的PCIe 7系列；128Gb/s PAM4、50米以上光连接和9通道1.15T光驱动器已经公开。</li>
+  <li><strong>高概率方向：</strong>同一交换板使用OCP标准Footprint，根据距离配置板载Redriver、Retimer、AEC/ACC或NPO光引擎，形成可派生的铜光SKU。</li>
+  <li><strong>高概率方向：</strong>PCIe/CXL光链路用于跨柜加速器、内存池或组合式I/O，Scale-up Ethernet继续承担大规模XPU事务，二者按一致性语义与故障域分工。</li>
+  <li><strong>高概率方向：</strong>BMC通过COSMOS、Redfish或OpenBMC读取眼图裕量、FEC计数、温度和光链路健康度，并在失效前降速、迁移任务或切换路径。</li>
+  <li><strong>高概率方向：</strong>NPO光引擎需要明确激光器、Driver/TIA、光连接器和冷板之间的机械热边界，并形成光电联合ATE、老化和现场诊断流程。</li>
+  <li><strong>尚待验证：</strong>每Lane和每Tb/s功耗、端到端时延、Pre-FEC BER、Flap恢复、PCIe设备重枚举、激光器形态、连接器清洁、FRU范围及多厂商互操作。</li>
+</ul>
+<blockquote><p><strong>架构师结论：</strong>Aries 7使PCIe 7的铜光边界从“选择一种链路”变成“在统一Footprint和软件下按距离组合器件”。对NPO超节点而言，真正关键的不是50米，而是光链路发生误码、掉光或温漂时，设备能否继续被系统识别、任务能否迁移，以及故障是否需要更换整块交换板。</p></blockquote>
+
+<p><strong>建议跟踪：</strong></p>
+<ul>
+  <li>PL7090L及对应TIA的单通道/整芯片功耗、模拟带宽、输入输出摆幅、Lane间串扰与工作温度；</li>
+  <li>x16 PCIe 7端口需要的Driver/TIA数量、光纤数量、光引擎面积、激光器功率和冷板热流密度；</li>
+  <li>铜、Retimer、LPO和NPO在相同链路长度下的端到端时延、功耗、Pre-FEC BER与可纠错错误率；</li>
+  <li>掉光、链路抖动、单Lane退化和光引擎热插拔时的训练时间、设备重枚举、任务恢复与MTTR；</li>
+  <li>OCP标准Footprint在不同供应商Redriver/Retimer之间的SI、PI、散热、固件及管理接口兼容矩阵。</li>
+</ul>
+<p><strong>来源：</strong><a href="https://ir.asteralabs.com/news-releases/news-release-details/astera-labs-announces-aries-7-industrys-first-pcie-7-signal">Astera Labs：Aries 7 PCIe 7铜与光信号调理系列（2026年10月8日）</a>｜<a href="https://www.asteralabs.com/products/aries-smart-optical-drivers/">Aries PCIe 7 Smart Optical Driver产品页</a>｜<a href="https://www.asteralabs.com/products/aries-smart-optical-tias/">Aries PCIe 7 Smart Optical TIA产品页</a>｜<a href="https://www.asteralabs.com/products/aries-smart-signal-conditioners/">Aries Smart Signal Conditioner系列</a></p>
+
+<h2>今日架构主线</h2>
+<p><strong>高速互联正在从“协议选择”进一步下沉为“每一段距离选择何种信号调理和介质”。</strong></p>
+<ul>
+  <li>芯片与板内短距仍可使用低功耗Redriver或直接走线；</li>
+  <li>高损耗板级和机箱内连接使用Retimer或智能铜缆；</li>
+  <li>跨机架PCIe开始采用NPO/LPO光引擎，但仍保留设备事务语义；</li>
+  <li>统一Footprint和管理软件降低SKU分裂，却不会消除光、电、热及故障恢复验证。</li>
+</ul>
+<p>对超节点架构师而言，今后的链路选型表不应只有速率与距离，还必须加入<strong>每Tb/s功耗、端到端P99、掉链后的设备语义、光源与连接器维护、板卡更换范围以及多供应商认证成本</strong>。</p>
+
+<h2>未发现可信新增</h2>
+<ul>
+  <li><strong>最近24小时：</strong>未发现新的独立芯片、超节点、量产光互连或完整高功率液冷规格达到主信号门槛；本期使用OCP会后可公开核验的器件资料，不把10月8日发布写成10月18日新发布。</li>
+  <li><strong>Aries 7成熟度：</strong>2026年第四季度送样是厂商计划，不是量产或客户部署；AMD、Intel的历史验证覆盖PCIe 4至6代Retimer，不能外推到PCIe 7 NPO/LPO。</li>
+  <li><strong>OpenCPX与其他NPO议题：</strong>官方录播目录已有标准化可插拔NPO Socket等演讲，但未获取可检索规格正文，本期不把演讲标题当作标准已经发布。</li>
+  <li><strong>SemiAnalysis：</strong>未发现10月18日新的独立高价值公开文章。</li>
+  <li><strong>供电液冷：</strong>未核实到新的240kW以上完整供回水温、流量、压降、母排保护、结构承载或FRU维护参数。</li>
+  <li><strong>阿里磐久会后补充：</strong>仍未找到可公开验证的AL144/AL64、ALink/SNPO、单卡Scale-up带宽、NPO光源与可靠性参数更新。</li>
+</ul>
+<p><strong>必查来源：</strong><a href="https://www.opencompute.org/events/ocp-summit/2026-ocp-global-summit/recorded-content/">OCP 2026录播与材料</a>｜<a href="https://newsletter.semianalysis.com/archive">SemiAnalysis公开归档</a></p>
+]]></description>
+    </item>
+
     <item>
       <title>AI算力架构前沿简报｜2026年10月18日</title>
       <link>https://raw.githubusercontent.com/YanLiang518/ai-supernode-rss/main/archive/2026-10-18.html</link>
