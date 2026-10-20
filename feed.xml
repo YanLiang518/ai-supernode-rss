@@ -5,10 +5,141 @@
     <link>https://github.com/YanLiang518/ai-supernode-rss</link>
     <description>聚焦 AI 超节点、GPU/加速芯片、Scale-up 互联、NPO/CPO、液冷、供电与头部厂商架构动态。</description>
     <language>zh-cn</language>
-    <pubDate>Tue, 20 Oct 2026 05:00:00 +0800</pubDate>
-    <lastBuildDate>Tue, 20 Oct 2026 05:00:00 +0800</lastBuildDate>
+    <pubDate>Wed, 21 Oct 2026 05:00:00 +0800</pubDate>
+    <lastBuildDate>Wed, 21 Oct 2026 05:00:00 +0800</lastBuildDate>
     <ttl>15</ttl>
     <atom:link href="https://raw.githubusercontent.com/YanLiang518/ai-supernode-rss/main/feed.xml" rel="self" type="application/rss+xml"/>
+    <item>
+      <title>AI算力架构前沿简报｜2026年10月21日</title>
+      <link>https://raw.githubusercontent.com/YanLiang518/ai-supernode-rss/main/archive/2026-10-21.html</link>
+      <guid isPermaLink="false">ai-supernode-brief-2026-10-21</guid>
+      <pubDate>Wed, 21 Oct 2026 05:00:00 +0800</pubDate>
+      <description><![CDATA[
+<h2>今日判断</h2>
+<p><strong>今天两条变化分别把AI系统的“逻辑数据路径”和“物理连接路径”推向可运营规模。</strong>llm-d 1.0把Prefix/KV缓存感知路由、Prefill/Decode分离、KV卸载、异构GPU/TPU和多租户流控收敛为Kubernetes原生的生产栈；3M则在与Amazon建立最高60亿美元数据中心产品采购门槛的同时，引入GSEO扩大EBO扩束光纤连接器的精密光学制造。</p>
+<p>前者说明Agent推理的核心矛盾已经从“有没有足够GPU”变成“上下文是否留在正确副本、突发Agent是否挤压在线请求、升级时能否保住会话”；后者说明高密光连接的瓶颈不只在插损和带宽，还在部署时清洁、检查、插拔与量产能力。</p>
+<p><strong>共同的架构主线是：AI基础设施开始围绕“避免重复工作”优化——软件侧避免重复Prefill与KV搬运，物理侧避免重复清洁、检查和返工。真正产出应按完成任务与按期通网衡量，而不是分别按峰值Token/s和光纤芯数衡量。</strong></p>
+
+<h2>信号总览</h2>
+<ul>
+  <li><strong>llm-d 1.0成为Agent分布式推理的开放生产控制层</strong>｜推理/缓存/异构调度信号｜CNCF Sandbox项目正式发布1.0，v1 API、HA Router与滚动升级已提供；厂商示范收益不能直接外推｜影响Prefill/Decode分池、KV分层、异构加速器、QoS、会话粘性及Day-2运维</li>
+  <li><strong>Amazon—3M商业承诺与GSEO合作推动EBO量产</strong>｜光连接/生产与运维信号｜Amazon采购门槛覆盖光连接及其他数据中心产品，不等于60亿美元全部为EBO；GSEO合作指向制造准备与扩产｜影响高密光纤插拔、清洁检查、预连接布线、FRU维护和NPO/CPO连接生态</li>
+</ul>
+
+<hr>
+
+<h2>01｜llm-d 1.0把上下文变成可调度资源：分布式推理开始从性能拼装进入Day-2生产运维</h2>
+
+<h3>① 新变化是什么</h3>
+<p>2026年10月20日，Google、Red Hat、IBM、CoreWeave、NVIDIA等参与的llm-d项目发布1.0。该项目由超过25家机构、500余名贡献者协作，已进入CNCF Sandbox，定位为Kubernetes原生的分布式大模型推理控制层，可同时管理vLLM、SGLang以及Google TPU、NVIDIA和AMD GPU等异构后端。</p>
+<p>1.0并非只增加推理Kernel，而是把此前分散的能力收敛到稳定生产路径：</p>
+<ul>
+  <li>Prefix缓存与负载感知路由；</li>
+  <li>KV Cache向主存或其他层级卸载；</li>
+  <li>Prefill与Decode分离；</li>
+  <li>Wide Expert Parallelism、批处理和异步推理；</li>
+  <li>多租户优先级及公平流控；</li>
+  <li>Router高可用、热备和零停机滚动升级；</li>
+  <li>会话感知路由、Turn优先级调度及Responses API状态。</li>
+</ul>
+<p>Google在PyTorch Conference演示了1000个隔离Agent经单一llm-d入口访问vLLM、SGLang以及混合TPU/GPU资源池；缓存感知路由让后续回合尽量回到保存其上下文的副本，流控则隔离突发Agent与交互式请求。</p>
+<p><strong>成熟度必须严格区分：</strong>1.0、v1 API和HA能力已经公开；1000 Agent属于演示而非长期生产验收。IBM公布的3000个并发编码Agent、峰值每分钟660万输出Token及5—10倍成本差也来自特定模型、租赁价格和基准，不能外推为llm-d的普遍收益。</p>
+
+<h3>② 为什么发生</h3>
+<p>普通Round-robin负载均衡假定副本近似无状态，但Agent会在多轮中反复使用长Prefix、KV Cache和工具结果。若每轮被随机送到不同副本，系统就会重复Prefill、复制上下文，并在每张卡上保存同一状态；一个突发Agent循环还可能让低延迟在线请求排队。</p>
+<p>Prefill与Decode的资源画像也不同：Prefill偏计算和高带宽矩阵运算，Decode更受HBM容量、带宽与小批次调度约束。把二者固定部署在同一种节点上，会造成某阶段闲置、另一阶段拥堵。</p>
+<p><strong>厂商目标是把推理系统从“每个团队自建的一组优化脚本”变成可跨模型服务器、加速器和云运行的开放控制面，并解决升级、租户隔离和故障恢复这些Day-2问题。</strong></p>
+
+<h3>③ 计算与数据特征如何变化</h3>
+<p>Agent流量具有长Prefix、多轮复用、分支扇出和突发并发特征。一次任务可能在数十个回合中只追加少量新Token；如果路由正确，主要工作是读取既有KV并继续Decode；如果路由错误，就会重新计算整个Prefix。</p>
+<p>因此，调度对象从“一个HTTP请求”扩大为：</p>
+<ul>
+  <li>模型及版本；</li>
+  <li>会话与Prefix哈希；</li>
+  <li>KV所在GPU、CPU内存或远端缓存层；</li>
+  <li>Prefill与Decode队列；</li>
+  <li>租户优先级、时延预算和Turn次序；</li>
+  <li>升级或故障时仍在运行的上下文。</li>
+</ul>
+<p>这使KV目录、缓存命中和跨层搬运成为控制面状态。GPU空闲并不代表它适合接收请求：若上下文位于另一节点，迁移成本可能超过等待原节点的成本。</p>
+
+<h3>④ 触碰哪项技术边界</h3>
+<p><strong>开始失效的假设是：多放几个无状态模型副本，再加通用负载均衡器，就能线性扩展Agent推理。</strong></p>
+<p>第一道边界是HBM重复占用。通用负载均衡会让相同Prefix和KV散落到多个副本，降低有效Batch与可服务并发。</p>
+<p>第二道边界是跨阶段耦合。Prefill和Decode分离能分别优化硬件，但会新增KV传输、队列同步与远程故障；链路带宽不足或缓存目录过期时，分离反而放大P99。</p>
+<p>第三道边界是升级一致性。只滚动更新Kubernetes Pod可能让Prefill与Decode使用不同模型或协议版本。llm-d的DisaggregatedSet尝试把两类副本作为逻辑整体协调升级，但仍需验证模型加载、KV兼容和长会话恢复。</p>
+<p>第四道边界是异构性。TPU、NVIDIA GPU和AMD GPU可以挂在同一控制面下，并不意味着权重格式、Kernel、KV布局和性能完全可互换；跨硬件迁移通常仍需重建或转换状态。</p>
+
+<h3>⑤ 可能催生何种硬件技术或架构</h3>
+<ul>
+  <li><strong>已出现：</strong>Prefix与负载感知路由、Prefill/Decode分离、KV卸载、Wide-EP、HA Router和会话感知调度已经进入llm-d 1.0。</li>
+  <li><strong>高概率方向：</strong>Prefill池采用高计算密度GPU/TPU，Decode池优先配置大HBM和高内存带宽；二者通过低延迟Scale-out或专用KV Fabric连接。</li>
+  <li><strong>高概率方向：</strong>形成HBM—CPU内存—本地NVMe—远端缓存的KV层级，DPU或智能NIC承担搬运、加密、租户隔离和缓存目录加速。</li>
+  <li><strong>高概率方向：</strong>调度器以“已有上下文价值”而非单纯空闲算力选择节点，同时把升级、维护与故障域纳入路由。</li>
+  <li><strong>尚待验证：</strong>不同上下文长度和命中率下分离架构的盈亏点、跨层KV恢复P99、目录一致性开销，以及异构加速器间是否能低成本迁移会话。</li>
+</ul>
+<p><strong>架构师结论：</strong>llm-d 1.0的关键不是又多一个推理框架，而是把上下文位置、计算阶段和租户SLO合并进同一个控制面。未来推理节点选型必须同时回答“算得多快”和“状态在哪里”；忽略后者，再多GPU也可能耗在重复Prefill与KV搬运上。</p>
+<p><strong>建议跟踪：</strong>Prefix/KV命中率、每轮重复Prefill Token；Prefill到Decode的KV字节、传输P50/P99和GPU等待；不同租户突发时TTFT与Decode P99；升级、Router故障和节点失效后的上下文保留率与恢复时间。</p>
+<p><strong>来源：</strong><a href="https://cloud.google.com/blog/topics/ai-infrastructure/llm-d-1-0-an-open-source-stack-for-distributed-inference">Google Cloud：llm-d 1.0技术说明（2026年10月20日）</a>｜<a href="https://www.redhat.com/en/about/press-releases/llm-d-1-advances-open-cost-efficient-ai-inference-production-scale">Red Hat：1.0生产能力与生态</a>｜<a href="https://newsroom.ibm.com/2026-10-20-llm-d-1-0-advances-open,-cost-efficient-ai-inference-for-production-scale">IBM：公开演示与成本口径</a></p>
+
+<hr>
+
+<h2>02｜Amazon采购承诺与GSEO扩产推动EBO：光连接竞争从插损延伸到部署速度与清洁运维</h2>
+
+<h3>① 新变化是什么</h3>
+<p>3M于10月19日披露与Amazon扩大数据中心商业关系，并向Amazon关联实体授予七年期、最多316.2万股的认股权证。其中85%的归属与Amazon对3M光连接及其他数据中心产品的付款挂钩，累计付款达到60亿美元时全部归属；剩余部分取决于事件里程碑。</p>
+<p><strong>60亿美元是多类数据中心产品的累计采购门槛，不是EBO订单金额。</strong>Reuters确认AWS和Microsoft Azure均为3M EBO客户；3M预计EBO销售额将从2026年约4000万美元增至2027年的8000万—1亿美元。这个规模仍远小于整体协议，但说明扩束连接器开始从验证走向收入增长阶段。</p>
+<p>同日，3M宣布与台湾GSEO合作EBO技术开发与制造，结合3M的材料、连接与客户能力，以及GSEO的精密光学制造和产能。公开范围包括EBO Ferrule、CPO相关方案和其他光互连应用的制造准备与长期扩产。</p>
+
+<h3>② 为什么发生</h3>
+<p>AI数据中心的光纤数量快速增加后，传统MPO的物理接触端面需要检查、清洁、再次检查；灰尘或划伤可能造成插损升高和现场返工。单个连接器只多几分钟，在数万到数十万次插接、跨多个施工班组时，会积累成投产延期。</p>
+<p>EBO通过准直扩束和非接触耦合降低颗粒占据光斑的比例，并减少端面直接接触。3M宣称传统连接器约3分钟的插接过程可降至最低约30秒，其案例中安装与测试约1小时，而MPO方案可达8小时以上；这些属于厂商案例，不能替代不同现场、纤芯数和插损预算下的独立验收。</p>
+<p>GSEO合作解决的是另一道边界：扩束Ferrule包含精密光学结构，只有模具、镜面、对准、组装和检测良率达到量产要求，防尘与快速部署收益才能转化为稳定供应。</p>
+
+<h3>③ 计算与数据特征如何变化</h3>
+<p>这不是改变模型算子的技术，而是改变集群交付和维护的数据路径。AI机架的GPU、NIC、Scale-up交换和NPO/CPO将产生更多高芯数连接；3M公开Connector Kit支持单模、多模及最高144芯以上配置。连接密度增加后，安装时间、端口识别、极性、插损和清洁状态会进入整集群上线关键路径。</p>
+<p>非接触扩束可以降低尘粒敏感度，却不会消除所有光损耗。扩束、反射或准直结构自身会引入公差，机柜振动、温漂、连接器倾斜和多次插拔仍可能改变IL/RL。对于NPO/CPO，任何额外插损还会影响外置激光功率、分光比例和链路预算。</p>
+
+<h3>④ 触碰哪项技术边界</h3>
+<p><strong>开始失效的假设是：光连接器只要满足初始插损和回损规格，生产与现场运维可以沿用传统MPO流程。</strong></p>
+<p>第一道边界是部署吞吐。机柜能否按期通网，越来越取决于每个端口的插接、检查、清洁、极性验证和故障定位，而不仅是光缆是否到货。</p>
+<p>第二道边界是批量制造。EBO需要精密光学Ferrule和稳定装配；3M选择GSEO并投资扩产，说明技术成熟度的下一步是制造良率、供应能力和多厂组装生态，而不是继续展示单连接器样品。</p>
+<p>第三道边界是互操作。3M EBO并非传统MPO Ferrule的透明替换，需要配套Connector Kit、适配器、测试方法与供应商认证。Amazon的采购门槛证明商业承诺，但没有公开纤芯、插损、回损、连接器形态、部署区域或在NPO/CPO中的具体位置。</p>
+<p>第四道边界是“免清洁”表述。3M称其设计可减少乃至消除部分安装清洁，但这不等于任何环境下都无需防尘盖、显微检查或验收；数据中心施工污染、油污和超规格颗粒仍需受控。</p>
+
+<h3>⑤ 可能催生何种硬件技术或架构</h3>
+<ul>
+  <li><strong>已出现：</strong>AWS与Azure客户采用信号、Amazon长期采购门槛、3M美国扩产及GSEO精密光学制造合作已形成从需求到产能的连续证据。</li>
+  <li><strong>高概率方向：</strong>高芯数EBO用于机柜级预连接Trunk、NPO/CPO外部光接口或交换柜集中配线，减少现场MPO清洁与返工。</li>
+  <li><strong>高概率方向：</strong>光缆组件在工厂完成端口映射、插损和极性测试，现场以快速盲插和数字化序列号完成装配；生产ATE记录跟随FRU进入运维系统。</li>
+  <li><strong>高概率方向：</strong>连接器验收从单次IL/RL扩展到污染、温度循环、振动、插拔寿命和现场MTTR，并与外置激光功率余量联动。</li>
+  <li><strong>尚待验证：</strong>相同芯数下相对MPO的IL/RL、成本、体积、插拔寿命、长期漂移、清洁例外条件及多供应商互操作。</li>
+</ul>
+<p><strong>架构师结论：</strong>Amazon商业承诺的意义不是“EBO已取代MPO”，而是Hyperscaler开始为光连接的部署和运维效率建立长期供应关系。对NPO超节点而言，EBO的价值应按每柜安装工时、返工率、掉光故障和MTTR核算；若插损、尺寸或生态成本抵消这些收益，它仍可能只适合高纤芯、维护困难的连接位置。</p>
+<p><strong>建议跟踪：</strong>EBO单模/多模及144F配置的IL/RL和体积；单柜插接、检查、清洁与验收工时；首次通过率、返工率和多次插拔后的漂移；在ELSFP外置光源、NPO光引擎与预连接Trunk中的链路预算和FRU边界。</p>
+<p><strong>来源：</strong><a href="https://www.sec.gov/Archives/edgar/data/66740/000006674026000303/mmm-20261019.htm">3M向SEC提交的Amazon协议摘要（2026年10月19日）</a>｜<a href="https://news.3m.com/2026-10-19-3M-announces-collaboration-with-GSEO-to-advance-Expanded-Beam-Optical-manufacturing-and-development">3M—GSEO制造合作（2026年10月19日）</a>｜<a href="https://www.3m.com/3M/en_US/p/c/electronics-components/interconnect-products/expanded-beam-optical-solutions/i/electronics/data-center/">3M EBO产品与案例资料</a>｜<a href="https://www.reuters.com/business/retail-consumer/3m-lifts-annual-profit-forecast-cost-controls-price-hikes-2026-10-20/">Reuters：EBO客户与收入口径（2026年10月20日）</a></p>
+
+<h2>今日架构主线</h2>
+<p><strong>软件缓存与物理光连接正在解决同一种浪费：相同信息被重复计算、重复搬运、重复清洁和重复验证。</strong></p>
+<ul>
+  <li>llm-d通过会话粘性和KV分层，尽量让Agent回到已有上下文的位置；</li>
+  <li>EBO通过非接触扩束和工厂化装配，尽量让光连接一次插接即可通过；</li>
+  <li>两者都依赖目录与身份：前者需要知道KV在哪里，后者需要知道光缆、端口、极性和测试记录；</li>
+  <li>两者都可能扩大共享故障域，因此需要HA Router、缓存恢复、光链路遥测和明确FRU边界。</li>
+</ul>
+<p>架构验收应增加两个端到端指标：<strong>每个完成Agent任务的重复Prefill与KV搬运字节，以及每个可用光端口的安装、清洁、测试和返工分钟数。</strong></p>
+
+<h2>未发现可信新增</h2>
+<ul>
+  <li><strong>llm-d性能：</strong>3000 Agent、660万输出Token/分钟及5—10倍成本来自厂商演示和特定租赁价格，不作为通用硬件收益；本期只把1.0稳定接口与运维能力视为确认事实。</li>
+  <li><strong>Amazon—3M协议：</strong>60亿美元门槛覆盖光连接及其他数据中心产品，不能写成EBO订单；协议也未公开具体光学和机柜规格。</li>
+  <li><strong>RTX PRO 5500中国订单：</strong>Reuters报道三家厂商下单规模很大，但其来源为知情人士，且产品属于工作站卡、交付比例不确定；本期不把意向订单写成已形成数据中心超节点。</li>
+  <li><strong>SemiAnalysis：</strong>未发现10月20日新的独立高价值公开文章。</li>
+  <li><strong>供电液冷：</strong>未核实到新的240kW以上完整供回水温、流量、压降、母排保护、结构承载或FRU维护参数。</li>
+</ul>
+<p><strong>必查来源：</strong><a href="https://newsletter.semianalysis.com/archive">SemiAnalysis公开归档</a>｜<a href="https://www.opencompute.org/events/ocp-summit/2026-ocp-global-summit/recorded-content/">OCP 2026录播与材料</a></p>
+      ]]></description>
+    </item>
     <item>
       <title>AI算力架构前沿简报｜2026年10月20日</title>
       <link>https://raw.githubusercontent.com/YanLiang518/ai-supernode-rss/main/archive/2026-10-20.html</link>
