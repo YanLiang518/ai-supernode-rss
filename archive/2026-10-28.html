@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="zh-CN"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AI算力架构前沿简报｜2026-10-28</title>
+<style>
+:root{color-scheme:light dark;--bg:#fff;--fg:#17202a;--muted:#5d6d7e;--line:#d5d8dc;--card:#f7f9fa;--link:#075985}
+@media(prefers-color-scheme:dark){:root{--bg:#101418;--fg:#e8edf2;--muted:#aeb8c2;--line:#36414b;--card:#171d23;--link:#7dd3fc}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--fg);font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;line-height:1.75}
+main{max-width:900px;margin:0 auto;padding:32px 20px 72px}h1{line-height:1.25}h2{margin-top:2.2em;border-bottom:1px solid var(--line);padding-bottom:.35em}h3{margin-top:1.6em}a{color:var(--link);overflow-wrap:anywhere}blockquote{margin:1.2em 0;padding:.2em 1em;border-left:4px solid var(--line);background:var(--card)}hr{border:0;border-top:1px solid var(--line);margin:2.5em 0}li{margin:.35em 0}.meta{color:var(--muted)}
+</style></head><body><main><p class="meta">发布日期：2026年10月28日（北京时间）</p>
+<h1>《AI算力架构前沿简报｜2026年10月28日》</h1>
+<h2>今日判断</h2>
+<p><strong>过去24小时没有出现比OCP会后工程资料更强的新架构信号；本期不为“最新”凑数，集中补齐两条可量化、此前尚未纳入日报的会议证据。</strong>第一，Ciena的6.4T Vesta 200把CPO/NPO光引擎做成Open CPX标准化、可插拔Socket，并给出5pJ/bit、2km与线性无Retimer的厂商口径；第二，LITEON把800VDC、95–180kW电源架、108kW超级电容备电和120kW至2.6MW液冷单元放入同一“Grid-to-Chip”展示。</p>
+<p>两条信号共同指向：下一代高密AI机架不再只是增加GPU和端口，而是在重新定义<strong>光引擎、外置激光、供电转换、备电和CDU的可替换边界</strong>。峰值带宽或功率密度只有与BER、温漂、保持时间、保护选择性和MTTR一起验收，才能转化为可用产能。</p>
+
+<h2>信号总览</h2>
+<ul>
+<li><strong>Ciena Vesta 200将6.4T CPX用于102.4T/200T+平台</strong>｜NPO/CPO/Scale-Up互联信号｜产品与OCP展台演示已公开；5pJ/bit、70%节电和100k XPU成本为厂商模型，缺少独立量产验证｜影响Retimer、光引擎Socket、外置/内置激光、前面板光纤密度和光学FRU</li>
+<li><strong>LITEON展示800VDC到GPU的完整电源与液冷链</strong>｜供电/备电/液冷信号｜OCP实物与厂商参数已公开；效率、保持时间、故障率和客户部署未披露｜影响800V母线、DC/DC级数、超级电容备电、Power Rack、CDU分层和机架维护</li>
+</ul>
+
+<hr>
+<h2>01｜6.4T CPX把CPO/NPO从“焊死的光学封装”改成标准Socket：200T+平台的边界转向通道预算与FRU</h2>
+<h3>① 新变化是什么</h3>
+<p>Ciena在2026 OCP Global Summit展台展示Vesta 200 6.4T CPX光引擎。产品遵循Open CPX MSA：同一标准化、可插拔Socket可用于共封装或近封装场景，也可按系统设计选择光或铜、外置或集成激光。</p>
+<p>Ciena公开的关键设计包括：6.4Tbps单引擎；EIC主机接收侧可均衡最高20dB电通道损耗；采用SiGe模拟前端与硅光Mach-Zehnder调制器；链路完全线性、不含Retimer；厂商称功耗约5pJ/bit、可覆盖IEEE 800BASE-DR4-2定义的最长2km链路。针对约90mm×90mm、512×200Gbps的102.4T交换ASIC，Ciena给出的布局是每个封装边缘放4个CPX、传输25.6Tbps，四边合计16个引擎覆盖102.4Tbps。</p>
+<p><strong>成熟度边界：</strong>产品已发布并在OCP展示，但5pJ/bit、约70%光互联节电、2km覆盖和可靠性均为Ciena口径；公开资料没有给出大规模系统的Pre-FEC BER、温度范围、FEC余量、插拔寿命、现场故障率或客户验收。面向204.8T平台和“200T+互联”的表述属于路线能力，不是已量产整机。</p>
+
+<h3>② 为什么发生</h3>
+<p>102.4T交换ASIC已使前面板与封装边缘同时成为瓶颈。传统32个1.6T OSFP只能在1RU提供51.2Tbps；当交换机转向液冷，原本为风道保留的空间不再是主要限制，光纤逃逸密度反而决定机箱能否承载更高radix。</p>
+<p>另一方面，224G电接口在板上短距仍可用，但走到前面板往往需要Retimer。Ciena估算，在10万颗XPU数据中心中，Retimer会增加约2MW功耗和1300万美元成本。<strong>这是厂商成本模型，不是行业通用实测。</strong>其业务目标是用线性CPX缩短高速电路径，同时保留标准Socket和可制造性，避免CPO把整个交换板变成不可维护的单一FRU。</p>
+
+<h3>③ 计算与数据特征如何变化</h3>
+<p>大Scale-Up/Scale-Out网络的流量并没有因为光引擎靠近ASIC而改变，但数据移动路径发生变化：短距高速电信号只需跨封装或近封装通道，长距由光承载；Retimer的时钟恢复、缓存与功耗被移除，模拟均衡、FEC和端到端通道预算承担更多责任。</p>
+<p>Ciena称VSFF连接器可在前面板接出超过3000根光纤、总带宽超过300Tbps。这会把瓶颈从端口面积推向光纤整理、连接器污染、弯曲半径、外置激光分配、标签和现场更换。对于512或1000+加速器域，真正需要计算的不是总Tbps，而是每条链路的误码、重训、Flap和维修事件如何叠加成作业中断。</p>
+
+<h3>④ 触碰哪项技术边界</h3>
+<p><strong>开始失效的假设是：CPO/NPO必然以不可插拔光引擎换取密度，而可维护性只能退化。</strong>Open CPX Socket表明光引擎本体可以标准化并可插拔，但这并未自动解决四个边界：</p>
+<ul>
+<li><strong>线性链路预算：</strong>20dB均衡能力和5pJ/bit不能替代不同主板材料、连接器、温度和老化条件下的BER/FEC测试；无Retimer会减少功耗，也会减少数字重整带来的裕量。</li>
+<li><strong>激光FRU：</strong>CPX支持外置或集成激光，二者的故障域、冗余与MTTR完全不同；公开资料没有说明Vesta在OCP演示中的光源配置和共享比。</li>
+<li><strong>光纤维护：</strong>3000根以上光纤提升逃逸带宽，却增加清洁、误插、布线应力和更换工时；总密度不能直接等于可运维密度。</li>
+<li><strong>规模实证：</strong>Ciena给出的是器件和布局模型，不是128/512/1000+卡训练网络的长期运行数据。</li>
+</ul>
+
+<h3>⑤ 可能催生什么硬件架构、新的技术需要</h3>
+<ul>
+<li><strong>已出现：</strong>6.4T Open CPX Socket、线性无Retimer光引擎，以及围绕102.4T ASIC的16引擎布局。</li>
+<li><strong>高概率方向：</strong>交换ASIC、XPU与光引擎分成不同FRU；Socket记录引擎序列号、激光来源、FEC/BER历史和插拔次数，控制面按退化趋势维护。</li>
+<li><strong>高概率方向：</strong>224G短距电通道继续服务同板/同托盘连接，跨托盘按通道损耗切换CPX/NPO；448G路线必须重新核对Retimer是否回归，而不能沿用224G预算。</li>
+<li><strong>高概率方向：</strong>外置激光、FAU和光纤连接器形成独立备件与维护面，冷板设计为可在不拆卸大面积光纤的情况下更换光引擎。</li>
+<li><strong>尚待验证：</strong>Vesta的实际功耗是否包含激光、FEC和主机接口；2km条件下的BER/时延；Open CPX跨供应商互换性及量产良率。</li>
+</ul>
+<blockquote><p><strong>架构师结论：</strong>CPX最有价值的变化不是6.4T这个数字，而是把“靠近ASIC的光学”从封装定制件推向可插拔标准部件。采购评估应把W/T、BER、激光FRU、光纤维护工时和整板更换概率放在同一张表中；否则节省的Retimer功耗可能被现场维护和停机成本抵消。</p></blockquote>
+<p><strong>来源：</strong><a href="https://www.ciena.com/events/open-compute-project">Ciena OCP 2026展台与演示清单（会议日期2026年10月12–15日）</a>｜<a href="https://www.ciena.com/insights/blog/2026/delivering-on-the-promise-of-cpo-npo-at-hyperscale-with-vesta-200-6-4t-cpx-light-engine">Ciena Vesta 200架构、密度与功耗说明（2026年8月10日）</a>｜<a href="https://opencpxmsa.org/">Open CPX MSA</a></p>
+
+<hr>
+<h2>02｜800VDC进入“电源架＋超级电容＋CDU”联合设计：高功率机架的约束从电流扩展到瞬态和维护</h2>
+<h3>① 新变化是什么</h3>
+<p>LITEON在2026 OCP Global Summit展示了从800VDC配电到GPU电压调节的完整链条，而不是单一Power Shelf：</p>
+<ul>
+<li>800VDC Power Shelf与电池备份单元组合；</li>
+<li>面向Vera Rubin NVL72的95kW DC/DC Power Shelf与280kW液—液机架内CDU；</li>
+<li>面向OCP ORv3的180kW Power Shelf与108kW Capacitor Backup Unit；</li>
+<li>120kW、220kW机架内CDU，以及伙伴DCX的2.6MW企业级CDU；后者宣称3°C Approach Temperature和N+1泵冗余；</li>
+<li>从800V Power Brick、IBC、50V Power Brick到GPU VRM的分级DC/DC转换。</li>
+</ul>
+<p><strong>成熟度边界：</strong>这些设备在OCP现场展示，功率和温差为厂商参数；公告没有披露效率曲线、输入/输出电压窗口、CBU储能量和保持时间、保护选择性、短路能力、液冷流量/压降或客户规模部署。2.6MW是设施级CDU能力，不能写成单机柜功率。</p>
+
+<h3>② 为什么发生</h3>
+<p>机架功率向100kW以上扩展时，低压大电流配电会迅速增加铜排截面、I²R损耗、连接器发热和空间占用。800VDC把相同功率对应的电流降低，使Power Rack或Sidecar能把电力更靠近计算机架，再由DC/DC逐级降压到中间母线和GPU核心电压。</p>
+<p>但AI负载并非恒定。大规模同步计算会制造快速负载阶跃；上游电网、UPS和发电机响应较慢。LITEON把108kW CBU与180kW Power Shelf组合，说明超级电容开始承担短时瞬态和保持，而液冷系统必须与电源波动共同设计。业务目标是提高机架密度并释放计算空间，同时避免瞬时电压跌落或热峰值扩大成整机架故障。</p>
+
+<h3>③ 计算与数据特征如何变化</h3>
+<p>训练和推理的功率曲线会随着集合通信、Prefill/Decode切换、动态Batch和GPU时钟而变化。平均功率相同的两项任务，毫秒到秒级dP/dt可能完全不同。CBU的价值取决于能量容量、响应时间和控制策略，而不是108kW功率标签本身。</p>
+<p>热路径也分层：95kW电源架、NVL72计算负载和280kW机架内CDU并非一一对应；CDU必须覆盖芯片热、配电转换损耗和负载瞬态，同时把热量交给设施水环。2.6MW CDU的3°C Approach反映换热器两侧温差目标，不等于芯片进水温度，也不能单独推导PUE或WUE。</p>
+
+<h3>④ 触碰哪项技术边界</h3>
+<p><strong>开始失效的假设是：只要把母线电压升到800V，供电效率和机架密度就会自动改善。</strong></p>
+<ul>
+<li><strong>转换链边界：</strong>800V到中间母线再到GPU VRM增加多个功率级；每级的效率、热损耗、控制稳定性和故障传播都必须叠加，峰值效率不能替代全负载曲线。</li>
+<li><strong>保护边界：</strong>高压直流没有交流过零点，电弧、绝缘、接地、预充电和选择性保护更困难。一个Power Brick短路能否局部隔离，决定故障是否扩大到整条800V母线。</li>
+<li><strong>备电边界：</strong>108kW只说明功率，不说明CBU可支撑多少毫秒或秒。若保持时间短于上游切换或任务降功率时间，超级电容无法避免GPU复位。</li>
+<li><strong>液冷边界：</strong>N+1泵提高部件冗余，但阀、传感器、控制器、换热器和水质仍可能形成共同故障；3°C Approach也没有说明在何种流量、供水温度和负载下实现。</li>
+</ul>
+
+<h3>⑤ 可能催生什么硬件架构、新的技术需要</h3>
+<ul>
+<li><strong>已出现：</strong>800V Power Rack、95/180kW DC/DC Shelf、108kW CBU、120/220/280kW机架CDU及2.6MW设施CDU被作为联合产品栈展示。</li>
+<li><strong>高概率方向：</strong>计算机架、电源架和冷却Sidecar成为三类独立FRU，通过直流母线、供回水和遥测接口组合；调度器读取CBU荷电状态、CDU余量与母线告警。</li>
+<li><strong>高概率方向：</strong>CBU用于毫秒至秒级负载平滑和有序降频，电池或UPS承担更长保持；功率控制器与GPU运行时协同，而不是只在设施层被动响应。</li>
+<li><strong>高概率方向：</strong>800V保护单元、DC/DC Brick和泵模块需要热插拔或隔离旁路，使单件维护不必关闭整机架。</li>
+<li><strong>尚待验证：</strong>每级效率、CBU储能与保持时间、短路选择性、弧光控制、CDU流量/压降和实际MTTR。</li>
+</ul>
+<blockquote><p><strong>架构师结论：</strong>800VDC的真正价值是把“配多少电”升级为“如何在负载阶跃、备电切换、热惯性和维护事件中保持任务继续运行”。系统验收至少需要给出从800V输入到GPU的效率曲线、CBU保持时间、保护动作矩阵和CDU降级曲线；单独公布kW和MW不能证明可用性。</p></blockquote>
+<p><strong>来源：</strong><a href="https://www.prnewswire.com/news-releases/liteon-showcases-nvidia-800-vdc-architecture-and-thermal-management-portfolio-at-ocp-global-summit-2026-302908014.html">LITEON官方新闻稿：800VDC、95/180kW电源架、108kW CBU与CDU产品栈（2026年10月14日）</a>｜<a href="https://www.opencompute.org/events/ocp-summit/2026-ocp-global-summit/recorded-content/">OCP 2026官方录播与资料目录</a></p>
+
+<h2>今日架构主线</h2>
+<p><strong>光互联与供电正在沿同一方向演进：把原本焊死或集中式的大故障域，拆成标准化、可监测、可替换的中间模块。</strong></p>
+<ul>
+<li>CPX试图把靠近ASIC的光引擎变成Socket部件，同时移除Retimer；</li>
+<li>800VDC把Power Shelf、CBU、DC/DC Brick和CDU分成可组合单元；</li>
+<li>两者都以密度和效率为目标，但真正的系统边界是模块失效后能否局部隔离、快速更换并维持任务进度。</li>
+</ul>
+<p>对128/512/1000+卡域，建议把互联与供电统一纳入“每次维修影响多少加速器小时”的指标：光引擎、激光、Power Brick、CBU或泵失效时，受影响的卡数、降级带宽、保持时间和MTTR比峰值Tbps或kW更接近全生命周期成本。</p>
+
+<h2>会议雷达</h2>
+<ul>
+<li><strong>OCP 2026会后：</strong>已补扫CPO/NPO、224G/448G与800VDC资料。Meta 51.2T CPO可靠性数据已在10月27日触发独立技术预警；本期不重复其0.20%年化中断率结论，只新增CPX Socket和LITEON电源/冷却链。后续继续追踪Open CPX互换、NPO光源FRU、224G/448G BER和1MW母排保护。</li>
+<li><strong>SC26（2026年11月15–20日，芝加哥）：</strong>进入会前阶段，优先检查HPC网络拓扑、训练Goodput、存储Checkpoint、故障恢复和高密液冷议程。</li>
+<li><strong>NVIDIA GTC Washington, D.C.（2026年11月30日–12月3日）：</strong>跟踪Vera Rubin、800VDC、AI工厂交付与政策/电力声明。</li>
+<li><strong>DesignCon 2027（2027年2月2–4日）：</strong>在未来90天边界之外约一周，提前关注224G/448G通道、连接器、封装和测量议程；OFC 2027为3月7–11日，尚不在90天窗口。</li>
+</ul>
+<p><strong>会议来源：</strong><a href="https://sc26.supercomputing.org/all-dates-deadlines/">SC26官方日期</a>｜<a href="https://www.nvidia.com/gtc/events/">NVIDIA GTC官方活动日历</a>｜<a href="https://www.designcon.com/">DesignCon 2027官方日期</a>｜<a href="https://www.ofcconference.org/about/">OFC 2027官方日期</a></p>
+
+<h2>系统健康自检</h2>
+<p>五个RSS均可从GitHub读取，RSS/XML结构与CDATA闭合检查通过；日报、技术预警和竞品周报的最新独立归档文件可读取。五个相关自动化当前均为启用状态，本次只读检查未修改其它任务。</p>
+<ul>
+<li><strong>feed.xml：</strong>最新为2026年10月27日，日报连续性正常。</li>
+<li><strong>tech-alert-feed.xml：</strong>10月27日已新增“Meta 51.2T CPO可靠性实证更新”，最新归档可读取；这证明条件预警近期确有运行和发布，上一期关于检查连续性的疑点已解除。</li>
+<li><strong>competitor-cost-feed.xml：</strong>最新仍为2026年9月21日，归档可读取；任务最近运行记录停在10月19日，已跨多个周周期，存在未运行或运行后未发布的异常疑点。</li>
+<li><strong>next-gen-architecture-feed.xml：</strong>XML有效但仍无任何item；最近运行记录停在10月17日，已超过周期加36小时，属于明确发布异常。</li>
+<li><strong>ai-memory-feed.xml：</strong>最新仍为9月25日，item link指向RSS自身而非独立归档；最近运行记录停在10月16日，已超过周期加36小时，属于明确异常。</li>
+</ul>
+<p><strong>系统告警：</strong>竞品周报、专题研究与AI Memory的公开发布链路仍明显落后；当前只能确认任务处于启用状态，不能把缺失文章归因于Follow缓存，也不能断言每次任务都已实际运行。本次未自行变更任何任务。</p>
+
+<h2>过去24小时筛选说明</h2>
+<p>10月27日新增公开信息主要集中在大型云厂商财报预期与AI资本开支。Reuters报道Amazon、Microsoft和Alphabet合计积压订单约1.7万亿美元，年度资本开支计划最高约6000亿美元，但尚未带来新的芯片、拓扑、内存、光互联或机架工程参数，因此不单列为架构新闻。</p>
+<p><strong>来源：</strong><a href="https://www.reuters.com/technology/big-tech-earnings-test-ai-boom-amid-market-turmoil-2026-10-27/">Reuters：云厂商AI资本开支与云增长预期（2026年10月27日）</a></p>
+</main></body></html>
