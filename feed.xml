@@ -5,10 +5,156 @@
     <link>https://github.com/YanLiang518/ai-supernode-rss</link>
     <description>聚焦 AI 超节点、GPU/加速芯片、Scale-up 互联、NPO/CPO、液冷、供电与头部厂商架构动态。</description>
     <language>zh-cn</language>
-    <pubDate>Wed, 28 Oct 2026 05:00:00 +0800</pubDate>
-    <lastBuildDate>Wed, 28 Oct 2026 05:00:00 +0800</lastBuildDate>
+    <pubDate>Thu, 29 Oct 2026 05:00:00 +0800</pubDate>
+    <lastBuildDate>Thu, 29 Oct 2026 05:00:00 +0800</lastBuildDate>
     <ttl>15</ttl>
     <atom:link href="https://raw.githubusercontent.com/YanLiang518/ai-supernode-rss/main/feed.xml" rel="self" type="application/rss+xml"/>
+    <item>
+      <title>AI算力架构前沿简报｜2026-10-29</title>
+      <link>https://raw.githubusercontent.com/YanLiang518/ai-supernode-rss/main/archive/2026-10-29.html</link>
+      <guid isPermaLink="false">ai-supernode-brief-2026-10-29</guid>
+      <pubDate>Thu, 29 Oct 2026 05:00:00 +0800</pubDate>
+      <description><![CDATA[
+<h1>《AI算力架构前沿简报｜2026年10月29日》</h1>
+<h2>今日判断</h2>
+<p><strong>今天两条变化都在拆解“一个AI云等于一种加速器加一套运行时”的旧假设。</strong>Oracle把已可用的Vera Rubin NVL72、计划2027年上线的Google TPU与Cerebras、SambaNova推理系统放入同一OCI产品栈，并把Scale-Up、后端集合通信、前端RDMA、存储和租户网络拆成不同Fabric层；Akamai则把模型推理与Agent生成代码的执行环境分开，用GPU服务模型、用嵌套WebAssembly沙箱在核心区和边缘执行工具。</p>
+<p>前者说明异构云的关键不再是“是否支持多种芯片”，而是模型、Collective、数据与故障恢复能否跨不同加速器保持可移植；后者说明Agent基础设施将形成<strong>集中GPU推理＋分布式轻量执行＋持久状态</strong>的三级结构。两者共同把控制面、状态位置和网络路径提升到与芯片同等重要的位置。</p>
+
+<h2>信号总览</h2>
+<ul>
+<li><strong>OCI同时扩展Vera Rubin、Google TPU、Cerebras与SambaNova，并升级Acceleron多平面网络</strong>｜异构算力/Scale-Up/Scale-Out信号｜NVL72与Vera CPU已宣布GA；Google TPU、Cerebras和多GW扩展属于2027年及多年计划｜影响芯片可替代性、通信库、前后端Fabric、DPU、存储附件与故障恢复</li>
+<li><strong>Akamai把推理服务与嵌套Wasm Agent Sandbox组合到核心—边缘云</strong>｜推理/Agent/安全执行信号｜Inference和Sandbox均为Beta；Blackwell Ultra节点参数已发布，Vera Rubin为2027年计划｜影响GPU核心池、边缘CPU执行、工具隔离、KV/Agent状态、网络出口和任务恢复</li>
+</ul>
+
+<hr>
+<h2>01｜OCI把多种AI芯片放进同一云：真正的抽象层从CUDA上移到Fabric、Collective与调度器</h2>
+<h3>① 新变化是什么</h3>
+<p>Oracle于2026年10月27日集中发布新的计算与网络路线：</p>
+<ul>
+<li><strong>已经宣布通用可用：</strong>NVIDIA Vera Rubin NVL72与Vera CPU在OCI上线；单机架72颗GPU仍通过NVLink组成Scale-Up域。</li>
+<li><strong>扩展目标：</strong>OCI Supercluster计划把Vera Rubin扩展到多GW，并通过多平面网络扩展到数十万颗GPU。多GW属于厂商规划，不是当前已交付容量。</li>
+<li><strong>新增异构加速器：</strong>Google TPU计划2027年进入OCI，并在多年内扩展到GW级；Cerebras晶圆级推理也计划2027年提供；SambaNova SN50及Oracle既有Positron共同进入推理组合。</li>
+<li><strong>网络控制面：</strong>Oracle Acceleron增加前端RDMA High-Performance Fabric、更多NVMe块存储附件、前端多平面自动选路与故障切换，以及可把NCCL/RCCL集合通信分散到健康后端路径的Oracle Collective Communications Library。</li>
+</ul>
+<p>需要避免一个误读：Oracle并不是在NVIDIA系统中完全移除NVIDIA网络。官方给出的Supercluster组合仍包括NVLink Scale-Up、Oracle Acceleron、NVIDIA Spectrum-X/Spectrum-6和BlueField-4 DPU。Reuters所说“部分NVIDIA网络芯片被Acceleron替代”更合理地理解为云网络层由Oracle掌握和组合，而非整套Fabric单一供应商替换。</p>
+
+<h3>② 为什么发生</h3>
+<p>训练、推理、Agent工具执行和数据库访问对计算/内存比、通信模式与延迟的要求不同。将所有负载固定到同一种GPU，会在推理低Batch、CPU工具等待、长上下文或特定模型编译时产生闲置和成本错配。</p>
+<p>Oracle的业务目标是把加速器变成可按性能、功耗和成本选择的资源，同时让数据库、存储、安全与网络继续由OCI控制。Google的目标则是把TPU扩大到Google Cloud之外的客户。<strong>本简报判断：</strong>这也是云厂商降低单一芯片和单一网络供应依赖、提高采购与容量调度弹性的路线。</p>
+
+<h3>③ 计算与数据特征如何变化</h3>
+<p>同一AI平台将同时承载四类不同数据路径：</p>
+<ul>
+<li>NVL72内部的NVLink Scale-Up集合通信；</li>
+<li>跨机架训练的后端多平面Scale-Out；</li>
+<li>推理、存储和HPC使用的前端RDMA；</li>
+<li>数据库、对象/块存储和Agent工具产生的通用租户流量。</li>
+</ul>
+<p>异构加速器进一步放大差异：TPU、GPU、晶圆级系统和数据流架构拥有不同模型编译、内存层次、Collective语义、Checkpoint格式和最优Batch。模型权重可以相同，并不意味着KV Cache、编译产物或分片能够直接迁移。</p>
+<p>Oracle Collective Communications Library把故障感知下沉到通信层：当端口、链路或NIC退化时，集合流量可以选择较健康路径。这减少了应用自行处理网络故障的负担，但控制面需要持续同步拓扑、拥塞和路径健康。</p>
+
+<h3>④ 触碰哪项技术边界</h3>
+<p><strong>开始失效的假设是：云平台只要提供统一API，就能把不同AI加速器视为同质容量池。</strong></p>
+<ul>
+<li><strong>软件可移植边界：</strong>CUDA、TPU/XLA、Cerebras与SambaNova软件栈不同。模型“能运行”不等于精度、吞吐、启动时间和运维工具一致。</li>
+<li><strong>状态可移植边界：</strong>KV布局、Prefix缓存、Checkpoint和编译缓存可能与芯片、精度和并行策略绑定；跨池迁移可能需要重新Prefill或重新编译。</li>
+<li><strong>网络抽象边界：</strong>前端RDMA、后端Collective、Scale-Up和存储路径不能被一个“带宽”指标概括；路径故障可能只影响某一通信层。</li>
+<li><strong>调度边界：</strong>多GW扩展同时受芯片、供电、冷却和Fabric交付限制。厂商规划不能当作已经可用容量。</li>
+<li><strong>故障一致性边界：</strong>通信库切换路径时必须保持Collective顺序与幂等性，否则网络恢复可能转化为训练状态损坏。</li>
+</ul>
+
+<h3>⑤ 可能催生什么硬件架构、新的技术需要</h3>
+<ul>
+<li><strong>已出现：</strong>NVLink机架内Scale-Up、Acceleron与Spectrum-X组合的多平面Scale-Out、前端RDMA和DPU卸载。</li>
+<li><strong>高概率方向：</strong>调度器根据模型结构、上下文、Batch、数据位置、功率和通信图选择GPU、TPU或专用推理芯片，而不是只看空闲卡数。</li>
+<li><strong>高概率方向：</strong>模型权重、Checkpoint、KV与编译缓存分别管理可移植格式和芯片专用格式；数据层记录可在哪类加速器上恢复。</li>
+<li><strong>高概率方向：</strong>DPU/SmartNIC承担租户隔离、RDMA、存储附件、加密与故障遥测，使加速器更换不必重建整个云网络。</li>
+<li><strong>高概率方向：</strong>统一通信控制面向NCCL、RCCL和其他Collective库暴露路径健康，但保留不同Fabric的物理故障域。</li>
+<li><strong>尚待验证：</strong>TPU在OCI上的具体代际、Pod拓扑、Acceleron接口、跨加速器模型迁移时间，以及多平面故障切换对训练Goodput和P99的实际收益。</li>
+</ul>
+<blockquote><p><strong>架构师结论：</strong>OCI的变化不是简单增加芯片SKU，而是把云基础设施的主导权从单一加速器栈上移到网络、通信库、数据和调度控制面。未来真正可比较的指标是：同一模型在不同芯片池之间迁移或恢复需要多少数据搬运、重新编译和任务停顿。</p></blockquote>
+<p><strong>来源：</strong><a href="https://www.oracle.com/news/announcement/blog/ai-world-building-the-next-decade-of-oracle-cloud-infrastructure-2026-10-27/">Oracle：OCI计算与Acceleron路线（2026年10月27日）</a>｜<a href="https://www.oracle.com/news/announcement/ai-world-oracle-brings-google-tpus-to-oracle-cloud-infrastructure-2026-10-27/">Oracle与Google：TPU进入OCI（2026年10月27日）</a>｜<a href="https://nvidianews.nvidia.com/news/nvidia-and-oracle-expand-nvidia-vera-rubin-to-multi-gigawatt-scale-and-bring-nvidia-vera-cpu-to-oracle-cloud-infrastructure">NVIDIA：Vera Rubin NVL72、Acceleron与Spectrum-X组合（2026年10月27日）</a>｜<a href="https://www.oracle.com/anz/news/announcement/ai-world-oracle-unveils-new-cloud-networking-innovations-for-ai-2026-10-27/">Oracle：Acceleron前端RDMA与Collective故障切换（2026年10月27日）</a>｜<a href="https://www.reuters.com/business/oracle-expands-chip-supply-deal-with-nvidia-adds-google-cerebras-offerings-2026-10-27/">Reuters交叉核实（2026年10月27日）</a></p>
+
+<hr>
+<h2>02｜Akamai把推理与Agent执行拆开：GPU集中部署，生成代码下沉到Wasm边缘沙箱</h2>
+<h3>① 新变化是什么</h3>
+<p>Akamai于2026年10月27日发布两个Beta服务：</p>
+<ul>
+<li><strong>Akamai Inference：</strong>通过OpenAI兼容API提供Serverless按量或专用推理，初始目录包含12个开放权重模型，规模从80亿到2.8万亿参数，并连接数据库、对象存储和外部云。</li>
+<li><strong>Akamai Agent Sandbox：</strong>Agent运行于Akamai Functions；Agent生成的JavaScript或Python代码再进入一个更紧的嵌套WebAssembly边界。默认禁止出站访问，并限制计算、内存、网络与系统能力。</li>
+</ul>
+<p>Akamai同时公布专用Blackwell Ultra节点：每节点8颗GPU，每颗288GB HBM3e，总HBM约2.3TB；Vera Rubin支持属于2027年准备计划。Inference和Sandbox均为Beta，公开资料没有给出模型吞吐、TTFT、沙箱密度、冷启动P99或生产SLA。</p>
+
+<h3>② 为什么发生</h3>
+<p>企业Agent同时需要两种截然不同的资源：模型规划和长上下文推理需要昂贵GPU；运行代码、访问API、格式转换和短时工具调用更适合便宜、快速启动、权限受限的CPU执行环境。如果每个Agent都长期绑定GPU和完整容器，工具等待会浪费HBM与算力；如果让生成代码直接进入通用容器，又扩大凭据、网络出口和横向移动风险。</p>
+<p>Akamai的目标是利用核心区GPU承载模型，以遍布全球的Functions执行工具和靠近用户的短任务，同时用默认拒绝的Wasm边界控制生成代码。业务上，这把“推理服务”和“Agent运行环境”从两个独立供应商组合成一条平台路径。</p>
+
+<h3>③ 计算与数据特征如何变化</h3>
+<p>Agent请求将形成跨层任务图：</p>
+<ul>
+<li>重Prefill、长上下文与Decode进入GPU推理池；</li>
+<li>工具调用、代码执行和轻量转换进入Wasm Functions；</li>
+<li>Agent上下文和记忆保存到键值或对象存储；</li>
+<li>只有经策略批准的外部访问才能通过出口控制。</li>
+</ul>
+<p>这种拆分降低GPU等待，但增加状态移动与网络往返。模型可能位于核心区，工具在更近的边缘执行，数据库又在第三个区域；端到端延迟由模型推理、状态读取、工具RTT和结果回传共同决定。12种模型和8B至2.8T的跨度也意味着Prefill、HBM占用和冷启动不能使用统一容量模型。</p>
+
+<h3>④ 触碰哪项技术边界</h3>
+<p><strong>开始失效的假设是：Agent Sandbox就是一个更安全的容器，放在推理节点旁边即可。</strong></p>
+<ul>
+<li><strong>隔离强度边界：</strong>Wasm缩小系统调用和运行时攻击面，但不能替代工具授权、秘密管理、输出校验与供应链签名。</li>
+<li><strong>嵌套开销边界：</strong>Agent运行时和生成代码分处两层沙箱，安全边界更清晰，但跨边界调用、序列化和状态复制会增加延迟。</li>
+<li><strong>网络边界：</strong>默认禁止出站访问有利于防泄漏，却要求每个工具显式定义目的地址、凭据和数据范围；开放出口会重新引入风险。</li>
+<li><strong>状态边界：</strong>间歇Agent可以停止和恢复，长期记忆必须与短期KV分离；键值状态并不等于GPU KV Cache。</li>
+<li><strong>边缘容量边界：</strong>Akamai拥有4350多个边缘位置，不代表所有位置都部署2.8T模型或Blackwell Ultra；模型位置和工具位置必须分别发现。</li>
+</ul>
+
+<h3>⑤ 可能催生什么硬件架构、新的技术需要</h3>
+<ul>
+<li><strong>已出现：</strong>专用8-GPU Blackwell Ultra节点、Serverless/专用推理、Functions和嵌套Wasm执行层。</li>
+<li><strong>高概率方向：</strong>GPU集中在具备高功率和高速Fabric的核心区，工具执行扩散到高核数CPU边缘节点；调度器按数据位置和工具权限选择执行地点。</li>
+<li><strong>高概率方向：</strong>Agent状态分成HBM内KV、可恢复会话状态、长期记忆和不可变审计记录，分别落在不同介质。</li>
+<li><strong>高概率方向：</strong>网络出口由DPU、SmartNIC或独立安全网关实施默认拒绝、短期凭据和流量审计。</li>
+<li><strong>高概率方向：</strong>长Agent任务在等待工具时释放GPU KV或将其换出到主存/NVMe，工具完成后再恢复，而不是占用整颗GPU。</li>
+<li><strong>尚待验证：</strong>Wasm Sandbox的冷启动、密度、I/O性能、嵌套边界开销，以及核心GPU与边缘工具之间的状态搬运P99。</li>
+</ul>
+<blockquote><p><strong>架构师结论：</strong>Akamai提供了一个清晰的Agent硬件分层：GPU负责高价值推理，Wasm负责短时且不可信的工具执行，存储负责跨步骤状态。评价这类平台应看每个完成任务的GPU占用、工具等待、状态字节和安全策略命中，而不是只看Token/s。</p></blockquote>
+<p><strong>来源：</strong><a href="https://www.akamai.com/newsroom/press-release/akamai-launches-ai-inference-service-and-agent-execution-environment">Akamai官方发布：Inference、Agent Sandbox与Blackwell Ultra（2026年10月27日）</a>｜<a href="https://www.akamai.com/products/akamai-agent-sandbox">Akamai Agent Sandbox产品与隔离说明</a>｜<a href="https://www.akamai.com/products/akamai-inference">Akamai Inference产品说明</a></p>
+
+<h2>今日架构主线</h2>
+<p><strong>AI基础设施正在从“统一芯片池”转向“统一控制面管理多个物理上不同的计算与执行域”。</strong></p>
+<ul>
+<li>Oracle在同一云内组合GPU、TPU、晶圆级和数据流推理架构，但Scale-Up、后端Collective、前端RDMA与存储网络仍各有物理边界；</li>
+<li>Akamai把GPU推理、Wasm工具执行和持久状态拆开，换取更低闲置与更强隔离；</li>
+<li>两者都要求调度器理解模型、状态、网络路径、权限与故障域，而不是只识别“可用加速器”。</li>
+</ul>
+<p>新的系统指标应上移到：每个完成任务在不同芯片、网络和执行域间搬运多少状态，经历多少重新编译、路径切换、工具等待与恢复时间。</p>
+
+<h2>会议雷达</h2>
+<ul>
+<li><strong>OCP 2026会后：</strong>官方录播与幻灯片目录仍可用，已覆盖224G AEC、448G铜/光、NPO标准化、800VDC故障保护、600kW Sidecar及1MW母排。本期未发现相较昨日新增的量产或MTTR数据，继续按原始PPT逐项提取，不把议题标题当作结论。</li>
+<li><strong>SC26（2026年11月15–20日）：</strong>会前重点检查异构加速器调度、Collective故障恢复、Checkpoint、存储与液冷实测。</li>
+<li><strong>NVIDIA GTC Washington, D.C.（2026年11月30日–12月3日）：</strong>Oracle的多GW Vera Rubin计划使Vera Rubin交付、800VDC、Spectrum-X和跨代兼容成为重点追问项。</li>
+</ul>
+<p><strong>会议来源：</strong><a href="https://www.opencompute.org/events/ocp-summit/2026-ocp-global-summit/recorded-content/">OCP 2026官方会后资料</a>｜<a href="https://sc26.supercomputing.org/all-dates-deadlines/">SC26官方日期</a>｜<a href="https://www.nvidia.com/gtc/events/">NVIDIA GTC官方活动日历</a></p>
+
+<h2>系统健康自检</h2>
+<p>五个RSS文件均可读取，XML标签结构和CDATA闭合检查通过；日报、技术预警与竞品周报的最新独立归档可以读取。五项任务当前均为启用状态，本次只读检查未修改其它任务。</p>
+<ul>
+<li><strong>feed.xml：</strong>最新为2026年10月28日，日报连续性正常。</li>
+<li><strong>tech-alert-feed.xml：</strong>最新为10月27日Meta 51.2T CPO预警；任务10月28日仍有运行记录但未新增文章，符合“没有达到条件则不发布”，不能判故障。</li>
+<li><strong>competitor-cost-feed.xml：</strong>最新仍为9月21日；最近运行停在10月19日，已跨多个周周期，存在任务未继续运行或运行后未发布的异常疑点。</li>
+<li><strong>next-gen-architecture-feed.xml：</strong>仍无任何item，最近运行停在10月17日，已超过周期加36小时，属于明确发布异常。</li>
+<li><strong>ai-memory-feed.xml：</strong>最新仍为9月25日，link继续指向RSS自身；最近运行停在10月16日，已超过周期加36小时，属于明确异常。</li>
+</ul>
+<p><strong>系统告警：</strong>竞品周报、专题研究和AI Memory的公开发布链路仍明显落后；当前只能确认任务启用，无法确认缺失周期是否启动后失败。本次没有自行修改其它任务。</p>
+
+<h2>未单列的新增</h2>
+<p>SK Hynix于10月27日称HBM和DRAM产能已售罄至2029年，HBM需求约为可供应量两倍，并预计短缺可能持续到2030年。这是重要供应信号，但未披露按代际、容量和客户拆分的交付数据，也没有改变今天两条系统架构主线，因此列为后续HBM容量与价格约束观察项，不单独扩写。</p>
+<p><strong>来源：</strong><a href="https://www.reuters.com/world/asia-pacific/sk-hynix-q3-profit-jumps-more-than-7-fold-beats-forecasts-2026-10-27/">Reuters：SK Hynix HBM/DRAM供需口径（2026年10月27日）</a></p>
+      ]]></description>
+    </item>
+
     <item>
       <title>AI算力架构前沿简报｜2026-10-28</title>
       <link>https://raw.githubusercontent.com/YanLiang518/ai-supernode-rss/main/archive/2026-10-28.html</link>
