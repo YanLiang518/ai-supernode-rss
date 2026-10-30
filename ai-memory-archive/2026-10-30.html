@@ -1,0 +1,10 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>AI Memory 周报｜2026-10-30</title>
+<style>body{font-family:system-ui,-apple-system,"Noto Sans CJK SC",sans-serif;max-width:820px;margin:2.5rem auto;padding:0 1.25rem;line-height:1.7;background:Canvas;color:CanvasText;color-scheme:light dark}a{color:LinkText}li{margin:1rem 0}small{opacity:.7}</style>
+</head><body><main><h1>AI Memory 周报｜2026-10-30</h1><p>长期可复用的公开架构认知摘要。仅包含已核验写入私人知识库、且适合公开的抽象知识。</p>
+<ol>
+<li><strong>CPO可靠性不能靠封装形态预判。</strong>应按光引擎、外置光源、光纤连接和板级故障域分解中断率、FRU与MTTR；特定51.2T平台已有验证，不能外推所有CPO。来源：<a href="https://engineering.fb.com/2026/10/26/open-source/ocp-summit-2026-meta-networking-talks/">Meta OCP会后技术材料</a>、<a href="https://www.opencompute.org/events/ocp-summit/2026-ocp-global-summit/recorded-content/">OCP录播/PPT</a>。具体中断率二次转录待核验。</li>
+<li><strong>Scale-Up交换芯片峰值带宽不等于已验证HBD规模。</strong>须区分实际互联加速器数量、每卡带宽、拓扑无阻塞性、集合通信与故障域；已交付16卡互联和下一代72卡规划不可混为一谈。来源：<a href="https://engineering.fb.com/2026/10/12/open-source/ocp-summit-2026-powering-ai-with-open-innovations-in-scale-up-scale-out-and-scale-across-networks/">Meta OCP 2026架构文章</a>。</li>
+<li><strong>KV Cache位置应成为推理控制面的显式调度变量。</strong>多轮共享前缀与P/D解耦场景需综合KV驻留层级、命中率、迁移带宽和恢复成本优化TTFT与任务总成本。来源：<a href="https://cloud.google.com/blog/topics/ai-infrastructure/llm-d-1-0-an-open-source-stack-for-distributed-inference">Google Cloud llm-d 1.0</a>、<a href="https://github.com/llm-d/llm-d">开源项目</a>。厂商性能数字非通用基准。</li>
+</ol><p><small>私人Notion已更新；运行复盘不公开。2026-10-30</small></p></main></body></html>
