@@ -5,11 +5,170 @@
     <link>https://github.com/YanLiang518/ai-supernode-rss</link>
     <description>聚焦 AI 超节点、GPU/加速芯片、Scale-up 互联、NPO/CPO、液冷、供电与头部厂商架构动态。</description>
     <language>zh-cn</language>
-    <pubDate>Fri, 30 Oct 2026 05:00:00 +0800</pubDate>
-    <lastBuildDate>Fri, 30 Oct 2026 05:00:00 +0800</lastBuildDate>
+    <pubDate>Sat, 31 Oct 2026 05:00:00 +0800</pubDate>
+    <lastBuildDate>Sat, 31 Oct 2026 05:00:00 +0800</lastBuildDate>
     <ttl>15</ttl>
     <atom:link href="https://raw.githubusercontent.com/YanLiang518/ai-supernode-rss/main/feed.xml" rel="self" type="application/rss+xml"/>
-        <item>
+            <item>
+      <title>AI算力架构前沿简报｜2026-10-31</title>
+      <link>https://raw.githubusercontent.com/YanLiang518/ai-supernode-rss/main/archive/2026-10-31.html</link>
+      <guid isPermaLink="false">ai-supernode-brief-2026-10-31</guid>
+      <pubDate>Sat, 31 Oct 2026 05:00:00 +0800</pubDate>
+      <description><![CDATA[<article>
+<header>
+<h1>AI算力架构前沿简报｜2026年10月31日</h1>
+<p><strong>今日判断：</strong>今天两条信号共同说明，生产Agent的基础设施不能继续按“模型推理等于GPU请求”规划。AWS披露推理已占其AI收入过半，并称后训练、强化学习和Agent工具调用的大量工作运行在CPU；Google则给出20万Agent规模下微虚机暂停/恢复、写时复制内存和独立持久卷的量化验证。</p>
+<p>这会把系统拆成三个资源域：GPU/Trainium承担Prefill与Decode，CPU沙箱承担工具、代码和环境交互，内存/本地或共享存储保存可恢复状态。关键指标因此从Token/s上移到<strong>每个完成任务消耗的加速器时间、CPU工具时间、快照字节、恢复P99和安全隔离成本</strong>。</p>
+</header>
+
+<section>
+<h2>信号总览</h2>
+<ul>
+<li><strong>AWS披露推理收入占比过半，Graviton与Trainium承诺额均同比增长20倍以上：</strong>收入结构与需求为厂商财报披露；“后训练、RL和Agent工具使用主要在CPU”是AWS工作负载归因，不应外推为所有模型。影响GPU/CPU配比、工具执行池、PyTorch可移植性和自研芯片对外产品化。</li>
+<li><strong>Google Agent Compute Engine把Agent执行定义为可暂停的硬件隔离微虚机：</strong>产品目前为预览规划；20万Agent、每秒500次激活、暂停/恢复低于500ms和最高10倍密度为厂商基准。影响CPU节点、内存写时复制、快照存储、IPU/DPU、身份与出口控制。</li>
+</ul>
+</section>
+
+<section>
+<h2>01｜AWS把Agent负载拆成Trainium推理与Graviton工具执行：GPU不再是唯一容量单位</h2>
+<h3>① 新变化是什么</h3>
+<p>Amazon在2026年10月29日财报电话会及10月30日官方整理中披露：</p>
+<ul>
+<li>AWS的AI收入中，推理已占明显过半且继续增长；</li>
+<li>Graviton和Trainium的收入承诺额均同比增长超过20倍，自研芯片业务同比保持三位数增长；</li>
+<li>AWS称Bedrock的大部分工作负载已运行在Trainium上；</li>
+<li>AWS判断后训练、强化学习和Agent工具使用的大量工作运行在CPU而非AI加速器，因此Agent增长也拉动Graviton；</li>
+<li>TorchNeuron已开源，目标是让现有PyTorch代码无需重写即可进入Trainium；</li>
+<li>Trainium短期旧代容量相较上半年出现溢价，AWS计划2027年末开始在AWS之外提供Trainium。</li>
+</ul>
+<p>成熟度必须分开：财务与容量需求是AWS管理层披露；30%–40% CPU性价比和客户节省20亿美元属于厂商口径；2027年外售是计划，不代表当前已有可采购整机、FRU或跨云软件支持。</p>
+
+<h3>② 为什么发生</h3>
+<p>Agent任务通常在模型推理与外部执行间循环：模型生成计划或代码，CPU执行工具、查询、编译、浏览器或安全沙箱，再把结果送回模型。加速器在工具等待期间继续占用会话状态，会降低昂贵HBM与计算资源的有效利用率。</p>
+<p>AWS的商业目标是用Trainium降低高规模推理成本，同时用Graviton承接更通用、分支多且I/O密集的后训练与工具任务。TorchNeuron减少迁移摩擦，外售Trainium则试图把自研芯片从AWS内部资源池扩展为独立系统产品。</p>
+
+<h3>③ 计算/数据特征如何变化</h3>
+<p>生产推理超过训练收入后，负载更强调连续Decode、KV Cache容量、Prefix复用、低P99和弹性扩缩；训练集群强调大同步域与长时间高利用率，两者不能共享同一容量模型。</p>
+<p>Agent工具执行又呈现不同形态：CPU突发、短时高内存、文件系统和网络I/O、长时间等待，以及大量隔离会话。强化学习和后训练还会形成“GPU生成轨迹—CPU环境执行—奖励计算—GPU更新”的循环，CPU沙箱吞吐不足会让加速器等待。</p>
+<p>旧代Trainium仍有溢价需求，说明推理容量不能只按最新芯片替换规划。已编译模型、稳定软件版本、区域可用性和既有配额会延长旧代硬件寿命，多代芯片必须共同进入调度。</p>
+
+<h3>④ 触碰哪项技术边界</h3>
+<p><strong>开始失效的假设是：Agent规模可以用模型Token数和加速器数量直接估算。</strong></p>
+<ul>
+<li><strong>CPU配比边界：</strong>工具调用、RL环境和后训练数据处理若增长快于Decode，CPU、内存和本地NVMe会先成为瓶颈。</li>
+<li><strong>状态边界：</strong>HBM中的KV、CPU沙箱工作目录、长期Agent记忆和审计日志生命周期不同，不能统一放在GPU节点。</li>
+<li><strong>软件边界：</strong>“无需重写PyTorch”不等于所有算子、精度、分布式策略和性能均等价；仍需编译与模型级验证。</li>
+<li><strong>代际边界：</strong>旧代容量仍然紧张时，调度器必须同时考虑芯片代际、编译缓存、价格、区域和SLA。</li>
+<li><strong>外售边界：</strong>Trainium离开AWS后，需要把内部网络、存储、固件、监控和维修能力变成客户可操作的系统接口。</li>
+</ul>
+
+<h3>⑤ 可能催生什么硬件技术/架构</h3>
+<ul>
+<li><strong>已出现：</strong>Bedrock大量运行在Trainium，Graviton承担CPU型AI工作，TorchNeuron提供PyTorch入口。</li>
+<li><strong>高概率方向：</strong>基础设施按Prefill、Decode、RL环境、工具执行和状态存储拆池；调度器依据任务阶段在加速器与CPU间迁移，而不是让Agent全程占用GPU。</li>
+<li><strong>高概率方向：</strong>CPU工具节点采用高核数、较大内存、本地NVMe和硬件隔离；DPU/智能NIC负责短期凭据、出口策略及租户网络隔离。</li>
+<li><strong>高概率方向：</strong>多代Trainium形成兼容池，编译产物携带芯片代际、精度、拓扑和运行时版本，避免每次调度重新编译。</li>
+<li><strong>待验证：</strong>Bedrock中Trainium的真实模型比例、CPU与加速器时间占比、TorchNeuron算子覆盖、跨代迁移成本，以及2027年外售形态是芯片、服务器、整柜还是托管系统。</li>
+</ul>
+<p><strong>架构师结论：</strong>Agent基础设施应按“推理—环境执行—状态”配置三类资源，而不是用GPU数代表总容量。CPU沙箱、内存与NVMe不足，最终会表现为昂贵加速器的工具等待。</p>
+<p><strong>来源：</strong>
+<a href="https://www.aboutamazon.com/news/company-news/amazon-custom-chips-demand-q3-2026-earnings">Amazon官方：自研芯片与AI负载披露，2026-10-30</a>｜
+<a href="https://www.aboutamazon.com/news/company-news/amazon-earnings-q3-2026-report">Amazon Q3 2026正式业绩，2026-10-29</a>｜
+<a href="https://stockanalysis.com/stocks/amzn/transcripts/720308-q3-2026/">Amazon Q3电话会转录，2026-10-29</a>
+</p>
+</section>
+
+<section>
+<h2>02｜20万Agent验证可暂停微虚机：执行环境从常驻容器变成“热状态—快照—恢复”的资源层</h2>
+<h3>① 新变化是什么</h3>
+<p>Google于2026年10月22日发布Agent Compute Engine，并在10月30日AI基础设施月度更新中再次确认。该服务以每个Agent一台硬件隔离微虚机为执行单元，使用写时复制共享操作系统模板；Agent进入思考、等待外部系统或等待人工时，宿主机将微虚机暂停并从快照恢复。</p>
+<p>Google同时公布开源GKE Agent Substrate的厂商基准：在20万Agent验证中，每秒可处理500次激活，暂停/恢复时延低于500ms；相较传统计算，宣称最高提供10倍计算密度。Agent Compute Engine使用Titanium IPU、独立Guest Kernel、短期凭据和由出口代理注入的服务凭据；每个微虚机具有独立Hyperdisk。服务本身计划在未来数月进入预览，不是已全面商用的SLA产品。</p>
+
+<h3>② 为什么发生</h3>
+<p>Agent执行的活跃占空比通常很低：浏览器、编译器或脚本短时运行，随后等待模型、网络、审批或外部API。为每个会话长期保留完整虚拟机成本过高；普通共享容器密度高，却难以承载具有Root权限或不可信生成代码的任务。</p>
+<p>写时复制让大量Agent共享只读系统页，快照暂停则在等待期间归还CPU和内存。硬件隔离、独立身份及出口凭据注入用于降低代码逃逸和秘密泄漏风险。</p>
+
+<h3>③ 计算/数据特征如何变化</h3>
+<p>Agent执行节点的核心负载不再是持续CPU利用率，而是大量高频状态切换：创建、短时执行、暂停、快照写入、恢复以及销毁。20万会话即使同时活跃比例不高，也会形成显著的内存页管理、快照元数据和存储随机I/O。</p>
+<p>写时复制提高基础镜像页复用，但Agent安装依赖、生成文件或修改运行环境后会产生私有页，实际密度取决于脏页比例。独立Hyperdisk保留长期工作区，活跃内存快照则更适合快速恢复；两者需要一致的版本与恢复点。</p>
+<p>每秒500次激活意味着控制器、身份签发、网络策略和出口代理也必须达到相同量级。模型推理可能在另一GPU池，工具结果和会话状态会跨网络往返，端到端P99不能只用低于500ms的沙箱恢复时间表示。</p>
+
+<h3>④ 触碰哪项技术边界</h3>
+<p><strong>开始失效的假设是：Agent Sandbox只需选择容器或虚拟机，并按实例数静态预留。</strong></p>
+<ul>
+<li><strong>内存边界：</strong>10倍密度取决于模板复用和低脏页率；复杂浏览器、编译和数据任务可能迅速消耗私有内存。</li>
+<li><strong>存储边界：</strong>大规模同步暂停或恢复会把压力从CPU移到NVMe、共享存储和元数据服务。</li>
+<li><strong>身份边界：</strong>暂停后的Agent必须恢复原身份与权限版本，同时确保凭据已过期或被重新签发。</li>
+<li><strong>一致性边界：</strong>工具调用若具有外部副作用，快照回滚不能导致重复支付、重复写入或重复控制设备。</li>
+<li><strong>指标边界：</strong>厂商基准没有公开镜像大小、每Agent内存、脏页比例、工具类型及故障条件，不能直接外推到任意企业负载。</li>
+</ul>
+
+<h3>⑤ 可能催生什么硬件技术/架构</h3>
+<ul>
+<li><strong>已出现：</strong>写时复制微虚机、空闲检测、快速Checkpoint/Restore、独立Hyperdisk、Titanium IPU和出口代理已经组成Agent专用执行架构。</li>
+<li><strong>高概率方向：</strong>执行节点采用高核心数CPU、大内存和本地NVMe快照缓存；GPU推理与执行节点分离，按会话ID和状态版本关联。</li>
+<li><strong>高概率方向：</strong>内存页、短期快照和长期工作区形成三级状态层，调度器根据等待时长决定保留内存、写本地快照还是迁移到共享存储。</li>
+<li><strong>高概率方向：</strong>DPU/IPU或独立安全网关承担微虚机身份、网络微分段、出口凭据注入和审计，使Guest即使获得Root也无法直接读取长期秘密。</li>
+<li><strong>待验证：</strong>浏览器、编译和多GB工作区下的真实密度，20万Agent的快照容量与写放大，宿主机或存储故障后的恢复范围，以及跨区域迁移P99。</li>
+</ul>
+<p><strong>架构师结论：</strong>Agent执行的稀缺资源不是持续CPU算力，而是可安全保存并快速恢复的会话状态。下一代执行集群应围绕活跃占空比、脏页、快照字节和幂等恢复设计。</p>
+<p><strong>来源：</strong>
+<a href="https://cloud.google.com/blog/topics/ai-infrastructure/introducing-agent-compute-engine-and-expanded-agent-governance">Google Cloud：Agent Compute Engine与Agent Substrate，2026-10-22</a>｜
+<a href="https://cloud.google.com/blog/topics/ai-infrastructure/whats-new-in-ai-infrastructure-this-month">Google Cloud AI基础设施月度确认，2026-10-30</a>
+</p>
+</section>
+
+<section>
+<h2>今日架构主线</h2>
+<p><strong>Agent让AI基础设施从“加速器集群”变成“加速器、CPU执行和状态存储协同的任务系统”。</strong></p>
+<ul>
+<li>AWS的收入与工作负载披露说明，生产推理正在扩大，而RL、后训练和工具调用把大量压力推向CPU。</li>
+<li>Google的20万Agent验证说明，执行环境必须支持高频暂停/恢复，并把等待中的会话从昂贵内存中释放。</li>
+<li>GPU、CPU和状态层之间的接口需要携带会话身份、幂等状态、工具权限、模型版本和恢复点。</li>
+<li>容量验收应测每个完成任务的加速器占用、CPU工具时间、快照字节、外部等待和恢复失败，而非分别优化Token/s或容器启动时间。</li>
+</ul>
+</section>
+
+<section>
+<h2>会议雷达与专项补扫</h2>
+<ul>
+<li><strong>OCP 2026会后：</strong>官方录播/PPT目录继续提供224G AEC、448G铜/光、NPO/IPEC、800VDC保护、600kW Sidecar及1MW母排资料。本轮没有发现相较既有预警新增的NPO量产FRU、现场MTTR、跨供应商互换或全生命周期成本数字；不把目录标题当成参数证据。</li>
+<li><strong>OIF标准状态：</strong>公开项目显示CEI-448G-VSR的目标为至少200mm主机通道、20mm模块通道和至少一个连接器；这仍是项目目标而非已完成互操作。CEI-224G-XSR目标至少500mm、一个连接器，CEI-224G-LR目标至少1000mm、两个连接器。后续需关注正式IA、参考通道和BER验证。</li>
+<li><strong>SC26会前：</strong>2026年11月15–20日举行；新增重点包括液冷接口温度/遥测/热回收，以及网络与计算冷却融合。只有原始实测进入主信号。</li>
+<li><strong>NVIDIA GTC Washington：</strong>2026年11月30日至12月3日；重点跟踪Vera Rubin、800VDC、Spectrum-X、多代兼容和AI工厂交付边界。</li>
+<li><strong>云栖2026：</strong>本期没有发现AL144/AL64/SNPO/ALink新增正式规格或客户验收，不把历史会期内容当作今日变化。</li>
+</ul>
+<p><strong>会议与标准来源：</strong>
+<a href="https://www.opencompute.org/events/ocp-summit/2026-ocp-global-summit/recorded-content/">OCP 2026官方资料目录</a>｜
+<a href="https://www.oiforum.com/technical-work/current-work/">OIF当前224G/448G项目</a>｜
+<a href="https://sc26.supercomputing.org/Program/">SC26官方项目</a>｜
+<a href="https://www.nvidia.com/gtc/dc/faq/">NVIDIA GTC Washington官方FAQ</a>
+</p>
+</section>
+
+<section>
+<h2>系统健康自检</h2>
+<p>五个RSS文件均可读取，XML标签及CDATA闭合检查通过，<code>ttl=15</code>；当前五项任务均显示启用，本次未修改其它任务。</p>
+<ul>
+<li><strong>feed.xml：</strong>发布前最新为2026-10-30，归档可达，连续性正常。</li>
+<li><strong>tech-alert-feed.xml：</strong>最新为10月27日Meta 51.2T CPO预警；任务10月30日有运行记录但未产生新条目，符合条件预警无重大变化不发。</li>
+<li><strong>ai-memory-feed.xml：</strong>已于10月30日恢复发布，新增独立归档且链接可达，先前“停在9月25日且链接指回feed”的异常已解除。</li>
+<li><strong>competitor-cost-feed.xml：</strong>最新仍为9月21日，最近运行停在10月19日，已错过10月26日周期，继续列为异常疑点。</li>
+<li><strong>next-gen-architecture-feed.xml：</strong>仍为0条，最近运行停在10月17日；今天06:00的本周运行尚未到点，但10月24日周期仍缺失。</li>
+</ul>
+<p><strong>系统告警：</strong>竞品周报和下一代架构专题的公开发布链路仍滞后。只能确认任务启用及最后运行时间，不能据此断定是调度未触发、执行失败还是GitHub发布失败。</p>
+</section>
+
+<section>
+<h2>未单列的新增</h2>
+<ul>
+<li><strong>Foxconn/OpenAI：</strong>Foxconn称双方正在讨论新的合作，但尚未公布产品、机架、互联、供电、液冷或交付参数；当前不足以构成架构信号。</li>
+<li><strong>NPO/CPO与高功率机柜：</strong>近24小时未发现新的生产部署、FRU/MTTR、Pre-FEC BER、保护选择性、冷却流量或维修工时实证。</li>
+</ul>
+</section>
+</article>]]></description>
+    </item>
+<item>
       <title>AI算力架构前沿简报｜2026-10-30</title>
       <link>https://raw.githubusercontent.com/YanLiang518/ai-supernode-rss/main/archive/2026-10-30.html</link>
       <guid isPermaLink="false">ai-supernode-brief-2026-10-30</guid>
