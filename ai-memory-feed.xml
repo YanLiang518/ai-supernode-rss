@@ -5,10 +5,26 @@
     <link>https://github.com/YanLiang518/ai-supernode-rss</link>
     <description>每周长期可复用知识的公开、脱敏摘要；涉及非公开信息的内容不会发布。</description>
     <language>zh-cn</language>
-    <pubDate>Fri, 25 Sep 2026 17:04:00 +0800</pubDate>
-    <lastBuildDate>Fri, 25 Sep 2026 17:04:00 +0800</lastBuildDate>
+    <pubDate>Fri, 30 Oct 2026 16:56:00 +0800</pubDate>
+    <lastBuildDate>Fri, 30 Oct 2026 16:56:00 +0800</lastBuildDate>
     <ttl>15</ttl>
     <atom:link href="https://raw.githubusercontent.com/YanLiang518/ai-supernode-rss/main/ai-memory-feed.xml" rel="self" type="application/rss+xml"/>
+
+        <item>
+      <title>AI Memory 周报｜2026-10-30</title>
+      <link>https://raw.githubusercontent.com/YanLiang518/ai-supernode-rss/main/ai-memory-feed.xml</link>
+      <guid isPermaLink="false">ai-memory-2026-10-30</guid>
+      <pubDate>Fri, 30 Oct 2026 16:56:00 +0800</pubDate>
+      <description><![CDATA[
+        <h2>本周新增的长期架构认知</h2>
+        <ul>
+          <li><strong>CPO可靠性不能靠封装形态预判：</strong>应按光引擎、外置光源、光纤连接和板级故障域分解中断率、FRU与MTTR；特定51.2T平台已有验证，但不能外推所有CPO。公开来源：<a href="https://engineering.fb.com/2026/10/26/open-source/ocp-summit-2026-meta-networking-talks/">Meta OCP会后技术材料（2026-10-26）</a>、<a href="https://www.opencompute.org/events/ocp-summit/2026-ocp-global-summit/recorded-content/">OCP官方录播/PPT</a>。具体中断率的二次转录仍待核验。</li>
+          <li><strong>Scale-Up交换芯片峰值带宽不等于已验证HBD规模：</strong>须区分实际互联加速器数量、每卡带宽、拓扑无阻塞性、集合通信与故障域，并严格分列已交付16卡互联与下一代72卡规划。公开来源：<a href="https://engineering.fb.com/2026/10/12/open-source/ocp-summit-2026-powering-ai-with-open-innovations-in-scale-up-scale-out-and-scale-across-networks/">Meta OCP 2026官方架构文章（2026-10-12）</a>。</li>
+          <li><strong>KV Cache位置应成为推理控制面的显式调度变量：</strong>在多轮、共享前缀与Prefill/Decode解耦场景下，应综合KV驻留层级、命中率、迁移带宽和恢复成本优化TTFT与任务总成本，不能只按GPU空闲率轮询。公开来源：<a href="https://cloud.google.com/blog/topics/ai-infrastructure/llm-d-1-0-an-open-source-stack-for-distributed-inference">Google Cloud llm-d 1.0（2026-10-20）</a>、<a href="https://github.com/llm-d/llm-d">llm-d开源项目</a>；厂商性能提升数字不作为通用实测结论。</li>
+        </ul>
+        <p>私人Notion已更新；内部运行复盘不在公开RSS披露。</p>
+      ]]></description>
+    </item>
 
     <item>
       <title>AI Memory 周报｜2026-09-25</title>
