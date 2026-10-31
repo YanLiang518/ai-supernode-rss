@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AI算力架构前沿简报｜2026年11月1日</title>
+<style>
+:root{color-scheme:light dark;--bg:#fff;--fg:#172033;--card:#f4f6fa;--line:#d8deea;--link:#075fd8}
+@media(prefers-color-scheme:dark){:root{--bg:#11151c;--fg:#e8edf5;--card:#191f29;--line:#394354;--link:#78b7ff}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.75 system-ui,-apple-system,"Noto Sans SC","Microsoft YaHei",sans-serif}
+main{max-width:920px;margin:auto;padding:28px 20px 64px}article>header,section{margin:0 0 22px;padding:20px;border:1px solid var(--line);border-radius:14px;background:var(--card)}
+h1{font-size:30px;line-height:1.25;margin:0 0 18px}h2{font-size:23px;line-height:1.35;margin:0 0 14px}h3{font-size:18px;margin:20px 0 6px}
+p{margin:8px 0 14px}li{margin:7px 0}a{color:var(--link);overflow-wrap:anywhere}table{border-collapse:collapse;width:100%;display:block;overflow-x:auto;margin:12px 0}
+th,td{border:1px solid var(--line);padding:8px 10px;text-align:left;vertical-align:top}code{font-family:ui-monospace,SFMono-Regular,Consolas,monospace}
+</style>
+</head>
+<body><main><article>
+<header>
+<h1>AI算力架构前沿简报｜2026年11月1日</h1>
+<p><strong>今日判断：</strong>今天的两条信号分别把AI数据中心的边界向外推到电网、向内压到单条光链路。美国电价与数据中心接电已成为选举和监管议题，意味着“已签电力”不再等于可无限刚性使用的MW；OCP会后演讲则量化显示，单链路很低的抖动率在1024卡、每卡128条lane的Scale-Up域中也会被放大到小时级事件。</p>
+<p>两者共同改变一个假设：<strong>大规模AI系统不能只靠提高器件可靠性和购买更多电力维持可用性，必须让任务、网络和供电都具备可降级、可暂停、可恢复的运行语义。</strong></p>
+</header>
+
+<section>
+<h2>信号总览</h2>
+<ul>
+<li><strong>美国电价与数据中心负载进入监管核心：</strong>10月31日新报道确认居民电价、费率申请和电网资本开支压力；数据中心并非全部涨价的唯一原因，但新增负载已成为政治与接电审查对象。影响可中断接电、功率封顶、储能/备用电源、训练调度和园区选址。</li>
+<li><strong>OCP会后补扫量化1024卡光链路抖动放大：</strong>原始演讲和PPT由OCP收录；具体表格由公开PPT逐页转录，演讲明确说明是参数扫描而非现场数据。影响lane故障域、800G端口降级、Collective容错、光学遥测和Checkpoint。</li>
+</ul>
+</section>
+
+<section>
+<h2>01｜电价压力进入政治与监管核心：数据中心的“可用MW”开始附带社会成本和可中断条件</h2>
+<h3>① 新变化是什么</h3>
+<p>Reuters于2026年10月31日报道，美国居民电价自2024年以来全国上涨超过10%，Ohio两年涨幅超过20%；公用事业公司2026年的费率上调申请规模可能达到约310亿美元，投资者所有的公用事业公司未来五年计划资本开支近1.3万亿美元。多个州的候选人提出冻结费率、降低公用事业回报、加强审查，甚至讨论数据中心暂停建设或居民电费保护。</p>
+<p><strong>证据边界：</strong>电价、费率申请和资本开支为公开统计及Reuters核实；数据中心是电力需求增长和地方争议的重要因素，但天然气价格、电厂退役、输配电投资和天气也会影响电价。不能把居民电价全部涨幅归因于AI负载，也不能把竞选主张当作已经生效的政策。</p>
+
+<h3>② 为什么发生</h3>
+<p>AI园区通常以数百MW乃至GW申请接入，输电、变电和新增电源却按多年周期建设。若升级成本通过公用事业费率向所有用户回收，附近居民和普通企业会要求更严格的成本归因、容量担保和建设审查。对云厂商而言，商业目标仍是尽快获得电力；监管方则要求新增负载不降低可靠性，也不把全部扩网成本转嫁给非数据中心用户。</p>
+
+<h3>③ 计算与数据特征如何变化</h3>
+<p>数据中心电力可能从“持续、刚性、统一价格”的输入，变成带有功率上限、爬坡速率、时段价格和紧急削减条件的资源。训练、批量数据处理和部分离线推理可以延后或跨站迁移；低延迟在线推理、控制面和存储一致性则难以同等削减。</p>
+<p>因此，同一园区需要按工作负载弹性分级：可暂停训练依赖Checkpoint，Agent和在线推理需要保留最小服务容量，存储与网络控制面必须在降功率时继续运行。削减结束后的集中恢复还会产生同步上电、模型重载和Checkpoint读取尖峰。</p>
+
+<h3>④ 触碰哪项技术边界</h3>
+<p><strong>开始失效的假设是：签署长期电力协议或取得并网容量后，AI机房即可把该容量作为稳定满载的IT功率。</strong></p>
+<ul>
+<li><strong>接电边界：</strong>监管可能要求数据中心承担更明确的扩网成本、提供自备资源或接受非坚定服务。</li>
+<li><strong>SLA边界：</strong>训练可以暂停不代表所有推理可暂停；园区必须证明哪些负载能在何种时限内削减。</li>
+<li><strong>恢复边界：</strong>负载恢复若不分批，会对变压器、800VDC母线、CDU和存储形成二次冲击。</li>
+<li><strong>指标边界：</strong>合同MW、已接电MW、可持续IT MW和可在故障时保留的关键MW是四个不同口径。</li>
+</ul>
+
+<h3>⑤ 可能催生什么硬件技术/架构</h3>
+<ul>
+<li><strong>已出现：</strong>OCP资料已把800VDC负载平滑、故障穿越、BBU/CBU和可削减负载列为AI电力链设计议题。</li>
+<li><strong>高概率方向：</strong>园区设置可编程功率上限，调度器读取电价、并网约束和电池SOC，优先暂停可恢复训练，再限制低优先级推理。</li>
+<li><strong>高概率方向：</strong>800VDC Sidecar、机架级BBU/超级电容和本地发电承担秒至分钟级穿越；Checkpoint与跨站调度承担更长时间的削减。</li>
+<li><strong>高概率方向：</strong>电源、GPU、网络、存储和液冷遥测进入统一控制面，以限制功率爬坡并分批恢复计算Block。</li>
+<li><strong>待验证：</strong>各州最终费率与接电规则、数据中心实际可削减MW、提前通知时间、恢复斜率，以及备用电源排放和持续运行限制。</li>
+</ul>
+<p><strong>架构师结论：</strong>以后评价AI园区不能只问“有多少MW”，还要问这些MW是否坚定、谁承担扩网成本、哪些任务能被削减，以及恢复时能否保持数据和任务一致性。</p>
+<p><strong>来源：</strong>
+<a href="https://www.reuters.com/business/energy/power-bills-data-centers-cast-rare-spotlight-utilities-us-midterms-2026-10-31/">Reuters：电价、费率与数据中心政治压力，2026-10-31</a>｜
+<a href="https://www.eia.gov/outlooks/steo/report/electricity.php">美国EIA短期电力展望，2026年10月更新</a>｜
+<a href="https://www.opencompute.org/events/ocp-summit/2026-ocp-global-summit/recorded-content/">OCP 2026：800VDC负载平滑、故障穿越与可削减负载原始演讲目录</a>
+</p>
+</section>
+
+<section>
+<h2>02｜1024卡域把光链路抖动放大到小时级：Scale-Up必须从“无故障”转向“带故障继续完成Collective”</h2>
+<h3>① 新变化是什么</h3>
+<p>本轮OCP会后补扫发现，Microsoft、Marvell和Ranovus在2026 OCP Global Summit的《Scale-up Optical Reliability and GPU/System Resiliency to Optical Link Flaps》演讲，给出了lane抖动率与GPU域规模的参数扫描。OCP官方确认演讲、讲者、视频及PPT均已公开。</p>
+<p>公开PPT的逐页转录显示，模型假设每GPU有128条lane。在1024 GPU时：</p>
+<table>
+<thead><tr><th>每lane Flap-FIT</th><th>1024 GPU聚合MTBF</th><th>折算事件频率</th></tr></thead>
+<tbody>
+<tr><td>100</td><td>约76.3小时</td><td>约0.3次/日</td></tr>
+<tr><td>1,000</td><td>约7.63小时</td><td>约3次/日</td></tr>
+<tr><td>10,000</td><td>约0.76小时</td><td>约31次/日</td></tr>
+</tbody>
+</table>
+<p>数学关系可复算：1024×128＝131,072条lane；聚合事件率约为lane数×Flap-FIT/10<sup>9</sup>小时。演讲明确标注这些数据<strong>不是现场统计</strong>，而是从10至100万Flap-FIT的敏感性扫描。详细数字来自可追溯原始PPT的第三方转录，本期未直接逐页下载原PDF，因此不把它写成独立实测。</p>
+
+<h3>② 为什么发生</h3>
+<p>Scale-Up域扩大后，单器件“很少发生”的瞬态事件会被lane数量线性放大。训练和推理Collective又是依赖图：数据一旦排入特定NIC，lane短时Down可能阻塞整个操作。传统交换网络能绕路，不代表GPU端已经排队的数据能自动迁移到另一NIC。</p>
+<p>与此同时，NPO/CPO把32至64条lane集中到更少的光引擎、光源和连接器上。集成可降低电通道损耗，却可能扩大共同故障域；如果多个lane共享同一激光、连接器或光引擎，不能把它们当成独立概率事件。</p>
+
+<h3>③ 计算与数据特征如何变化</h3>
+<p>从128卡扩至1024卡不仅增加带宽，也让任务持续时间更长、同步参与者更多。一次短抖动是否导致作业失败，取决于端点模式和软件：</p>
+<ul>
+<li>800G端点若按1×800整体暴露，一条lane异常可能使整个端点失效；</li>
+<li>若按4×200独立lane运行，可在单lane异常时退化到3×200或2×200；</li>
+<li>只有把lane分散到不同光源、连接器、引擎或NIC故障域，全部同时失效的概率才可能接近独立事件的乘积；</li>
+<li>Collective运行时必须理解降级后的带宽和路径，否则“链路仍在线”不等于作业能继续。</li>
+</ul>
+
+<h3>④ 触碰哪项技术边界</h3>
+<p><strong>开始失效的假设是：只要每条光链路达到足够高的MTBF，千卡级Scale-Up域就可以按无故障网络设计。</strong></p>
+<ul>
+<li><strong>聚合可靠性边界：</strong>器件级FIT必须乘以lane数量和任务时长；永久故障FIT不能与瞬态Flap-FIT混用。</li>
+<li><strong>共同故障边界：</strong>共享激光、FAU、连接器或光引擎的lane高度相关，简单P<sup>4</sup>只适用于独立故障域。</li>
+<li><strong>软件边界：</strong>NIC和Collective队列缺少迁移语义时，物理冗余仍可能无法挽救正在执行的操作。</li>
+<li><strong>维护边界：</strong>NPO/CPO的关键不只是光引擎MTBF，还包括失效后更换的是ELSFP、FAU、光引擎、交换板还是整托盘。</li>
+</ul>
+
+<h3>⑤ 可能催生什么硬件技术/架构</h3>
+<ul>
+<li><strong>高概率方向：</strong>将800G端点拆成可独立降级的200G lane组，并在不同光源、连接器、光引擎和NIC间做物理swizzle。</li>
+<li><strong>高概率方向：</strong>GPU/NIC支持lane降速、端口重映射和多NIC迁移；Collective运行时保持操作顺序，在带宽变化时重新建立通信图。</li>
+<li><strong>高概率方向：</strong>光学遥测统一记录Pre-FEC BER、光功率、温度、Flap事件和共同故障域，调度器在任务启动前避开亚健康链路。</li>
+<li><strong>高概率方向：</strong>长作业采用增量Checkpoint和局部恢复，把网络瞬态从“整作业重启”降为“局部通信重建”。</li>
+<li><strong>待验证：</strong>真实NPO/CPO lane相关性、1024卡域现场Flap-FIT、降级Collective的性能损失、端点切换时间，以及ELS/FAU/光引擎FRU的MTTR。</li>
+</ul>
+<p><strong>架构师结论：</strong>Scale-Up可靠性的单位应从“单链路在线率”提升为“Collective在链路瞬态下仍能完成”。当域规模达到512/1024及以上，故障隔离、端点降级和软件恢复与光学性能同等重要。</p>
+<p><strong>来源：</strong>
+<a href="https://www.opencompute.org/events/ocp-summit/2026-ocp-global-summit/recorded-content/">OCP官方：2026 Global Summit原始录播/PPT目录，会议2026-10-12至15</a>｜
+<a href="https://www.simpletechtrend.com/en/post/ocp-2026-microsoft-marvell-scale-up-optical-link-flaps-en">公开PPT逐页转录与计算核对，2026-10-20</a>｜
+<a href="https://www.opencompute.org/projects/networking/optics-reliability/">OCP Optics Reliability Workstream与遥测规范</a>
+</p>
+</section>
+
+<section>
+<h2>今日架构主线</h2>
+<p><strong>超大AI系统的可用性正在从器件级可靠性转向跨层弹性。</strong></p>
+<ul>
+<li>电网侧要求数据中心在MW受限时削减、平滑和恢复负载；</li>
+<li>Scale-Up侧要求Collective在lane瞬态时降级、绕行和恢复；</li>
+<li>两类事件都不能只靠增加冗余解决，因为冗余本身受成本、共同故障域和状态一致性约束；</li>
+<li>统一控制面需要知道任务恢复点、链路健康、功率预算和工作负载优先级。</li>
+</ul>
+<p>新的系统验收指标应包括：每MW可持续完成的任务量、功率削减后的恢复时间、每个Collective因Flap中断的概率、降级路径goodput，以及故障恢复时避免重复副作用的能力。</p>
+</section>
+
+<section>
+<h2>会议雷达与专项跟踪</h2>
+<ul>
+<li><strong>OCP 2026会后：</strong>本期新增纳入光链路Flap放大证据；原始资料仍未提供跨厂商NPO量产FRU互换、现场MTTR或完整全生命周期成本，不能以演讲标题补齐。</li>
+<li><strong>OIF季度会议：</strong>官方日程显示2026年11月2–6日在Bangkok举行；重点观察CEI-448G-VSR/LR、12.8T NPO、COI和光学管理项目状态是否改变。会议开始本身不构成新闻。</li>
+<li><strong>SC26：</strong>11月15–20日，新增值得跟踪的演讲包括“New Concept Liquid Cooling for Networking and Computing”；重点要求供回水温、压降、快接/冷板FRU、光学热预算和故障恢复实测。</li>
+<li><strong>NVIDIA GTC Washington：</strong>11月30日至12月3日；重点跟踪Vera Rubin、800VDC、Spectrum-X及Agent CPU机架的产品化和交付边界。</li>
+<li><strong>云栖2026：</strong>没有发现AL144/AL64/SNPO/ALink新的正式规格、修订PPT或客户验收；不把9月会期内容包装成今日新增。</li>
+</ul>
+<p><strong>会议来源：</strong>
+<a href="https://www.oiforum.com/meetings-events/future-quarterly-meetings/">OIF未来季度会议</a>｜
+<a href="https://sc26.supercomputing.org/Program/">SC26官方项目</a>｜
+<a href="https://www.nvidia.com/gtc/dc/conference-schedule/">GTC Washington官方日程</a>
+</p>
+</section>
+
+<section>
+<h2>系统健康自检</h2>
+<p>五个RSS均可读取，XML标签结构和CDATA闭合检查通过，<code>ttl=15</code>；五项任务均显示启用。本次未修改其它任务。</p>
+<ul>
+<li><strong>feed.xml：</strong>发布前最新为2026-10-31，独立归档可达，连续性正常。</li>
+<li><strong>tech-alert-feed.xml：</strong>最新为10月27日Meta CPO预警；10月31日任务有运行记录但无新条目，符合条件预警“无重大变化不发”。</li>
+<li><strong>next-gen-architecture-feed.xml：</strong>10月31日已成功发布首条完整专题，独立归档可达；先前0条异常解除。</li>
+<li><strong>ai-memory-feed.xml：</strong>最新为10月30日，独立归档可达，周期正常。</li>
+<li><strong>competitor-cost-feed.xml：</strong>最新仍为9月21日，最近运行停在10月19日，已错过10月26日周期。</li>
+</ul>
+<p><strong>系统告警：</strong>仅竞品成本周报仍明显滞后。现有证据确认任务启用但没有近期运行或公开发布，无法进一步区分调度未触发、执行中止还是GitHub写入失败。</p>
+</section>
+
+<section>
+<h2>未单列的新增</h2>
+<ul>
+<li><strong>资本市场波动：</strong>10月末AI资本开支受到更强回报审视，但没有新增可核实的芯片、网络、供电或液冷参数，本期不作为独立架构新闻。</li>
+<li><strong>NPO/CPO：</strong>除本期Flap可靠性补扫外，近24小时未发现新的量产部署、FRU/MTTR或Pre-FEC BER数据。</li>
+</ul>
+</section>
+</article></main></body></html>
