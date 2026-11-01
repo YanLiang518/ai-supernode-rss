@@ -5,11 +5,173 @@
     <link>https://github.com/YanLiang518/ai-supernode-rss</link>
     <description>聚焦 AI 超节点、GPU/加速芯片、Scale-up 互联、NPO/CPO、液冷、供电与头部厂商架构动态。</description>
     <language>zh-cn</language>
-    <pubDate>Sun, 01 Nov 2026 05:00:00 +0800</pubDate>
-    <lastBuildDate>Sun, 01 Nov 2026 05:00:00 +0800</lastBuildDate>
+    <pubDate>Mon, 02 Nov 2026 05:00:00 +0800</pubDate>
+    <lastBuildDate>Mon, 02 Nov 2026 05:00:00 +0800</lastBuildDate>
     <ttl>15</ttl>
     <atom:link href="https://raw.githubusercontent.com/YanLiang518/ai-supernode-rss/main/feed.xml" rel="self" type="application/rss+xml"/>
-                <item>
+                    <item>
+      <title>AI算力架构前沿简报｜2026-11-02</title>
+      <link>https://raw.githubusercontent.com/YanLiang518/ai-supernode-rss/main/archive/2026-11-02.html</link>
+      <guid isPermaLink="false">ai-supernode-brief-2026-11-02</guid>
+      <pubDate>Mon, 02 Nov 2026 05:00:00 +0800</pubDate>
+      <description><![CDATA[<article>
+<header>
+<h1>AI算力架构前沿简报｜2026年11月2日</h1>
+<p><strong>今日判断：</strong>过去24小时没有出现足以单列的新硬件发布，本期按规则回溯7天。两条最强信号都说明，AI集群的瓶颈正在从“有没有加速器”扩展到“是否能同时交付CPU、先进封装基板和HBM”。Intel披露Xeon需求超过可用供给，数据中心CPU受Intel 3晶圆和先进封装基板双重约束；SK hynix则称HBM需求约为可供量两倍，DRAM与HBM产能结合已签和在谈需求看已排至2029年。</p>
+<p><strong>架构含义：</strong>加速器柜不能脱离主机CPU、内存和封装交付独立规划。Agent工具执行、数据移动、推理编排和安全控制会把CPU重新推入关键路径；HBM稀缺则迫使系统在模型权重、KV Cache、并发和上下文之间做显式分配，并用CPU内存、SOCAMM与NVMe建立更可靠的分层。</p>
+</header>
+
+<section>
+<h2>信号总览</h2>
+<ul>
+<li><strong>Intel Xeon供给受晶圆与先进封装基板双重约束：</strong>Q3 DCAI收入73亿美元、同比增长78%，为正式财务披露；“40%更多基板产能主要到2027年下半年释放”来自管理层电话会，属于公司产能计划。影响GPU主机CPU配比、Agent CPU池、先进封装、服务器交付与多代平台混部。</li>
+<li><strong>SK hynix称HBM需求约为供给两倍、产能排至2029年：</strong>HBM4在第四季度成为主流及M15X扩产为厂商计划；需求/供给倍数和售罄口径由Reuters核实，仍不是独立需求审计。影响HBM配额、KV/权重分层、SOCAMM、模型压缩和加速器SKU选择。</li>
+</ul>
+</section>
+
+<section>
+<h2>01｜Xeon从“配套主机”变成供给约束：AI节点扩容必须把CPU、晶圆与封装基板放进同一BOM</h2>
+<h3>① 业务变化是什么</h3>
+<p>Intel于2026年10月29日公布第三季度业绩：Data Center and AI（DCAI）收入73亿美元，同比增长78%；公司称这是15年来最强的数据中心收入增长，并把释放更多Xeon供给列为当前优先事项。10‑Q进一步披露，数据中心CPU需求持续超过可用供给，限制项包括基板、内存和其他关键部件，其中先进封装所需基板对数据中心CPU影响尤其明显。</p>
+<p>管理层电话会给出更具体的产能路径：Intel称新增约40%的基板产能主要要到2027年下半年才释放；Intel 3仍受约束，公司计划把Oregon部分原用于18A客户端产品的晶圆能力转换为Intel 3，以增加数据中心晶圆，预计相关产出在2027年下半年进入生产。即使晶圆转换成功，基板仍是独立约束。</p>
+<p><strong>证据边界：</strong>收入、供给不足和基板风险来自正式财报与10‑Q；40%基板扩容、晶圆转换和时点来自管理层计划，不能当作已完成产能。增长额也不能单独证明AI Agent是全部需求来源。</p>
+
+<h3>② 为什么发生</h3>
+<p>大规模AI系统并不是只有GPU。CPU负责数据准备、I/O与网络协议栈、存储服务、机密计算、虚拟化和故障控制；Agent还会把代码执行、浏览器、数据库查询、身份验证和工具调用推向CPU。Intel与Oracle同周明确把CPU作用描述为执行应用、管理数据移动、编排Agent动作并支持推理。</p>
+<p>另一方面，高端Xeon使用更复杂的芯粒和先进封装，服务器需求上升不会只消耗前端晶圆，也会同时消耗基板、封装、测试和内存。PC需求变弱能够腾出部分晶圆，却不能自动创造合格的服务器基板和封装能力。</p>
+
+<h3>③ 计算与数据特征如何变化</h3>
+<p>Agent和企业推理把负载拆成两个不同节奏的资源域：</p>
+<ul>
+<li>GPU/专用加速器承担高密度Prefill、Decode和训练；</li>
+<li>CPU承担短突发、分支多、I/O密集、常需隔离的工具与数据任务。</li>
+</ul>
+<p>工具执行期间，GPU可能等待外部结果；如果CPU或主机内存不足，昂贵加速器会因数据准备、沙箱启动、网络或存储控制面排队而空转。CPU需求因此不一定与GPU卡数按固定比例增长：多Agent扇出、沙箱密度、压缩/解压、向量检索和安全策略都会改变最优配比。</p>
+<p>供给受限还会迫使集群混用多代CPU。相同GPU机柜可能连接不同核心数、内存通道、PCIe/CXL代际和NUMA拓扑的主机，调度器必须按真实数据路径放置任务，而不能只按“空闲GPU”分配。</p>
+
+<h3>④ 触碰哪项技术边界</h3>
+<p><strong>开始失效的假设是：只要锁定GPU/HBM和机房电力，通用CPU就能按需补齐，不会决定AI产能上线。</strong></p>
+<ul>
+<li><strong>封装边界：</strong>先进基板和封装产能与前端晶圆是串联系统，任何一项不足都会阻断服务器交付。</li>
+<li><strong>主机边界：</strong>PCIe/CXL lane、内存带宽、NIC/DPU和CPU核心不足会降低GPU有效利用率，但峰值Token/s基准通常看不到这一点。</li>
+<li><strong>异构边界：</strong>多代CPU混部会改变NUMA、内存和I/O性能，容器级可移植不等于任务性能等价。</li>
+<li><strong>恢复边界：</strong>工具型Agent具有外部副作用；CPU沙箱或主机故障后需要幂等重试和状态恢复，不能只重发模型请求。</li>
+</ul>
+
+<h3>⑤ 可能催生什么硬件技术/架构</h3>
+<ul>
+<li><strong>已出现：</strong>Intel扩大基板与先进封装产能，并把部分18A客户端晶圆能力改造为Intel 3数据中心产能；Intel与Oracle为Agent场景继续扩展Xeon。</li>
+<li><strong>高概率方向：</strong>训练/推理加速器池与高核心数CPU工具池分离，由低延迟Fabric、DPU和状态存储连接；GPU不再长期承载工具等待。</li>
+<li><strong>高概率方向：</strong>服务器采购从“GPU卡数”转向可上线的完整Block，验收CPU、内存、PCIe/CXL、NIC/DPU、基板/封装交期和GPU利用率。</li>
+<li><strong>高概率方向：</strong>调度器记录CPU代际、NUMA、内存通道和I/O拓扑，按Prefill、Decode、数据准备、Sandbox和控制面分别放置。</li>
+<li><strong>待验证：</strong>新增基板和Intel 3产能的实际良率与爬坡、每种Agent负载的CPU/GPU时间比、CPU不足造成的GPU空转比例，以及Diamond Rapids/OCI X14的最终可用规格。</li>
+</ul>
+<p><strong>架构师结论：</strong>AI集群的采购单位应从“加速器柜”提升为“可持续完成任务的异构计算Block”。当CPU、基板或主机内存不足时，已到货GPU也不能形成有效Token或Agent任务产能。</p>
+<p><strong>来源：</strong>
+<a href="https://www.intc.com/news-events/press-releases/detail/1786/intel-reports-third-quarter-2026-financial-results">Intel Q3 2026财报，2026-10-29</a>｜
+<a href="https://www.intc.com/filings-reports/all-sec-filings/content/0000050863-26-000191/intc-20260926.htm">Intel 10‑Q：基板、内存与数据中心CPU供给约束</a>｜
+<a href="https://stockanalysis.com/stocks/intc/transcripts/714242-q3-2026/">Intel Q3电话会逐字稿：基板扩容与Oregon产能转换</a>｜
+<a href="https://www.intel.com/content/www/us/en/newsroom/news/corporate/intel-oracle-collaborate-on-enterprise-and-agentic-ai.html">Intel/Oracle Agentic AI合作，2026-10-27</a>
+</p>
+</section>
+
+<section>
+<h2>02｜HBM需求约为可供量两倍：容量稀缺将迫使推理系统显式管理权重、KV与主存层级</h2>
+<h3>① 业务变化是什么</h3>
+<p>SK hynix于2026年10月28日公布第三季度业绩并表示，HBM4与高价值服务器产品销售扩大，计划在年底前把M15X提升到最大产能；公司预计HBM4在第四季度的出货量和收入都超过HBM3E，成为主流产品。官方同时称，面向2027至2028年的长期协议已覆盖超过一半产能，并判断需求超过供给的结构将持续到2030年。</p>
+<p>Reuters对电话会的核实进一步给出两个关键口径：将已签长期协议与在谈客户需求合计，SK hynix称DRAM和HBM产能已排至2029年；客户请求的HBM量约为公司可供量的两倍。</p>
+<p><strong>证据边界：</strong>产能、产品转换和订单均是厂商披露，不是第三方逐客户审计；“售罄”包含在谈需求，不等同于全部已收不可取消订单，也不能据此推断整个行业所有HBM供应商都按相同比例短缺。</p>
+
+<h3>② 为什么发生</h3>
+<p>训练和推理同时拉动HBM。更大的MoE需要容纳更多专家权重；长上下文和多Agent并发扩大KV Cache；推理服务为降低TTFT与尾延迟，会复制热门模型和Prefix/KV缓存。即使每Token激活参数较少，常驻权重、缓存和并发状态仍会占据大量容量。</p>
+<p>供给端无法简单按晶圆片数线性扩展。HBM需要领先DRAM工艺、TSV堆叠、先进封装、良率爬坡和与加速器封装协同；新厂和洁净室以年为周期。HBM4转换还会改变每颗加速器的封装、热设计和基板需求。</p>
+
+<h3>③ 计算与数据特征如何变化</h3>
+<p>HBM稀缺会把推理优化从单纯追求峰值算力转向“每GB HBM产生多少有效任务”。权重、活动KV、共享Prefix、激活和通信缓冲会争用同一容量；不同阶段的价值不相同：</p>
+<ul>
+<li>Prefill重计算与带宽，适合批量处理和共享Prefix；</li>
+<li>Decode常受内存带宽与KV访问限制，长会话会长期占用容量；</li>
+<li>Agent在工具等待期间可能暂不计算，但其状态仍需可恢复；</li>
+<li>MoE专家冷热不均，全部常驻HBM可能浪费容量，跨节点取权重又增加Scale-Up/Scale-Out流量。</li>
+</ul>
+<p>因此，真实瓶颈会在HBM容量、HBM带宽、网络搬运和主存/本地SSD恢复P99之间移动，而不是固定为某个加速器的峰值FLOPS。</p>
+
+<h3>④ 触碰哪项技术边界</h3>
+<p><strong>开始失效的假设是：每一代加速器都会自然带来足够HBM，软件只需围绕芯片已给定的容量优化。</strong></p>
+<ul>
+<li><strong>容量边界：</strong>热门模型复制、长上下文与高并发不能同时无限增长；需要明确每租户、会话和模型的HBM预算。</li>
+<li><strong>分层边界：</strong>KV或权重换出到CPU内存/NVMe可以释放HBM，却会增加PCIe/CXL和网络恢复尾延迟。</li>
+<li><strong>封装边界：</strong>HBM4扩产依赖DRAM、TSV、基板和加速器封装协同，单一环节扩产不能立即增加可交付GPU。</li>
+<li><strong>可靠性边界：</strong>更大内存池和跨节点KV共享扩大故障域；缓存目录、版本和租户隔离必须与数据本身一致恢复。</li>
+</ul>
+
+<h3>⑤ 可能催生什么硬件技术/架构</h3>
+<ul>
+<li><strong>已出现：</strong>SK hynix提高M15X的HBM4产能，并扩展DDR5与LPDDR5 SOCAMM等AI服务器产品；这反映HBM与主存层级同时扩容。</li>
+<li><strong>高概率方向：</strong>推理集群按Prefill、Decode和工具执行拆池，HBM优先保留活动KV与高频权重，CPU内存/SOCAMM保存温数据，NVMe保存可恢复冷状态。</li>
+<li><strong>高概率方向：</strong>使用量化、专家裁剪、稀疏化、Prefix共享和KV压缩提高每GB HBM任务产出；调度器按缓存命中和迁移成本放置请求。</li>
+<li><strong>高概率方向：</strong>CXL或专用内存扩展承担容量池，但需以实际P99、故障隔离和带宽成本证明价值；不能把可寻址容量等同于HBM性能。</li>
+<li><strong>待验证：</strong>2029“售罄”中已签与在谈比例、HBM4实际良率与交付节奏、不同SKU容量/带宽价格，以及分层KV在生产环境中的命中率、迁移带宽和任务完成成本。</li>
+</ul>
+<p><strong>架构师结论：</strong>HBM将从芯片附属规格变成推理控制面的配额资源。未来系统优劣不仅看每卡容量，更看能否让权重、KV和会话状态在HBM—主存—NVMe之间迁移且不破坏P99与租户隔离。</p>
+<p><strong>来源：</strong>
+<a href="https://news.skhynix.com/en/q3-2026-business-results/">SK hynix Q3 2026财报，2026-10-28</a>｜
+<a href="https://www.reuters.com/world/asia-pacific/sk-hynix-q3-profit-jumps-more-than-7-fold-beats-forecasts-2026-10-27/">Reuters：HBM需求、供给与2029口径核实，2026-10-28</a>｜
+<a href="https://news.skhynix.com/en/fab-facility-investment-2026/">SK hynix新晶圆厂与长期扩产计划，2026-08-07</a>
+</p>
+</section>
+
+<section>
+<h2>今日架构主线</h2>
+<p><strong>AI产能的最小可交付单位正在从GPU数量转向完整的计算—内存—封装供应链。</strong></p>
+<ul>
+<li>Intel信号说明CPU与先进封装基板会决定GPU主机和Agent工具池何时上线；</li>
+<li>SK hynix信号说明HBM配额会决定模型常驻、KV容量和并发，而不是所有需求都能靠下一批GPU自然解决；</li>
+<li>两者共同要求规划多代硬件混部、内存分层、任务可迁移和完整Block验收；</li>
+<li>采购指标应增加每个完成任务的CPU时间、HBM GB‑小时、KV换入/换出字节、GPU空转率和恢复P99。</li>
+</ul>
+</section>
+
+<section>
+<h2>会议雷达与专项跟踪</h2>
+<ul>
+<li><strong>OIF Q4技术会议：</strong>官方确认2026年11月2–6日在Bangkok举行，会议为会员线下活动。重点追踪CEI‑448G‑VSR/LR、12.8T NPO、COI与管理接口是否形成公开IA、互操作数据或项目状态变化；会议开幕本身不当作技术发布。</li>
+<li><strong>OCP 2026会后：</strong>本轮继续补扫Scale‑Up 128/512/1000+、NPO FRU/MTTR、224G/448G与800VDC资料；未发现相较已发布日报和专题研究新增、可量化且可公开验证的证据，因此不重复写入。</li>
+<li><strong>SC26：</strong>11月15–20日；重点跟踪高功率网络与计算液冷、Checkpoint/存储、跨Pod网络和故障恢复实测。</li>
+<li><strong>NVIDIA GTC Washington：</strong>11月30日至12月3日；重点跟踪Vera Rubin、800VDC、Spectrum‑X及Agent CPU机架的产品化和交付边界。</li>
+<li><strong>云栖2026：</strong>没有发现AL144/AL64/SNPO/ALink新的正式规格书、修订PPT或客户验收；不把9月会期旧资料包装成今日动态。</li>
+</ul>
+<p><strong>会议来源：</strong>
+<a href="https://www.oiforum.com/meetings-events/future-quarterly-meetings/">OIF季度会议</a>｜
+<a href="https://www.opencompute.org/events/ocp-summit/2026-ocp-global-summit/recorded-content/">OCP 2026会后录播/PPT</a>｜
+<a href="https://sc26.supercomputing.org/Program/">SC26官方项目</a>｜
+<a href="https://www.nvidia.com/gtc/dc/conference-schedule/">GTC Washington官方日程</a>
+</p>
+</section>
+
+<section>
+<h2>系统健康自检</h2>
+<p>五个RSS均可读取，XML结构和CDATA闭合检查通过，最新归档链接可达；五项任务均显示启用。本次未修改其它任务。</p>
+<ul>
+<li><strong>feed.xml：</strong>发布前最新为2026‑11‑01，独立归档可达，连续性正常。</li>
+<li><strong>tech-alert-feed.xml：</strong>最新为2026‑10‑27 Meta CPO可靠性预警；最近任务有运行而未新增条目，符合条件预警“无重大变化不发”。</li>
+<li><strong>competitor-cost-feed.xml：</strong>已于2026‑11‑02 03:55（北京时间）恢复发布周报，独立归档可达；此前滞后疑点解除。</li>
+<li><strong>next-gen-architecture-feed.xml：</strong>最新为2026‑10‑31 HBD512/1024专题，独立归档可达，周期正常。</li>
+<li><strong>ai-memory-feed.xml：</strong>最新为2026‑10‑30，独立归档可达，周期正常。</li>
+</ul>
+<p><strong>状态判断：</strong>当前没有明确发布故障；条件预警的无新增与任务未运行已区分。GitHub原始文件可立即读取，第三方Follow或缓存延迟不在本次只读检查的可观测范围内。</p>
+</section>
+
+<section>
+<h2>未单列的新增</h2>
+<ul>
+<li><strong>近24小时：</strong>韩国10月芯片出口大增验证AI投资需求仍强，但没有新增系统规格、交付拓扑或性能数据，不单列为架构信号。</li>
+<li><strong>NPO/CPO与高功率机柜：</strong>未发现新的量产互操作、FRU/MTTR、Pre‑FEC BER、供回水温、流量、压降或母排保护数据。</li>
+</ul>
+</section>
+</article>]]></description>
+    </item>
+<item>
       <title>AI算力架构前沿简报｜2026-11-01</title>
       <link>https://raw.githubusercontent.com/YanLiang518/ai-supernode-rss/main/archive/2026-11-01.html</link>
       <guid isPermaLink="false">ai-supernode-brief-2026-11-01</guid>
