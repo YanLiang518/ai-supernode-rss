@@ -1,7 +1,42 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/">
 <channel>
-<title>超节点竞品与成本周报</title><link>https://github.com/YanLiang518/ai-supernode-rss</link><description>每周公开的超节点竞品架构变化及可核实成本信息；不披露内部成本模型。</description><language>zh-cn</language><lastBuildDate>Mon, 21 Sep 2026 04:00:51 +0800</lastBuildDate><pubDate>Mon, 21 Sep 2026 04:00:51 +0800</pubDate><ttl>15</ttl><atom:link href="https://raw.githubusercontent.com/YanLiang518/ai-supernode-rss/main/competitor-cost-feed.xml" rel="self" type="application/rss+xml"/>
+<title>超节点竞品与成本周报</title><link>https://github.com/YanLiang518/ai-supernode-rss</link><description>每周公开的超节点竞品架构变化及可核实成本信息；不披露内部成本模型。</description><language>zh-cn</language><lastBuildDate>Mon, 02 Nov 2026 03:55:44 +0800</lastBuildDate><pubDate>Mon, 02 Nov 2026 03:55:44 +0800</pubDate><ttl>15</ttl><atom:link href="https://raw.githubusercontent.com/YanLiang518/ai-supernode-rss/main/competitor-cost-feed.xml" rel="self" type="application/rss+xml"/>
+<item><title>超节点竞品与成本变化周报｜2026-11-02</title><link>https://raw.githubusercontent.com/YanLiang518/ai-supernode-rss/main/competitor-cost-archive/2026-11-02.html</link><guid isPermaLink="false">competitor-cost-2026-11-02</guid><pubDate>Mon, 02 Nov 2026 03:55:44 +0800</pubDate><description><![CDATA[<article lang="zh-CN">
+<h1>超节点竞品与成本变化周报｜2026-11-02</h1>
+<p><strong>观察期：</strong>2026-10-26至2026-11-01（北京时间）。<strong>研究方法：</strong>只纳入可核实的公开一手公告；区分实际可用、现场展示、参考设计与规划；与10月中旬公开基线比较，旧规格仅作对照。</p>
+<h2>一、摘要：本周新增的是交付与部署形态，而非HBD规模突破</h2>
+<p>本周两项具有明确日期的实质变化：（1）10月27日NVIDIA与Oracle共同宣布Vera Rubin NVL72及Vera CPU在OCI正式可用，并提出向多吉瓦级扩展的规划，同时公布计划推出8-GPU HGX Rubin NVL8；（2）10月30日鸿海展示工厂预集成的NVIDIA DSX POD模块化数据中心参考设计及Vera Rubin相关无传统线缆、无软管、无风扇Compute Tray展示。前者提高云服务可获得性的公开证据等级，后者改变现场部署、产测与维护成本的比较维度。二者均未公布新的72-GPU NVLink拓扑、单柜功率、成交价或完整BOM。</p>
+<h2>二、六家核心竞品增量矩阵</h2>
+<table><thead><tr><th>竞品</th><th>过去一周的可核实变化</th><th>证据/成熟度</th><th>成本模型影响</th></tr></thead><tbody>
+<tr><td>NVIDIA Vera Rubin NVL72</td><td>OCI宣布正式可用；多吉瓦扩展属规划；新增HGX Rubin NVL8计划</td><td>联合正式公告；规划与GA分开</td><td>加入云服务可用性与8/72 GPU部署形态；无公开硬件成交价</td></tr>
+<tr><td>AMD Helios</td><td>未找到本观察期新的Helios专属HBD、交换端口、功率或成交价</td><td>维持公开72-GPU/ORW/UALink参考基线</td><td>不调整BOM和$/GPU</td></tr>
+<tr><td>华为CloudMatrix/Atlas</td><td>未找到本观察期新增的Atlas 950/960E拓扑、Hi-ONE数量或报价</td><td>沿用9月Atlas 960E官方公开基线</td><td>不把既有5500个Hi-ONE等指标当本周新增</td></tr>
+<tr><td>中兴OEX/光跃</td><td>未找到本观察期新增的OEX+dOCS实测、交付或价格</td><td>沿用既有128 GPU/柜及dOCS公开资料</td><td>不调整</td></tr>
+<tr><td>百度天池</td><td>未找到本观察期新的正式版本或公开器件价格</td><td>既有架构设计规范公开入口</td><td>不调整</td></tr>
+<tr><td>阿里云磐久AL64/AL144</td><td>未找到本观察期官方新增ALink/SNPO端口映射、HBD边界或量产价格</td><td>保留云栖2026历史对照，不将展台标语视作规格</td><td>不调整</td></tr>
+</tbody></table>
+<h2>三、NVIDIA/Oracle：从设备交付声明进入OCI服务可用性</h2>
+<p><strong>事件日期：2026-10-27。</strong>NVIDIA与Oracle联合宣布，Vera Rubin NVL72和Vera CPU已在OCI正式可用；多吉瓦级OCI Supercluster扩展仍是未来规划。公告明确每个NVL72机柜通过NVLink连接72颗GPU，跨机柜采用Oracle Acceleron及Spectrum-X以太网体系。不能将跨柜多平面网络解释为同一72-GPU NVLink HBD的扩容，也不能由多吉瓦规划反推实际已交付机柜数。</p>
+<p>公告另提出HGX Rubin NVL8规划：8颗Rubin GPU通过NVLink连接，配备两颗64核Intel Xeon 6 CPU、4TB DDR5和6.4Tb/s高速RDMA网络。NVL8与NVL72的GPU数量比为8:72，即1:9；但不能将两者的CPU配置、NVLink域、GPU内存、网络功耗和每GPU成本简单按比例换算。若仅把6.4Tb/s作为整机网络总量，均摊8 GPU的算术值为0.8Tb/s/GPU；这不是实测单GPU注入带宽，也不是NVLink带宽。</p>
+<p><strong>成本影响：</strong>需增加“整柜NVL72 vs 8-GPU x86服务器”在不同模型并行度、SLO和集群规模下的利用率比较。多吉瓦规模可能带来设施与供应链规模效应，但缺少公开合同价格、功率分摊和运行数据，不能得出单位GPU采购成本降低结论。OCI宣布GA不等于所有区域、所有客户均可即时获得库存。</p>
+<h2>四、鸿海：DSX POD将系统集成与现场交付纳入竞争</h2>
+<p><strong>事件日期：2026-10-30。</strong>鸿海在HHTD26展示基于NVIDIA DSX POD参考设计的模块化货柜，强调在工厂完成机柜接线、配管及关键功能验证，现场连接准备好的电力、散热、网络接口。鸿海宣称，在特定预制及场地已就绪条件下，部署时间可由约六个月缩短至最快14天。该时间对照属于厂商目标/宣称，未见独立同口径项目验收数据；DSX POD为参考设计，展出不等于批量交付。</p>
+<p>同期公开展示包括Vera Rubin相关Compute Tray的无传统线缆、无软管、无风扇设计，以及800VDC供电的模拟AI数据厅。这里的“无软管”不等于不需要液冷介质连接；“800VDC展示”不等于特定NVL72量产柜已经完成800V供电验收。</p>
+<p><strong>成本影响：</strong>传统仅比较机柜BOM不足以反映部署经济性，应加入工厂预集成、L11/L12或同等测试、现场工时、运输、吊装、预制模块、现场接口与故障返修。若将部署时间视为资金占用期，理论资金成本可写为 C_financing = CAPEX × r_annual × Δt/365；但六个月对14天的比较不能直接代入真实项目，因为起算点、现场条件和合同边界尚未统一。需要同条件的端到端交付工期及验收记录。</p>
+<h2>五、互联、液冷和供电：本周未获得可更新硬件BOM的新实测</h2>
+<p>NVL72的72-GPU HBD和Helios的72-GPU参考设计属于不同协议与实现，不能把NVLink与UALink端口数量视作可直接替换。Atlas 960E的4096-NPU SuperPoD和中兴128 GPU/柜/更大集群扩展涉及不同的HBD与Scale-Out边界，不能仅以“卡数”进行带宽或$/GPU排名。云栖AL144/AL64的实际交换级数、单GPU光注入、光源FRU与成本仍缺少本周新增官方证据。</p>
+<p>鸿海800VDC展示及无软管Tray体现机柜供电、散热与维护协同的方向，但本周没有可核实的新机柜连续额定功率、54V/800V转换效率、CDU流量/Approach、光引擎BER或MTTR实测。因此不修改供电、液冷、光互联的量产成本基线。</p>
+<h2>六、统一成本口径与证据缺口</h2>
+<p>建议统一计算：C_total = C_accelerator + C_switch + C_optics + C_cable + C_power + C_cooling + C_factory_test + C_site_deployment + C_spares + C_operations。硬件互联成本可按 C_interconnect/GPU = (C_switch+C_optics+C_cable+C_retimer+C_test+C_spares)/N_GPU 归一化；比较经济性还应在同模型、同精度、同TTFT/ITL及有效吞吐下核算TCO/有效Token。这里仅提供公式，不引入未公开价格或内部成本。</p>
+<p>本周有证据支持更新“产品状态”和“交付模型”字段，却没有足够同口径公开单价、机柜功率、光链路数量、整机维修工时和合同价格来建立跨厂商$/GPU排名。不得将云服务租赁报价、厂商性能/$宣称或多吉瓦投资规划倒推为设备成交价。</p>
+<h2>七、结论与下周验证</h2>
+<ol><li>验证OCI Rubin NVL72实际可订区域、交付批次、公开计费形态及HGX Rubin NVL8与NVL72的真实网络/互联边界。</li><li>验证DSX POD从工厂预集成至现场验收的端到端工期、测试覆盖、现场准备条件、故障返修和单位GPU部署成本。</li><li>继续获取Helios交换Tray、Atlas Hi-ONE、OEX+dOCS、天池与磐久AL144/AL64的公开端口/功率/液冷/维护实测，只有新增可核实证据才修改BOM。</li></ol>
+<p><strong>总体判断：</strong>本周实质增量是NVIDIA平台云服务可用性和预制交付形态，不是GPU/HBD规模或Scale-Up芯片容量的新突破。维持各平台硬件互联BOM基线，不编造价格。</p>
+<h2>八、公开来源与日期</h2>
+<ul><li><a href="https://nvidianews.nvidia.com/news/nvidia-and-oracle-expand-nvidia-vera-rubin-to-multi-gigawatt-scale-and-bring-nvidia-vera-cpu-to-oracle-cloud-infrastructure">NVIDIA与Oracle联合公告，2026-10-27</a></li><li><a href="https://www.oracle.com/news/announcement/blog/ai-world-building-the-next-decade-of-oracle-cloud-infrastructure-2026-10-27/">Oracle OCI技术说明，2026-10-27</a></li><li><a href="https://www.honhai.com/zh-tw/press-center/press-releases/latest-news/2136">鸿海DSX POD官方公告，2026-10-30</a></li><li><a href="https://www.prnewswire.com/news-releases/foxconn-ecosystem-enabling-token-factory-for-ai-in-spotlight-at-hon-hai-tech-day-2026-302924468.html">鸿海HHTD26原始新闻稿，2026-10-30</a></li><li><a href="https://www.amd.com/en/products/rackscale-solutions/helios.html">AMD Helios官方参考设计</a></li><li><a href="https://www.huawei.com/en/news/2026/9/hc-ascend960-supernode">华为Atlas 960E官方发布，2026-09-17</a></li><li><a href="https://www.zte.com.cn/china/about/news/20260717C3.html">中兴OEX+dOCS官方技术说明，2026-07-17</a></li><li><a href="https://cloud.baidu.com/article/8983717">百度天池设计规范公开入口，2026-09-18</a></li></ul>
+</article>]]></description></item>
+
 <item><title>超节点竞品与成本变化周报｜2026-09-21</title><link>https://raw.githubusercontent.com/YanLiang518/ai-supernode-rss/main/competitor-cost-archive/2026-09-21.html</link><guid isPermaLink="false">competitor-cost-2026-09-21</guid><pubDate>Mon, 21 Sep 2026 04:00:51 +0800</pubDate><description><![CDATA[
 <h2>本周结论</h2><p>最近一周最值得进入竞品模型的变化有两项：华为正式发布采用7.2T Hi-ONE NPO的Atlas 960E SuperPoD；百度公开《天池超节点系统架构设计规范》的下载入口。NVIDIA Vera Rubin NVL72、AMD Helios、ZTE/光跃128本周未检索到改变既有硬件基线的官方新规格或公开价格。</p>
 <h2>1. 华为 Atlas 960E：NPO进入系统级BOM替代叙事</h2><p><b>事件日期：2026-09-17。</b>华为披露Hi-ONE单引擎7.2Tbit/s、内置光源，并称已具备量产条件；Atlas 960E采用正交架构、全液冷和UnifiedBus统一编址，单SuperPoD可扩展至4096 NPU，FP8 8 EFLOPS、FP4 16 EFLOPS。系统集成约5500个Hi-ONE，官方对照称可替代约48000个800G光模块、降低超过550kW功耗，并给出99.8%系统可用度。</p><p><b>成本影响：</b>公开信息给出了“5500个NPO vs 48000个800G光模块”的系统级数量对照，但没有Hi-ONE单价、800G模块类型/单价、光纤连接BOM、交换芯片边界及维护备件成本，因此本周不计算每NPU互联美元成本。按厂商公开数量直接归一化，约1.34个Hi-ONE/NPU，对照口径约11.72个800G模块/NPU；这只是该系统的厂商对照，不应外推为通用端口关系。</p><p><b>模型更新：</b>新增光引擎数量、光源FRU边界、光纤连接数量、光模块/引擎墙上功耗、MTTR五个字段，避免只用$/Gbps比较NPO和可插拔光。</p><p><a href="https://www.huawei.com/en/news/2026/9/hc-ascend960-supernode">华为官方，2026-09-17</a></p>
