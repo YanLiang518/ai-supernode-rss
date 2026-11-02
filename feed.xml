@@ -5,11 +5,194 @@
     <link>https://github.com/YanLiang518/ai-supernode-rss</link>
     <description>聚焦 AI 超节点、GPU/加速芯片、Scale-up 互联、NPO/CPO、液冷、供电与头部厂商架构动态。</description>
     <language>zh-cn</language>
-    <pubDate>Mon, 02 Nov 2026 05:00:00 +0800</pubDate>
-    <lastBuildDate>Mon, 02 Nov 2026 05:00:00 +0800</lastBuildDate>
+    <pubDate>Tue, 03 Nov 2026 05:00:00 +0800</pubDate>
+    <lastBuildDate>Tue, 03 Nov 2026 05:00:00 +0800</lastBuildDate>
     <ttl>15</ttl>
     <atom:link href="https://raw.githubusercontent.com/YanLiang518/ai-supernode-rss/main/feed.xml" rel="self" type="application/rss+xml"/>
-                    <item>
+                        <item>
+      <title>AI算力架构前沿简报｜2026-11-03</title>
+      <link>https://raw.githubusercontent.com/YanLiang518/ai-supernode-rss/main/archive/2026-11-03.html</link>
+      <guid isPermaLink="false">ai-supernode-brief-2026-11-03</guid>
+      <pubDate>Tue, 03 Nov 2026 05:00:00 +0800</pubDate>
+      <description><![CDATA[<article>
+<header>
+<h1>AI算力架构前沿简报｜2026年11月3日</h1>
+<p><strong>今日判断：</strong>今天两条信号把光互联产业从“器件拼装”推向“电—光联合设计”，但成熟度处在完全不同的层次。Marvell与Lumentum签署1150亿美元全股票并购协议，试图把定制XPU、交换与XPU Attach、硅光、激光器、光模块、OCS和化合物半导体制造放进同一供应体系；Astera Labs则在OCP会后公开50米PCIe 6硅光NPO现场链路结果，并展示576-lane液冷交换托盘机械样机。</p>
+<p><strong>共同结论：</strong>Scale-Up光互联的竞争单位正在从单个NPO/CPO器件扩大为ASIC—Driver/TIA—硅光—激光器—光纤连接—液冷—遥测的完整信号链。纵向整合有机会缩短验证周期，但会放大接口锁定和单一供应商故障域；链路演示能证明物理可行性，却不能替代系统吞吐、功耗、FRU、MTTR和现场可靠性。</p>
+</header>
+
+<section>
+<h2>信号总览</h2>
+<ul>
+<li><strong>Marvell拟收购Lumentum：</strong>双方已签署确定性协议，企业价值约1150亿美元，预计2028年上半年交割；监管及股东批准尚未完成。影响定制XPU/交换芯片、硅光、InP激光器、OCS、先进封装及供应链纵向整合。</li>
+<li><strong>Astera Labs公开PCIe 6 NPO链路与高radix托盘边界：</strong>50米、x32硅光NPO和优于1e‑10的Pre‑FEC BER属于现场演示；576-lane、1.5OU液冷托盘属于机械样机，不能写成量产整机。影响PCIe光化、NPO布局、ELSFP/MMC、光纤管理、可拆CPO连接和链路遥测。</li>
+</ul>
+</section>
+
+<section>
+<h2>01｜Marvell拟收购Lumentum：AI互联从分立采购走向ASIC—激光器—OCS纵向整合</h2>
+<h3>① 业务变化是什么</h3>
+<p>2026年11月2日，Marvell与Lumentum宣布签署确定性协议，Marvell将以全股票方式收购Lumentum，隐含企业价值约1150亿美元。交易预计2028年上半年完成，仍需双方股东、监管机构和其他常规条件批准；因此当前是<strong>已签协议、尚未交割</strong>，不能把两家公司产品线写成已经合并。</p>
+<p>双方公开的目标组合包括：</p>
+<ul>
+<li>Marvell的定制XPU、交换与XPU Attach、电/光互联、CMOS和先进半导体技术；</li>
+<li>Lumentum的高性能激光器、光收发器、光路交换OCS及InP等化合物半导体制造；</li>
+<li>硅光、化合物半导体、先进封装和高功率激光器的联合开发及生产；</li>
+<li>面向Scale-Across、Scale-Out、Scale-Up和Scale-In的预验证光互联方案。</li>
+</ul>
+<p>Reuters核实了交易金额、交割预期和竞争背景，同时指出市场对估值与执行风险存在明显质疑。交易公告中的5500亿美元可服务市场和每年10亿美元成本协同属于公司预测，不是已实现收益。</p>
+
+<h3>② 为什么发生</h3>
+<p>Scale-Up和Scale-In把互联距离从机柜间推近到交换托盘、计算托盘乃至封装边缘。随着电通道在224G及更高速率下面临插损、功耗和面积压力，光引擎不能再只按标准模块与ASIC分开采购。SerDes、Driver/TIA、硅光调制器、激光功率、封装热路径、光纤连接和FEC必须共同冻结。</p>
+<p>传统分工要求云厂商或系统厂商自己完成多家芯片、光学、封装和制造供应商之间的链路预算与可靠性闭环。Marvell的商业目标是把这部分系统集成提前到供应商内部，以更快提供经过联合验证的完整信号链，并与Broadcom等全栈供应商竞争。</p>
+
+<h3>③ 计算和数据特征如何变化</h3>
+<p>训练、推理和Agent工作流持续提高芯片间通信量，但不同层级的数据特征并不相同：</p>
+<ul>
+<li>Scale-Up需要低尾延迟、严格顺序和高有效带宽，承载Tensor Parallel、专家路由及内存语义通信；</li>
+<li>Scale-Out更重视多路径、拥塞控制和跨机柜带宽；</li>
+<li>Scale-Across可能连接不同园区，距离更长且需要更强的光传输和故障隔离；</li>
+<li>OCS适合重构大流量、持续时间较长的连接，但切换时间和拓扑调度必须与作业阶段匹配。</li>
+</ul>
+<p>纵向整合可以让ASIC路由、SerDes设置、激光状态和模块遥测共享同一控制面，减少重复训练和黑盒故障定位；但也可能把原本可独立替换的器件绑定成供应商专有组合。</p>
+
+<h3>④ 触碰哪项技术边界</h3>
+<p><strong>开始失效的假设是：光模块、激光器、交换ASIC和定制XPU可以保持松耦合，只靠标准电接口在系统集成末期组合。</strong></p>
+<ul>
+<li><strong>联合设计边界：</strong>更高速率下的电/光余量、FEC、功耗和散热互相耦合，分立器件各自达标不代表端到端链路达标。</li>
+<li><strong>供应链边界：</strong>InP激光和化合物半导体制造进入关键路径；自有产能可以保障供应，也会扩大单一厂商中断的影响。</li>
+<li><strong>开放性边界：</strong>预验证整套方案可能缩短上线时间，却削弱跨厂商光引擎、ELS、OCS及管理接口的互换性。</li>
+<li><strong>证据边界：</strong>交易尚未完成，双方没有发布由并购产生的新NPO/CPO产品、功耗、BER、FRU或量产客户数据。</li>
+<li><strong>资本边界：</strong>交易规模巨大且需等待至2028年，组织整合和产品路线重叠可能影响交付节奏。</li>
+</ul>
+
+<h3>⑤ 可能催生什么硬件技术/架构</h3>
+<ul>
+<li><strong>高概率方向：</strong>面向特定XPU或交换ASIC的光引擎、ELS和光纤连接器联合参考设计，出厂前完成端到端链路预算及热验证。</li>
+<li><strong>高概率方向：</strong>把OCS、Scale-Out交换和Scale-Up光引擎接入统一拓扑控制面，根据训练阶段和故障状态重构路径。</li>
+<li><strong>高概率方向：</strong>CMOS、硅光、InP激光器和先进封装形成异构集成平台，光互联进一步接近封装边缘。</li>
+<li><strong>必须保留：</strong>标准化电/光接口、CMIS或等效遥测、可独立更换的光源/FAU以及第二供应源，避免整套互联成为不可替换黑盒。</li>
+<li><strong>待验证：</strong>交易能否按期完成，产品线如何整合，NPO/CPO是否保持开放接口，以及预验证方案相对分立方案的真实W/Tb/s、良率、MTTR和全生命周期成本。</li>
+</ul>
+<p><strong>架构师结论：</strong>这笔交易的重要性不在财务规模本身，而在于AI互联供应链开始把XPU、交换、激光和OCS视为同一系统。但对采购方而言，“联合优化”必须与“可替换、可维修、可多源”同时验收。</p>
+<p><strong>来源：</strong>
+<a href="https://investor.marvell.com/news-events/press-releases/detail/1040/marvell-and-lumentum-to-combine-creating-a-category-leader-in-ai-connectivity">Marvell/Lumentum正式交易公告，2026-11-02</a>｜
+<a href="https://www.sec.gov/Archives/edgar/data/1835632/000119312526442714/d81187dex991.htm">SEC附件：交易与技术组合说明，2026-11-02</a>｜
+<a href="https://www.reuters.com/legal/transactional/marvell-buy-lumentum-115-billion-deal-ai-data-center-bet-2026-11-02/">Reuters交叉核实，2026-11-02</a>
+</p>
+</section>
+
+<section>
+<h2>02｜50米PCIe 6硅光NPO链路进入现场演示：高radix光化开始同时暴露散热、光纤与FRU边界</h2>
+<h3>① 业务变化是什么</h3>
+<p>Astera Labs在2026 OCP Global Summit会后公开技术回顾。大会期间（10月12–15日）完成的现场演示包括：</p>
+<ul>
+<li>由Scorpio X‑Series 320L交换芯片驱动的50米PCIe 6、x32硅光NPO链路；</li>
+<li>厂商报告链路成功Link Up，Pre‑FEC BER优于1×10<sup>−10</sup>并展示接收眼图；</li>
+<li>一个包含两颗Scorpio 320L的NPO交换托盘机械样机，每颗交换芯片周围布置9个x32硅光NPO，总计576条lane；</li>
+<li>样机高度1.5OU，交换和NPO区域采用冷板，光纤由NPO引至前面板MMC连接器与ELSFP；</li>
+<li>另一路线以1060nm二维VCSEL阵列演示20米、x8 PCIe 5无错Link Up；</li>
+<li>面向CPO展示可拆卸、成组的fiber-to-chip连接器概念，目标覆盖100T、200T和400T交换架构。</li>
+</ul>
+<p><strong>成熟度必须分开：</strong>50米PCIe 6链路属于现场演示；576-lane托盘被厂商明确称为机械样机；VCSEL是概念验证；可拆CPO连接器仍在开发。厂商所称NPO在2027年初可部署属于路线目标，不是量产验收。</p>
+
+<h3>② 为什么发生</h3>
+<p>高radix PCIe/Scale-Up交换芯片可以提供数百条高速lane，但前面板可插拔模块、Retimer/DSP数量、铜通道损耗和布线面积会限制这些lane的实际引出。把光电转换移到ASIC附近，可缩短高速电通道并将长距离部分变成光纤。</p>
+<p>PCIe光化还有一个特殊约束：协议的重放缓冲和时延预算比普通以太网更敏感。50米不是只由光功率决定，传播时延、交换路径、重放缓冲和错误恢复都可能成为上限。系统需要同时验证链路距离、BER、负载下重试和端到端尾延迟。</p>
+<p>Astera同时展示硅光外置激光和VCSEL路线，反映NPO不仅是性能选择，也是供应链与维护边界选择。外置激光器有利于将光源设为FRU；VCSEL内置光源可能减少InP供应依赖，却改变故障隔离和可维修性。</p>
+
+<h3>③ 计算和数据特征如何变化</h3>
+<p>PCIe/内存语义流量包含大量细粒度读写、完成包和顺序依赖，不等同于可以深度缓存的以太网批量流量。短时BER恶化、lane抖动或重放会直接放大访问尾延迟，并可能阻塞多个加速器之间的同步。</p>
+<p>576条lane集中在1.5OU托盘，还会同时制造：</p>
+<ul>
+<li>高密度光纤弯曲半径、交叉和标签管理；</li>
+<li>ELSFP到多个NPO引擎之间的光功率分配与共同故障域；</li>
+<li>冷板、光引擎和FAU之间的装配公差及热变形；</li>
+<li>前面板MMC清洁、插拔和现场更换压力；</li>
+<li>链路训练、BER、光功率和温度遥测的控制面负载。</li>
+</ul>
+<p>因此，高lane数不会自动转化为可用Scale-Up带宽；系统还要证明所有lane在热稳态、实际流量和故障降级下能够持续工作。</p>
+
+<h3>④ 触碰哪项技术边界</h3>
+<p><strong>开始失效的假设是：NPO的主要问题只是将光引擎放到ASIC附近，其他机械、散热和维护设计可以沿用可插拔光模块。</strong></p>
+<ul>
+<li><strong>协议边界：</strong>Link Up和单点BER不能说明满载goodput、P99、重放率或Collective性能。</li>
+<li><strong>热边界：</strong>1.5OU内两颗高radix交换芯片和18个x32 NPO需要联合冷板设计；厂商未公开热流密度、供回水温、流量和压降。</li>
+<li><strong>共同故障边界：</strong>ELS、FAU、连接器或冷板泄漏可能同时影响多个lane，不能按独立链路FIT简单外推可靠性。</li>
+<li><strong>维护边界：</strong>MMC与ELSFP可从前面板维护，不等于焊接NPO、光纤耦合和交换ASIC均可独立FRU。</li>
+<li><strong>量产边界：</strong>机械样机没有证明生产良率、光纤自动装配、污染控制、插拔寿命和现场MTTR。</li>
+<li><strong>代际边界：</strong>厂商称拓扑具备PCIe 7潜力，不能替代PCIe 7速率下的通道、功耗和BER实测。</li>
+</ul>
+
+<h3>⑤ 可能催生什么硬件技术/架构</h3>
+<ul>
+<li><strong>已出现：</strong>PCIe 6 x32硅光NPO现场链路、MMC/ELSFP前面板光纤管理、冷板式高radix托盘和VCSEL替代路线。</li>
+<li><strong>高概率方向：</strong>NPO交换托盘形成“交换ASIC＋光引擎＋冷板＋ELS＋FAU＋前面板连接器”的整体验证单元，而不是单独采购光模块。</li>
+<li><strong>高概率方向：</strong>按光源、连接器和光引擎划分lane故障域，并通过物理swizzle避免单个FRU使整组Scale-Up端点失联。</li>
+<li><strong>高概率方向：</strong>链路遥测统一记录Pre‑FEC BER、重放、光功率、温度、训练时间和lane降级状态，供调度器避开亚健康路径。</li>
+<li><strong>高概率方向：</strong>可拆fiber-to-chip连接器成为CPO生产与维护关键件，但必须公布插损、回损、重复插拔寿命、污染控制和自动装配良率。</li>
+<li><strong>待验证：</strong>50米链路的实际Payload吞吐、功耗与P99；576-lane托盘的热稳态、完整端口同时工作、ELS冗余、FRU边界和维修工时。</li>
+</ul>
+<p><strong>架构师结论：</strong>Astera的新增价值是把PCIe光化从链路概念推进到可测的50米NPO演示，并把576-lane托盘中的冷板、MMC和ELSFP摆到同一机械边界内；但它仍不是可采购、可维护的量产Scale-Up系统。</p>
+<p><strong>来源：</strong>
+<a href="https://www.asteralabs.com/resources/blog/lighting-the-way-demonstrated-progress-on-our-optical-roadmap-to-npo-and-cpo/">Astera Labs OCP会后NPO/CPO技术回顾，2026年10月末公开；演示发生于2026-10-12至15</a>｜
+<a href="https://www.asteralabs.com/resources/blog/computex-2026-demo-how-linear-optics-enables-longer-link-reach-lower-latency-for-scorpio-smart-fabric-switches/">Astera Labs PCIe 6 LPO历史基线，2026-06</a>｜
+<a href="https://www.opencompute.org/events/ocp-summit/2026-ocp-global-summit/recorded-content/">OCP 2026官方会后资料目录</a>
+</p>
+</section>
+
+<section>
+<h2>今日架构主线</h2>
+<p><strong>光互联的工程边界正从“光模块规格”扩大为“联合信号链和可维护系统”。</strong></p>
+<ul>
+<li>Marvell—Lumentum交易显示芯片、激光、OCS和制造正在纵向合并；</li>
+<li>Astera的演示显示NPO落地同时依赖协议、冷板、光纤、ELS和前面板连接；</li>
+<li>纵向整合可以缩短Bring-up，却可能扩大供应商锁定；</li>
+<li>高lane密度可以减少前面板模块，却把污染、光源冗余、热变形和维修集中到更少FRU。</li>
+</ul>
+<p>后续验收应同时报告有效Tb/s、W/Tb/s、Pre‑FEC BER与重放、P99、光源/FAU/引擎故障域、插拔寿命、MTTR及第二供应源，而不能只比较链路速率和托盘密度。</p>
+</section>
+
+<section>
+<h2>会议雷达与专项跟踪</h2>
+<ul>
+<li><strong>OIF Q4技术会议：</strong>11月2–6日正在曼谷举行，会员会议首日尚未出现可公开核实的CEI‑448G、12.8T NPO或COI实施协议更新；继续观察会后发布及11月5–6日CFCF公开演讲。</li>
+<li><strong>OCP 2026会后：</strong>本期新增纳入Astera PCIe 6 NPO与576-lane托盘证据；它补充了链路和机械形态，但仍未提供量产FRU、现场MTTR或全生命周期成本。</li>
+<li><strong>SC26：</strong>11月15–20日；重点核查高功率网络液冷、光互联热预算、Checkpoint/存储及故障恢复的原始演讲和实测数据。</li>
+<li><strong>NVIDIA GTC Washington：</strong>11月30日至12月3日；重点跟踪Vera Rubin、800VDC、Spectrum‑X和Agent CPU机架的实际交付与拓扑边界。</li>
+<li><strong>云栖2026：</strong>没有发现AL144、AL64、SNPO或ALink新增正式规格、修订PPT或客户验收；不把9月会期内容当作今日动态。</li>
+</ul>
+<p><strong>会议来源：</strong>
+<a href="https://www.oiforum.com/meetings-events/future-quarterly-meetings/">OIF季度会议</a>｜
+<a href="https://www.opencompute.org/events/ocp-summit/2026-ocp-global-summit/recorded-content/">OCP 2026会后资料</a>｜
+<a href="https://sc26.supercomputing.org/Program/">SC26官方项目</a>｜
+<a href="https://www.nvidia.com/gtc/dc/conference-schedule/">GTC Washington官方日程</a>
+</p>
+</section>
+
+<section>
+<h2>系统健康自检</h2>
+<p>五个RSS均可读取，XML标签结构有效、CDATA开闭数量一致、<code>ttl=15</code>，各自最新归档链接均可达；五项任务均显示启用。本次未修改其他任务。</p>
+<ul>
+<li><strong>feed.xml：</strong>发布前最新为2026‑11‑02，共74期，独立归档可达。</li>
+<li><strong>tech-alert-feed.xml：</strong>最新为2026‑10‑27 Meta CPO可靠性预警；11月2日任务已完成但没有新条目，符合条件预警“无重大变化不发”。</li>
+<li><strong>competitor-cost-feed.xml：</strong>最新为2026‑11‑02，独立归档可达，周报周期正常。</li>
+<li><strong>next-gen-architecture-feed.xml：</strong>最新为2026‑10‑31 HBD512/1024专题，独立归档可达。</li>
+<li><strong>ai-memory-feed.xml：</strong>最新为2026‑10‑30，独立归档可达，周度周期正常。</li>
+</ul>
+<p><strong>状态判断：</strong>当前日报任务正在本期执行，不能把“运行中”误判为失败；其余任务最近记录与公开RSS相符。第三方Follow缓存时延不在GitHub只读检查的可观测范围内。</p>
+</section>
+
+<section>
+<h2>未单列的新增</h2>
+<ul>
+<li><strong>Google马来西亚水基础设施投资：</strong>11月2日宣布1.6亿美元共享水库和处理设施资金，说明水资源开始与数据中心建设绑定；但缺少数据中心IT负载、冷却方式、WUE和供回水数据，本期不升级为独立架构信号。</li>
+<li><strong>Oracle融资与韩国AI预算：</strong>属于资本或政策容量信号，未新增芯片、网络、供电或冷却工程参数。</li>
+</ul>
+</section>
+</article>]]></description>
+    </item>
+<item>
       <title>AI算力架构前沿简报｜2026-11-02</title>
       <link>https://raw.githubusercontent.com/YanLiang518/ai-supernode-rss/main/archive/2026-11-02.html</link>
       <guid isPermaLink="false">ai-supernode-brief-2026-11-02</guid>
