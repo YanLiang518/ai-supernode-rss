@@ -5,10 +5,160 @@
     <link>https://github.com/YanLiang518/ai-supernode-rss</link>
     <description>聚焦 AI 超节点、GPU/加速芯片、Scale-up 互联、NPO/CPO、液冷、供电与头部厂商架构动态。</description>
     <language>zh-cn</language>
-    <pubDate>Thu, 05 Nov 2026 05:00:00 +0800</pubDate>
-    <lastBuildDate>Thu, 05 Nov 2026 05:00:00 +0800</lastBuildDate>
+    <pubDate>Fri, 06 Nov 2026 05:00:00 +0800</pubDate>
+    <lastBuildDate>Fri, 06 Nov 2026 05:00:00 +0800</lastBuildDate>
     <ttl>15</ttl>
     <atom:link href="https://raw.githubusercontent.com/YanLiang518/ai-supernode-rss/main/feed.xml" rel="self" type="application/rss+xml"/>
+    <item>
+      <title>AI算力架构前沿简报｜2026-11-06</title>
+      <link>https://raw.githubusercontent.com/YanLiang518/ai-supernode-rss/main/archive/2026-11-06.html</link>
+      <guid isPermaLink="false">ai-supernode-brief-2026-11-06</guid>
+      <pubDate>Fri, 06 Nov 2026 05:00:00 +0800</pubDate>
+      <description><![CDATA[<article>
+<header>
+<h1>AI算力架构前沿简报｜2026年11月6日</h1>
+<p><strong>今日判断：</strong>今天两条变化分别把推理状态和数据中心电力从“外围支撑”推到AI架构主路径。Supermicro、IBM与NVIDIA把共享全闪存正式产品化为持久KV Cache层，并公开了长上下文、并发及噪声流量测试；NTT DATA则签订900MW现场燃料电池协议，计划把现场发电作为多个数据中心项目的主电源。</p>
+<p><strong>共同结论：</strong>推理侧，GPU之外的数据移动已经能决定首Token与并发；设施侧，电网接入之外的现场发电已经能决定何时交付算力。下一代AI系统必须同时调度“KV在哪一层、何时复用”和“MW从哪里来、故障时如何切换”，不能再把存储与供电当作规格冻结后的配套工程。</p>
+</header>
+
+<section>
+<h2>信号总览</h2>
+<ul>
+<li><strong>共享持久KV Cache进入正式解决方案：</strong>120B模型、130k Token测试中，厂商联合测试称TTFT最高改善56倍，并在并发及噪声网络下保持18倍吞吐优势。证据为厂商联合验证与公开参考架构，不是独立第三方基准。</li>
+<li><strong>900MW现场燃料电池成为数据中心主电源合同：</strong>NTT DATA与Bloom Energy公布跨多个全球项目的协议，首批设备计划2027年出货。900MW是协议总量和未来交付目标，不是当前已投运容量。</li>
+</ul>
+</section>
+
+<hr/>
+
+<section>
+<h2>01｜持久KV Cache从本地优化升级为共享数据平面：长上下文推理开始由存储与网络决定TTFT</h2>
+
+<h3>① 新变化是什么</h3>
+<p>2026年11月5日，Supermicro宣布与IBM、NVIDIA推出KV Cache存储解决方案，把Supermicro Petascale全闪存服务器、IBM Storage Scale ECE、NVIDIA Dynamo和Spectrum-X以太网组合成可跨GPU节点共享的持久KV层。Supermicro称该系统已经做过集群级高并发和噪声邻居流量验证，并提供工厂集成与现场部署服务。</p>
+<p>配套IBM参考架构公开了更完整的测试配置：3台Spectrum-X SN5600组成Spine/Leaf，8台存储节点，每台16块7.68TB NVMe；计算端包含H100、H200与RTX PRO 6000等异构GPU节点，并通过BlueField-3与200/400Gb网络访问共享文件系统。软件采用IBM Storage Scale ECE 6.0.0.1、NVIDIA Dynamo、vLLM 0.14.1及AIPerf，模型为openai/gpt-oss-120b。</p>
+<p>在单请求测试中，无KV复用的TTFT从10k Token时0.572秒升至130k时32.14秒；从共享存储读取持久KV时，测试范围内TTFT约0.193—0.57秒，130k处对应约56倍改善。并发测试中，厂商报告吞吐从0.19 RPS提升至4.26 RPS、约22倍；噪声邻居条件下仍称有18倍优势。</p>
+<p><strong>证据边界：</strong>解决方案发布、硬件与软件配置及测试曲线都有公开原始资料；但测试由合作厂商共同完成，未公开全部请求分布、缓存命中构造、KV精度/块大小、端到端功耗、成本或独立复现。因此“56倍、22倍、18倍”只能视作特定参考架构和高复用负载下的厂商实测，不能外推为任意模型、Prompt或存储系统的普遍收益。</p>
+
+<h3>② 为什么发生</h3>
+<p>长对话、代码助手、RAG、多模态与Agent反复使用大型系统提示、代码库、文档和历史轨迹。Prefill已经计算出的注意力KV若因HBM不足被驱逐，下一轮请求必须重新计算同一前缀；GPU花费算力重做数据准备，而不是生成新Token。</p>
+<p>仅把KV留在单机CPU内存或本地SSD又会把会话绑定到一台推理服务器，降低跨节点调度、故障恢复和弹性伸缩能力。共享持久层的商业目标，是让调度器可以把请求迁移到另一GPU节点，仍然复用已计算上下文，并把昂贵HBM留给正在Decode的活跃序列。</p>
+<p><strong>本简报判断：</strong>这不是“存储取代HBM”，而是KV生命周期第一次以正式产品形态横跨HBM、主存、本地介质和共享全闪存。收益来源不是闪存本身，而是“复用概率×避免的Prefill计算”大于远程读取、索引、网络与一致性成本。</p>
+
+<h3>③ 计算与数据特征如何变化</h3>
+<p>Prefill仍在GPU上生成KV，但数据随后可能被切块、登记、写入共享存储，并在后续请求到来时跨网络恢复。因而推理流量从单纯的Token输入输出，增加了大块KV写入、按前缀命中的随机读取、缓存目录查询和跨节点数据搬运。</p>
+<ul>
+<li><strong>冷请求：</strong>需要完整Prefill并写入KV，计算与存储写入同时上升；</li>
+<li><strong>热前缀请求：</strong>可跳过大部分重复Prefill，TTFT受目录命中、远程读取带宽和GPU装载路径支配；</li>
+<li><strong>多轮Agent：</strong>短时活动KV适合留在HBM，等待工具或人工审批的会话可下沉到主存、NVMe或共享层；</li>
+<li><strong>多租户并发：</strong>相同系统提示或知识库可能获得高复用，但隔离、加密与删除语义必须随KV数据一同执行。</li>
+</ul>
+<p>参考架构中的Spine/Leaf、BlueField-3及独立存储节点说明，KV已经成为需要流量工程的东西向数据面。训练集合通信、模型权重加载、Checkpoint和KV读取若共享同一Fabric，平均带宽充足也可能在突发时制造TTFT长尾。</p>
+
+<h3>④ 触碰哪项技术边界</h3>
+<p><strong>开始失效的假设是：KV Cache只是推理服务器内部的临时状态，容量规划只需看单卡HBM和本地内存。</strong></p>
+<p>第一道边界是复用经济性。一次性Prompt或低命中前缀可能因写入和读取远程KV而更慢；必须根据前缀长度、预计复用次数、重算成本和存储排队动态决定是否持久化。</p>
+<p>第二道边界是尾延迟。厂商给出的峰值改善没有替代P99、并发恢复风暴、热点前缀和存储节点失效时的降级测试。共享存储把单机容量问题转化为网络、元数据和故障域问题。</p>
+<p>第三道边界是正确性与安全。KV必须绑定模型版本、权重、Tokenizer、位置编码、精度、租户和工具上下文；任一维度变化都可能使旧缓存失效。若目录或访问控制错误，KV还可能泄露用户上下文或让错误状态跨请求复用。</p>
+
+<h3>⑤ 可能催生什么硬件与架构</h3>
+<ul>
+<li><strong>已出现：</strong>HBM—主存—共享全闪存的G4级KV层，配套Dynamo目录/调度、Spectrum-X Fabric与BlueField-3数据路径。</li>
+<li><strong>高概率方向：</strong>Prefill与Decode进一步分池；调度器同时读取GPU空闲、KV位置、缓存命中率和网络拥塞，把请求放到“数据已在附近”的节点。</li>
+<li><strong>高概率方向：</strong>DPU或智能NIC承担KV块的校验、压缩、加密、租户隔离与零拷贝搬运；KV流量与训练集合通信采用独立队列、流量类别或独立Fabric。</li>
+<li><strong>高概率方向：</strong>缓存准入和淘汰从LRU升级为价值感知策略，以“未来避免的Prefill GPU秒数/占用字节”排序，而不是只看最近访问。</li>
+<li><strong>尚待验证：</strong>不同KV精度、模型、缓存命中率和上下文长度下的盈亏平衡点，以及存储节点、交换链路或目录服务故障时的P99与恢复范围。</li>
+</ul>
+<blockquote><p><strong>架构师结论：</strong>持久KV把“上下文复用”变成可采购的数据基础设施。验收不能只看顺序读带宽，应在真实命中率、混合上下文、噪声邻居和故障降级下测每个完成任务的TTFT、GPU重算秒数、KV读写字节、P99和总成本。</p></blockquote>
+<p><strong>建议跟踪：</strong>缓存命中率分布、KV块大小与精度、每GPU远程读取带宽、目录P99、跨模型/版本失效、加密与安全删除、热点前缀及存储故障下的退化。</p>
+<p><strong>原始来源：</strong>
+<a href="https://ir.supermicro.com/news/news-details/2026/Supermicro-Launches-KV-Cache-Solution-with-IBM-and-NVIDIA-Demonstrating-Significant-Inference-Performance-Benefits/default.aspx">Supermicro正式发布，2026-11-05</a>｜
+<a href="https://www.redbooks.ibm.com/docs/MD260021/MD260021.html">IBM Redbooks：完整参考架构、配置与基准方法，2026年公开</a>｜
+<a href="https://www.supermicro.com/solutions/validated-design/IBM-Storage-Scale-ECE--NVIDIA-Dynamo--SpectrumX--SMCI-Petascale.pdf">联合参考架构PDF，2026年公开</a>
+</p>
+</section>
+
+<hr/>
+
+<section>
+<h2>02｜NTT DATA签订900MW现场发电协议：AI数据中心开始把主电源从“等电网”改为“随项目分期交付”</h2>
+
+<h3>① 新变化是什么</h3>
+<p>2026年11月5日，NTT DATA与Bloom Energy宣布协议：在多个全球数据中心项目部署合计900MW现场燃料电池，并把其作为主电源；首批设备计划2027年开始出货。双方称该协议可扩展至吉瓦级，是Bloom截至公告日最大的国际项目。</p>
+<p>燃料电池为模块化非燃烧发电单元。厂商称其本地空气污染物较低、用水少、噪声低，可随数据中心建设分期增加容量。协议没有披露具体站点、各站MW、燃料来源、可用率、效率、碳强度、价格、备用电源拓扑或并网方式。</p>
+<p><strong>证据边界：</strong>900MW是已公布的商业协议总量，首批出货是2027年目标；不是900MW已经投运，也不是全部容量都专供AI。环保与可靠性收益来自供应商陈述，尚无本项目的第三方运行数据。</p>
+
+<h3>② 为什么发生</h3>
+<p>AI园区的瓶颈越来越常见于“电网何时能交付MW”，而不是服务器何时到货。大型变电站、输电扩容、许可和并网排队可能晚于机房建设数年，使已采购土地、机房与加速器不能形成收入。</p>
+<p>现场发电允许运营商把电源模块与数据厅同步建设，按租户与机柜投产曲线分期扩容。NTT DATA明确把“speed to power”列为驱动因素：客户扩AI能力的速度超过部分地区电网供给节奏。</p>
+<p><strong>本简报判断：</strong>这项协议的架构意义不在于燃料电池替代所有电网，而在于主电源首次以接近吉瓦的组合合同进入全球数据中心容量规划。电源从园区外部的固定前提，变成可与计算Block一起采购、分期和调度的模块。</p>
+
+<h3>③ 计算与数据特征如何变化</h3>
+<p>AI训练与推理负载具有大功率、快速爬升和波动性。GPU集群可在毫秒到秒级改变功率，而燃料电池、UPS、储能和电网各有不同的动态响应。若现场电源承担基载，电池或超级电容仍需覆盖机架功率跃迁、故障切换和ride-through。</p>
+<p>多项目合计900MW还意味着容量不会是一个统一电气域。每个站点需要把发电模块、变配电、UPS/BBU、800VDC或传统交流分配、液冷泵和计算机柜组成可独立验收的电力Block；调度器可能需要读取现场可用功率与储能状态，限制训练并发或迁移可延迟作业。</p>
+
+<h3>④ 触碰哪项技术边界</h3>
+<p><strong>开始失效的假设是：数据中心主电源由公用电网稳定提供，现场能源只负责短时备用。</strong></p>
+<p>第一道边界是动态响应。燃料电池适合稳定输出，不代表能直接跟随GPU负载阶跃；必须公开其ramp rate、ride-through、储能配置和从单模块故障到机柜端电压的影响。</p>
+<p>第二道边界是燃料与碳。公告没有说明天然气、生物气或氢的比例，也没有给出全生命周期碳强度。非燃烧、低本地污染不能等同于零碳；燃料供应中断会形成新的共同故障模式。</p>
+<p>第三道边界是冗余经济性。若现场发电是主电源，电网、燃料电池、UPS、发电机与储能之间的N、N+1、2N关系会决定CAPEX和可用性。没有站点级单线图、效率和维护窗口，不能把900MW协议直接换算成可持续IT MW。</p>
+
+<h3>⑤ 可能催生什么硬件与架构</h3>
+<ul>
+<li><strong>已出现：</strong>模块化现场燃料电池被合同化为主电源，按数据中心建设节奏分期交付。</li>
+<li><strong>高概率方向：</strong>形成“发电模块＋储能/BBU＋800VDC或中压直供＋液冷＋计算机柜”的标准能源Block，在工厂与现场联合验收。</li>
+<li><strong>高概率方向：</strong>AI调度器接入实时功率、燃料、储能和热容量遥测，在电源模块检修或峰值受限时降频、暂停低优先级训练或迁移批处理。</li>
+<li><strong>高概率方向：</strong>电源控制与计算Fabric分离故障域；每个Pod具备孤岛运行、黑启动、负载切除和渐进恢复能力，避免一次能源故障引发大范围同步重启。</li>
+<li><strong>尚待验证：</strong>各站点实际IT MW、效率、燃料来源、碳强度、可用率、维护周期、并网策略及每MW全生命周期成本。</li>
+</ul>
+<blockquote><p><strong>架构师结论：</strong>现场主电源能缩短等待电网的时间，但会把燃料、储能、动态响应和电气保护带入算力SLA。采购指标应从“签约MW”上移到“可持续IT MW、负载阶跃响应、故障切换时间和每完成任务的能源成本”。</p></blockquote>
+<p><strong>建议跟踪：</strong>首批站点与出货量、燃料合同、AC/DC拓扑、转换效率、储能时长、PUE、水耗、排放、模块MTBF/MTTR及现场发电与电网的切换演练。</p>
+<p><strong>原始来源：</strong>
+<a href="https://www.bloomenergy.com/news/ntt-data-announces-agreement-with-bloom-energy-for-900-mw-of-onsite-power-generation-across-multiple-data-center-projects/">Bloom Energy与NTT DATA联合公告，2026-11-05</a>
+</p>
+</section>
+
+<section>
+<h2>今日架构主线</h2>
+<p><strong>AI基础设施正在从“加速器中心”转向“状态与能源中心”。</strong>持久KV让已经计算过的上下文可以跨GPU节点生存，现场发电让尚未接入电网的园区可以按能源Block推进。两者都把原本隐含的外部条件变成可调度资源，也都扩大了共享故障域。</p>
+<ul>
+<li>推理系统要测每个任务避免了多少Prefill、搬运了多少KV、缓存失效与恢复花了多久；</li>
+<li>园区系统要测每个任务占用了多少可持续IT MW、遇到电源模块故障时能否局部降级；</li>
+<li>共同控制面需要理解数据位置、网络拥塞、GPU队列、功率余量和故障域，而不只统计空闲GPU数量。</li>
+</ul>
+</section>
+
+<section>
+<h2>会议雷达与专项跟踪</h2>
+<ul>
+<li><strong>OCP 2026会后补扫：</strong>官方Recorded Content已集中提供AI Clusters、Photonics、Rack &amp; Power、800VDC、1MW+机架、224/448G和NPO/CPO演讲的录播及大量PPT链接。今天未发现相较既有跟踪新增且可独立核验的Scale-Up 128/512/1000+拓扑、NPO量产FRU/MTTR或全生命周期成本数据，因此不重复入选主信号。后续继续按原始PPT核对，不把演讲标题当成规格。</li>
+<li><strong>SC26会前：</strong>大会将于2026年11月15—20日举行。优先跟踪DPU/NVMe协同I/O、SuperSSD、AI基础设施流体化学与冷却液流速、吉瓦级AI基础设施及通信规避/网内归约；需要问清的不是峰值，而是端到端P99、故障恢复、冷却可靠性与每有效任务成本。</li>
+<li><strong>OIF/DesignCon：</strong>OIF已列出2027年2月2—4日DesignCon两场面板，分别讨论448Gbps电信号与224G CEI进展、以及面向AI时间表的节能光互联标准；具体时间仍待公布。CEI-448G-VSR当前目标包含至少200mm主机通道、20mm模块通道和至少一个连接器；CEI-448G-LR目标至少1000mm及至少两个连接器，均是项目目标而非已发布IA。</li>
+<li><strong>云栖2026延续跟踪：</strong>本期未发现阿里云对AL144、AL64、SNPO、ALink新增正式datasheet、端口映射、单卡Scale-Up带宽、光源FRU、BER、液冷或供电实测；历史会期信息不作为今天的新动态。</li>
+</ul>
+<p><strong>会议原始入口：</strong>
+<a href="https://www.opencompute.org/events/ocp-summit/2026-ocp-global-summit/recorded-content/">OCP 2026 Recorded Content</a>｜
+<a href="https://sc26.supercomputing.org/Program/">SC26官方Program</a>｜
+<a href="https://sc26.conference-program.com/">SC26完整议程</a>｜
+<a href="https://www.oiforum.com/meetings-events/speaking-engagements-and-supported-events/">OIF会议与演讲</a>｜
+<a href="https://www.oiforum.com/technical-work/current-work/">OIF当前技术项目</a>
+</p>
+</section>
+
+<section>
+<h2>每日健康自检</h2>
+<p>已只读检查GitHub仓库中的5个既有RSS。全部可达、RSS2.0/XML标签结构有效、<code>ttl=15</code>，最新条目的归档链接均可读取：</p>
+<ul>
+<li><strong>feed.xml：</strong>写前最新为2026-11-05；当前日报任务状态为本次运行中，没有超过36小时缺口。</li>
+<li><strong>tech-alert-feed.xml：</strong>最新为2026-10-27；任务已启用，最近一次扫描于2026-11-05完成但未触发新预警，属于“条件无变化未发”，不据此判故障。</li>
+<li><strong>competitor-cost-feed.xml：</strong>最新为2026-11-02；任务已启用，最近周报运行完成。</li>
+<li><strong>next-gen-architecture-feed.xml：</strong>最新为2026-10-31；任务已启用，下一周期尚未超过“周期＋36小时”。</li>
+<li><strong>ai-memory-feed.xml：</strong>最新为2026-10-30；任务已启用，当前周五发布窗口尚未结束。</li>
+</ul>
+<p>本次可核验仓库与任务记录；外部RSS阅读器/Follow缓存的实际刷新延迟不可直接观测。写前没有发现明确系统异常，因此不新增故障告警。</p>
+</section>
+</article>]]></description>
+    </item>
                                 <item>
       <title>AI算力架构前沿简报｜2026-11-05</title>
       <link>https://raw.githubusercontent.com/YanLiang518/ai-supernode-rss/main/archive/2026-11-05.html</link>
