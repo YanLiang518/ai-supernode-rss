@@ -5,10 +5,21 @@
     <link>https://github.com/YanLiang518/ai-supernode-rss</link>
     <description>每周长期可复用知识的公开、脱敏摘要；涉及非公开信息的内容不会发布。</description>
     <language>zh-cn</language>
-    <pubDate>Fri, 30 Oct 2026 16:56:00 +0800</pubDate>
-    <lastBuildDate>Fri, 30 Oct 2026 16:56:00 +0800</lastBuildDate>
+    <pubDate>Fri, 06 Nov 2026 17:00:00 +0800</pubDate>
+    <lastBuildDate>Fri, 06 Nov 2026 17:00:00 +0800</lastBuildDate>
     <ttl>15</ttl>
     <atom:link href="https://raw.githubusercontent.com/YanLiang518/ai-supernode-rss/main/ai-memory-feed.xml" rel="self" type="application/rss+xml"/>
+    <item>
+      <title>AI Memory 周报｜2026-11-06</title>
+      <link>https://raw.githubusercontent.com/YanLiang518/ai-supernode-rss/main/ai-memory-archive/2026-11-06.html</link>
+      <guid isPermaLink="false">ai-memory-2026-11-06</guid>
+      <pubDate>Fri, 06 Nov 2026 17:00:00 +0800</pubDate>
+      <description><![CDATA[<article lang="zh-CN"><h2>本周长期架构认知</h2><ol><li><strong>Scale-Up单级扩展必须同时满足交换容量与端口radix：</strong>在固定每卡注入带宽下，SerDes提速若未同步提升交换ASIC容量，端口数可能下降并迫使网络由单级变为多级；需同时验证radix、每rail端点数与真实协议映射。 公开来源：<a href="https://raw.githubusercontent.com/YanLiang518/ai-supernode-rss/main/next-gen-architecture-archive/2026-10-31.html">448G/HBD512专题（2026-10-31）</a>。</li>
+<li><strong>高速SerDes的系统收益取决于全链路代价：</strong>链路速率翻倍、链路数减半并不自动意味着TCO降低；须比较光电器件、FEC、交换级数、散热、制造测试、尾延迟及维护成本。 公开来源：<a href="https://www.oiforum.com/wp-content/uploads/OIF-FD-CEI-448G-01.0.pdf">OIF CEI-448G框架</a>。</li>
+<li><strong>预集成交付应按工厂到现场的完整生命周期验收：</strong>高密机柜与模块化POD需要联合评价工厂FAT、运输、现场SAT、接口调试、返修及投运时间，不能只比较设备BOM或标称部署速度。 公开来源：<a href="https://www.honhai.com/zh-tw/press-center/press-releases/latest-news/2136">鸿海公开发布（2026-10-30）</a>。</li></ol><p>私人Notion已更新。</p></article>]]></description>
+    </item>
+
+
 
         <item>
       <title>AI Memory 周报｜2026-10-30</title>
