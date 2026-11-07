@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AI算力架构前沿简报｜2026-11-08</title>
+<meta name="description" content="AI算力架构前沿简报：Google怀俄明AI园区的2.7GW混合电源与私有微网架构。">
+<style>
+:root{color-scheme:light dark;--bg:#f7f8fa;--fg:#172033;--muted:#526077;--card:#fff;--line:#d8dee9;--link:#0b57d0;--quote:#eef4ff}
+@media(prefers-color-scheme:dark){:root{--bg:#0f1115;--fg:#e6eaf0;--muted:#aab4c3;--card:#171a21;--line:#303744;--link:#8ab4f8;--quote:#182338}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--fg);font-family:system-ui,-apple-system,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;line-height:1.75}main{max-width:920px;margin:0 auto;padding:32px 20px 64px}article{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:clamp(20px,4vw,48px)}h1{line-height:1.25;margin-top:0}h2{margin-top:2em;line-height:1.35}h3{margin-top:1.5em;line-height:1.45}a{color:var(--link);overflow-wrap:anywhere}hr{border:0;border-top:1px solid var(--line);margin:2.5em 0}blockquote{margin:1.5em 0;padding:.7em 1.1em;border-left:4px solid var(--link);background:var(--quote)}li+li{margin-top:.45em}
+</style>
+</head>
+<body><main><article>
+<header>
+<h1>AI算力架构前沿简报｜2026年11月8日</h1>
+<p><strong>今日判断：</strong>过去24小时只有一条达到主信号标准：Google正式接手Crusoe已完成前期开发的怀俄明州Cheyenne园区，并把702MW燃料电池、564MW新建燃气发电、市场/公用事业电力及约2.1GW第三方资源纳入一套由Black Hills协调的电网连接私有微网。新增之处不是又一份燃料电池采购，而是超大AI园区开始把多种电源、备用容量、微网调度、碳捕集和数据中心冷却按同一交付边界设计。</p>
+<p><strong>核心判断：</strong>园区规模继续上升后，“有多少签约MW”已经不足以描述算力可用性。电源的爬坡、备用、孤岛运行、黑启动、燃气共因失效、碳捕集寄生功耗和数据厅热设计都会进入GPU任务SLO。2.7GW是含备用裕量的资源组合，不是已投运IT负载，更不是单一数据中心的持续计算功率。</p>
+</header>
+
+<section>
+<h2>信号总览</h2>
+<ul>
+<li><strong>Google接手Cheyenne园区并公开混合电源架构：</strong>Google宣布170亿美元长期投资；Crusoe确认Google已收购其完成场址、审批和混合能源方案前期开发的项目。</li>
+<li><strong>量化边界：</strong>Black Hills合同口径为最高590MW电网连接服务，以及约2.1GW第三方资源的私有微网管理；AEP计划投资约40亿美元建设702MW Bloom燃料电池，目标2028年底全部投运。</li>
+<li><strong>成熟度：</strong>场址收购、合同和投资方案已经公开；发电、微网、CCS与数据中心均处于建设或规划阶段，尚无持续IT MW、机柜功率、PUE、捕集率、孤岛测试或客户负载验收数据。</li>
+</ul>
+</section>
+
+<hr/>
+
+<section>
+<h2>01｜Google把2.7GW资源组合变成AI园区控制问题：电源架构开始像计算Fabric一样分层</h2>
+
+<h3>① 业务变化是什么</h3>
+<p>2026年11月5日，Google宣布在怀俄明州建设其首个数据中心，长期投资170亿美元，并与Tallgrass Energy、Black Hills Energy、American Electric Power（AEP）和Related Digital合作。11月6日，Crusoe确认Google已收购其位于Cheyenne东南部的项目场址；Crusoe此前完成了土地、审批和“燃料电池＋电网＋天然气轮机＋长期碳捕集”的前期开发。</p>
+<p>Google与AEP签约建设702MW商业规模燃料电池项目并规划碳捕集与封存；AEP称项目采用Bloom Energy技术、20年PPA、计划2026年开工并在2028年底全部投运。Black Hills的合同则提供最高590MW电网连接服务，并管理约2.1GW怀俄明州第三方资源组成的私有微网；整个资源组合约2.7GW，明确包含备用裕量，计划2027年底开始供能、2030年爬升至项目峰值。</p>
+<p>Google还明确该数据中心将采用空气冷却以降低当地用水压力。这个信息说明供电和热设计被同时冻结，但“空气冷却”不等于所有计算厅都已具备同一机柜密度，也不能据此推断没有局部液冷。</p>
+<p><strong>证据边界：</strong>170亿美元、702MW燃料电池、590MW电网服务、2.1GW第三方资源、564MW新建燃气发电和空气冷却均来自公司正式公告；2.7GW是含备用裕量的资源组合。Google没有公开数据厅数量、加速器型号、持续IT负载、单柜功率或PUE，不能把资源容量直接换算成GPU数量。</p>
+
+<h3>② 为什么发生</h3>
+<p>AI园区的建设周期正在被电力而非服务器采购主导。传统路径要求等待公用事业扩建输电和发电，而燃料电池与场内燃气机组可以分期部署；私有微网则允许把多家第三方资源、电网购买和自建机组纳入统一调度。</p>
+<p>但单一现场电源也会制造新的共因失效：燃气供应、厂内管线、控制系统和碳捕集设施可能同时影响多个计算Block。Google因此采用混合来源，并由Black Hills对电网运行、可靠性服务和资源调度负责。其商业目标是把能源交付时间表与数据中心扩容节奏锁定，同时由Google承担由自身负载直接引起的电力基础设施成本。</p>
+<p><strong>本简报判断：</strong>这笔收购的架构意义在于，Google不再只购买电量，而是接管一套已经完成场址、许可和混合能源前期设计的“可交付算力底座”。能源Block、计算Block和热管理Block将需要共同验收。</p>
+
+<h3>③ 计算与数据特征如何变化</h3>
+<p>大模型训练和高并发推理不会形成平滑恒定负载。作业启动、Checkpoint、集合通信、Prefill突发和批量离线推理会造成秒级到小时级的功率变化；GPU也要求毫秒级电能质量和不中断供电。燃料电池、燃气轮机和电网资源的启动与爬坡特性不同，不能直接按GPU负载波动。</p>
+<p>因此，2.7GW资源层与计算负载之间还需要快速缓冲和控制层：UPS或BESS负责瞬态与切换，微网控制器负责分钟级调度，训练调度器则在更长时间尺度上移动或延迟作业。若CCS投入运行，其压缩、输送和注入也会形成寄生负载和新的维护窗口。</p>
+<p>空气冷却降低了冷却塔和补水依赖，却把热容量、室外环境和风机功耗推到前台。对于高功率Scale-Up机柜，园区可能需要限制单柜密度、使用后门换热或局部液冷；公开资料尚未说明最终边界。</p>
+
+<h3>④ 触碰哪项技术边界</h3>
+<p><strong>开始失效的假设是：只要电源合同覆盖峰值MW，数据中心就能把这些MW稳定转换为可售GPU小时。</strong></p>
+<p>第一道边界是容量口径。2.7GW含备用裕量，且其中702MW燃料电池属于约2.1GW第三方资源组合的一部分，不能再与2.7GW简单相加。项目从2027到2030分期爬坡，也不能写成已经上线。</p>
+<p>第二道边界是动态稳定性。固体氧化物燃料电池和大型燃气机组适合持续出力，但AI负载突变需要储能、UPS、快速限载和可降级计算共同吸收。公开资料未给出BESS规模、黑启动、孤岛运行、并网切换、短路容量或保护选择性。</p>
+<p>第三道边界是共因可靠性。不同发电设备若共享天然气管线、控制网络或变电设施，名义N+1并不等于故障独立。CCS还引入捕集设备、CO₂管道和封存井的可用性；AEP只称“计划集成”碳捕集，尚未给出捕集率、能耗、持续运行或许可完成情况。</p>
+<p>第四道边界是热设计。Google确认空气冷却，但没有披露夏季设计温度、机柜功率、送回风温差或风机冗余。它不能证明MW级液冷机柜已经由空气冷却替代。</p>
+
+<h3>⑤ 可能催生什么硬件与架构应对</h3>
+<ul>
+<li><strong>已出现：</strong>最高590MW电网服务、约2.1GW第三方微网资源、702MW燃料电池、564MW新建燃气发电及空气冷却被纳入同一园区路线。</li>
+<li><strong>高概率方向：</strong>以能源Block对应计算Pod和故障域，每个Block配置独立保护、UPS/BESS、黑启动路径和可降级网络，避免单一母线故障放大到整个园区。</li>
+<li><strong>高概率方向：</strong>训练与推理调度器读取发电、储能、冷却和电网遥测；紧急时优先保持在线Decode、存储和控制面，暂停可恢复训练或批处理。</li>
+<li><strong>高概率方向：</strong>高压交流或800VDC园区/机柜配电与局部54V转换并存，减少大电流铜排长度；但高压保护、预充放电、直流拉弧和FRU维护必须成为验收项目。</li>
+<li><strong>高概率方向：</strong>空气冷却大厅与局部液冷高密度区分层，调度器按热设计和电源余量放置不同加速器世代。</li>
+<li><strong>尚待验证：</strong>持续IT MW、BESS/UPS规模、孤岛和黑启动试验、燃气共因失效、CCS捕集率与寄生功耗、机柜功率和空气/液冷分界。</li>
+</ul>
+<blockquote><p><strong>架构师结论：</strong>Google怀俄明项目把AI园区从“电网负荷”变成“多源能源系统”。真正应验收的是每个能源Block在电网、燃气、发电或CCS故障下还能维持多少可恢复计算进度，而不是把2.7GW资源数字直接等同于GPU算力。</p></blockquote>
+<p><strong>建议跟踪：</strong>2027—2030分期投产曲线、合同MW到持续IT MW的转化率、微网一次图、BESS/UPS和黑启动能力、CCS捕集与注入实测、空气冷却机柜上限、能源故障时的训练Checkpoint和推理降级策略。</p>
+<p><strong>原始来源：</strong>
+<a href="https://blog.google/innovation-and-ai/infrastructure-and-cloud/global-network/wyoming-data-center/">Google官方公告，2026-11-05</a>｜
+<a href="https://www.crusoe.ai/resources/newsroom/crusoe-wyoming-data-center-campus-update">Crusoe场址收购与前期开发说明，2026-11-06</a>｜
+<a href="https://ir.blackhillscorp.com/news-releases/news-release-details/black-hills-corp-executes-definitive-agreements-serve-googles">Black Hills合同与资源组合，2026-10-06</a>｜
+<a href="https://aep-q.aep.com/news/stories/view/12314/">AEP 702MW燃料电池项目，2026-10-14</a>｜
+<a href="https://www.reuters.com/world/us/google-plans-17-billion-wyoming-data-center-amid-rising-threats-curbs-2026-11-05/">Reuters交叉核实，2026-11-05</a>
+</p>
+</section>
+
+<section>
+<h2>今日架构主线</h2>
+<p>过去三期信号可以连成一条线：共享KV和异构Prefill/Decode把计算解耦到不同设备池，混合微网则把供电解耦到不同能源池。两者都需要统一控制面理解状态、队列、故障域和恢复成本。下一代AI基础设施的核心指标应从“峰值GPU和签约MW”上移到“每MW可持续交付多少可恢复、满足SLO的任务进度”。</p>
+</section>
+
+<section>
+<h2>会议雷达与专项跟踪</h2>
+<ul>
+<li><strong>OCP Global Summit 2026会后：</strong>官方录播目录仍在持续整理。本期复核Scale-Up、NPO、224G/448G、800VDC和MW级机柜资料，没有发现相较既有日报/专题新增的量产FRU、MTTR、误码率、持续功率或全生命周期成本数据，因此不重复入选。</li>
+<li><strong>SC26会前：</strong>官方日程为2026年11月15—20日。下一轮重点看AI/HPC系统实测、SCinet高速网络、存储Checkpoint和液冷工程数据。</li>
+<li><strong>NVIDIA GTC Washington会前：</strong>研讨会11月30日开始、会议与展览12月1—3日、主题演讲12月1日。重点验证AI Factory、电源与机柜、Rubin系统交付、推理运行时和长程Agent，不把展位演示当成量产规格。</li>
+<li><strong>DesignCon 2027会前：</strong>官方日期为2027年2月2—4日，已进入90天雷达；后续关注224G/448G SerDes、封装/连接器、CPO/NPO测试与可靠性议题。</li>
+<li><strong>云栖2026会后：</strong>未发现阿里云对AL144、AL64、SNPO、ALink、HBD边界、单卡Scale-Up带宽、NPO光源、正交互连、液冷或供电发布新的可核实参数；旧会期信息不作为今日动态。</li>
+</ul>
+<p><strong>会议来源：</strong>
+<a href="https://www.opencompute.org/events/ocp-summit/2026-ocp-global-summit/recorded-content/">OCP 2026录播目录</a>｜
+<a href="https://sc26.supercomputing.org/program/">SC26官方日程</a>｜
+<a href="https://www.nvidia.com/gtc/dc/conference-schedule/">GTC Washington官方日程</a>｜
+<a href="https://www.designcon.com/">DesignCon 2027官网</a>
+</p>
+</section>
+
+<section>
+<h2>每日健康自检</h2>
+<ul>
+<li><strong>feed.xml：</strong>可读取、XML结构完整、79期、GUID唯一、最新归档为2026-11-07；距本期发布前不足36小时。</li>
+<li><strong>tech-alert-feed.xml：</strong>可读取、XML结构完整、5期，最新文章2026-10-27；对应条件预警任务在2026-11-07完成检查，未发布新条目不能单独判为故障。</li>
+<li><strong>competitor-cost-feed.xml：</strong>可读取、XML结构完整、3期，最新周报2026-11-02；下一个周一周期尚未超期。</li>
+<li><strong>next-gen-architecture-feed.xml：</strong>可读取、XML结构完整、2期，最新专题2026-11-07。</li>
+<li><strong>ai-memory-feed.xml：</strong>可读取、XML结构完整、3期，最新周报2026-11-06；周期未超期。</li>
+</ul>
+<p>五个最新归档链接均可读取并含UTF-8 HTML。可获取的五项任务均处于启用状态；本次日报任务记录为进行中，符合当前执行。未发现需要追加系统告警的明确异常。第三方RSS客户端缓存与Follow分发延迟无法由GitHub源文件检查直接确认。</p>
+</section>
+</article></main></body>
+</html>
