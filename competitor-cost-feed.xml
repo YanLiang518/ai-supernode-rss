@@ -1,7 +1,46 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/">
 <channel>
-<title>超节点竞品与成本周报</title><link>https://github.com/YanLiang518/ai-supernode-rss</link><description>每周公开的超节点竞品架构变化及可核实成本信息；不披露内部成本模型。</description><language>zh-cn</language><lastBuildDate>Mon, 02 Nov 2026 03:55:44 +0800</lastBuildDate><pubDate>Mon, 02 Nov 2026 03:55:44 +0800</pubDate><ttl>15</ttl><atom:link href="https://raw.githubusercontent.com/YanLiang518/ai-supernode-rss/main/competitor-cost-feed.xml" rel="self" type="application/rss+xml"/>
+<title>超节点竞品与成本周报</title><link>https://github.com/YanLiang518/ai-supernode-rss</link><description>每周公开的超节点竞品架构变化及可核实成本信息；不披露内部成本模型。</description><language>zh-cn</language><lastBuildDate>Mon, 09 Nov 2026 04:04:21 +0800</lastBuildDate><pubDate>Mon, 09 Nov 2026 04:04:21 +0800</pubDate><ttl>15</ttl><atom:link href="https://raw.githubusercontent.com/YanLiang518/ai-supernode-rss/main/competitor-cost-feed.xml" rel="self" type="application/rss+xml"/>
+<item><title>超节点竞品与成本变化周报｜2026-11-09</title><link>https://raw.githubusercontent.com/YanLiang518/ai-supernode-rss/main/competitor-cost-archive/2026-11-09.html</link><guid isPermaLink="false">competitor-cost-2026-11-09</guid><pubDate>Mon, 09 Nov 2026 04:04:21 +0800</pubDate><description><![CDATA[<article lang="zh-CN">
+<h1>超节点竞品与成本变化周报｜2026-11-09</h1>
+<p><strong>观察期：</strong>2026-11-02至2026-11-08（北京时间）；与2026-11-02周报对比。仅使用公开一手信息；“未发现”不等于厂商没有研发进展。产品发布、验证结果、财报和规划分别标注，绝不由收入推算机柜售价。</p>
+<h2>一、摘要：新增推理存储层验证，GPU互联硬件基线基本不变</h2>
+<p>本周最有价值的系统架构证据是11月5日Supermicro、IBM与NVIDIA公开的持久化KV Cache联合验证：Petascale全闪存服务器、IBM Storage Scale、NVIDIA Dynamo与Spectrum-X组成共享缓存层。厂商披露120B参数模型、130k token提示下最高56倍TTFT改善，并给出提示长度从30k增至130k时TTFT增量：缓存方案0.377秒、无缓存29.55秒。此为特定测试条件下的厂商联合结果，不是跨模型通用加速倍数，也不代表NVLink HBD带宽提升。对系统成本模型的影响是增加共享KV存储、网络和缓存命中率的权衡，而不是直接降低GPU或NPO单价。</p>
+<p>11月3日AMD公布2026年第三季度财报，数据中心业务同比增长97%，称由Instinct GPU与EPYC CPU销售增长驱动。该信息支持市场交付规模变化，但不包含Helios独立出货量、整柜售价或72-GPU HBD的新技术参数，不能当作Helios量产份额证据。</p>
+<h2>二、核心竞品增量矩阵</h2>
+<table><thead><tr><th>对象</th><th>本周相对上期变化</th><th>证据等级</th><th>成本模型处理</th></tr></thead><tbody>
+<tr><td>NVIDIA NVL / 配套推理系统</td><td>11月5日合作伙伴披露KV Cache存储网络联合测试；未发现NVL72新GPU数量、NVLink交换拓扑或机柜功率</td><td>厂商联合实测；非NVL72专属硬件规格</td><td>新增共享缓存层TCO变量；不修改NVLink BOM</td></tr>
+<tr><td>AMD Helios</td><td>11月3日AMD财报数据中心同比增长97%；未披露Helios专属出货、互联端口或售价</td><td>正式财报，不能外推至单一平台</td><td>仅更新市场成熟度观察，不修改$/GPU</td></tr>
+<tr><td>华为CloudMatrix/Atlas</td><td>本观察期未核实新增GPU/NPU规模、Hi-ONE数量、交换级数、机柜功率或公开成交价</td><td>保留既有官方发布基线</td><td>不调整</td></tr>
+<tr><td>中兴OEX/光跃</td><td>未核实新增OEX/dOCS量产测试、端口、冷却或价格</td><td>维持历史公开资料</td><td>不调整</td></tr>
+<tr><td>百度天池</td><td>未核实新正式规范版本、交换映射、液冷或公开成本</td><td>维持既有设计规范入口</td><td>不调整</td></tr>
+<tr><td>阿里云磐久AL64/AL144</td><td>未核实新增ALink/SNPO单GPU光带宽、HBD边界、交换级数或光源维护数据</td><td>云栖资料仅作历史对照</td><td>不调整</td></tr>
+</tbody></table>
+<h2>三、NVIDIA生态：KV Cache由软件策略进入联合系统测试</h2>
+<p><strong>事件：2026-11-05。</strong>Supermicro官方公告说明测试包含高并发与网络干扰场景；组合使用AMD EPYC 9005处理器的Supermicro Petascale全闪存服务器、IBM Storage Scale、NVIDIA Dynamo和Spectrum-X以太网。120B模型及130k token下“最高56倍TTFT”属于指定负载和配置的相对结果；其30k至130k提示扩展时的TTFT增量比为29.55/0.377≈78.4倍，但这是两种方案<strong>增量的比值</strong>，不能混称为完整TTFT加速比。</p>
+<p>架构影响：Prefill/Decode解耦后，KV Cache可作为独立容量与带宽层。其经济性取决于命中率、复用次数、缓存读写吞吐、网络拥塞、存储容量与功耗。对跨厂商GPU比较应新增同模型、同精度、同SLO下的有效token吞吐和存储网络开销，避免仅比较Scale-Up峰值带宽。</p>
+<p>参考成本条件：若每请求缓存复用节约的GPU计算成本为S，缓存命中率h、缓存层每请求摊销成本K，则只有h×S &gt; K（且TTFT/ITL满足SLO）时该缓存层在此简化模型下具有经济收益。S和K均缺少公开可比单价，不代入金额。</p>
+<h2>四、AMD：财报增长不能直接转译为Helios架构突破</h2>
+<p><strong>事件：2026-11-03。</strong>AMD公布2026年第三季度总营收134亿美元，数据中心业务同比增长97%，官方将增长归因于Instinct GPU与EPYC CPU的强劲销售。财报未给出Helios单独的72-GPU系统交付数量、UALink交换芯片清单、机柜供电液冷实测、每柜成交价。因而仅将其记为AMD数据中心产品线商业化进展，不提升Helios具体架构成熟度证据等级。既有Helios 72-GPU参考架构保留，不将参考设计误作统一SKU。</p>
+<h2>五、跨厂商可比边界与成本变化</h2>
+<p>GPU/NPU数量、单HBD大小、Scale-Up网络与Scale-Out网络、系统级吞吐、机柜功率、液冷边界必须分别比较。NVL72的72-GPU NVLink域、Helios的UALink路线、Atlas SuperPoD、OEX/dOCS及磐久分布式NPO不可直接按总卡数排序。尤其不能把跨柜集群规模解释成单层HBD，或把展示柜等同量产。</p>
+<p>建议TCO公式：TCO = C_GPU + C_scaleup + C_scaleout + C_KV_storage + C_power_cooling + C_deployment + C_maintenance + C_software。单位有效Token成本 = TCO / 在指定周期、模型、精度、并发和SLO下的有效输出Token数。KV Cache引入后，GPU节省与新增存储、网络、软件成本应同时计入。没有同口径价格、功率和缓存命中率，不输出虚构的每GPU美元排名。</p>
+<h2>六、结论与下周核验</h2>
+<ol><li>复现KV Cache在不同上下文长度、复用率、并发和网络干扰下的TTFT/ITL及端到端成本，明确Spectrum-X链路与GPU Scale-Up的分工。</li><li>追踪AMD Helios独立的OEM交付、UALink交换映射、功率与液冷验收数据，不用AMD总体财报替代。</li><li>继续核实Atlas Hi-ONE、OEX/dOCS、天池与磐久AL64/AL144的正式新规格及公开可比成本；关注SC26后续实际披露，不提前把展会预告当成规格。</li></ol>
+<p><strong>本期判断：</strong>实质变化在推理存储网络分层和可测性能证据；核心六家Scale-Up GPU/HBD、互联器件和机柜BOM暂无足够公开新数据可修订。公开售价与系统级MTTR仍是主要证据缺口。</p>
+<h2>七、公开一手来源</h2>
+<ul>
+<li><a href="https://ir.supermicro.com/news/news-details/2026/Supermicro-Launches-KV-Cache-Solution-with-IBM-and-NVIDIA-Demonstrating-Significant-Inference-Performance-Benefits/default.aspx">Supermicro、IBM、NVIDIA联合KV Cache方案，2026-11-05</a></li>
+<li><a href="https://www.redbooks.ibm.com/docs/MD260021/MD260021.html">IBM Redbook：KV Cache联合测试详细资料（由厂商公告引用）</a></li>
+<li><a href="https://ir.amd.com/news-events/press-releases/detail/1303/amd-reports-third-quarter-2026-financial-results">AMD 2026年第三季度财报，2026-11-03</a></li>
+<li><a href="https://www.amd.com/en/blogs/2026/amd-launches-helios-the-highest-performing-rackscale-ai-infrastructure-solution.html">AMD Helios官方历史架构基线，2026-07-23</a></li>
+<li><a href="https://www.huawei.com/en/news/2026/9/hc-ascend960-supernode">华为Atlas 960E历史基线，2026-09</a></li>
+<li><a href="https://www.zte.com.cn/china/about/news/20260717C3.html">中兴OEX+dOCS历史基线，2026-07-17</a></li>
+<li><a href="https://cloud.baidu.com/article/8983717">百度天池设计规范历史入口，2026-09</a></li>
+</ul>
+</article>]]></description></item>
+
 <item><title>超节点竞品与成本变化周报｜2026-11-02</title><link>https://raw.githubusercontent.com/YanLiang518/ai-supernode-rss/main/competitor-cost-archive/2026-11-02.html</link><guid isPermaLink="false">competitor-cost-2026-11-02</guid><pubDate>Mon, 02 Nov 2026 03:55:44 +0800</pubDate><description><![CDATA[<article lang="zh-CN">
 <h1>超节点竞品与成本变化周报｜2026-11-02</h1>
 <p><strong>观察期：</strong>2026-10-26至2026-11-01（北京时间）。<strong>研究方法：</strong>只纳入可核实的公开一手公告；区分实际可用、现场展示、参考设计与规划；与10月中旬公开基线比较，旧规格仅作对照。</p>
