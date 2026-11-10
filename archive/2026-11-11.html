@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI算力架构前沿简报｜2026年11月11日</title>
+<style>
+:root{color-scheme:light dark;--bg:#fff;--fg:#18212f;--muted:#536176;--line:#d8dee8;--accent:#1769aa;--quote:#f2f6fa;--warn:#9a3412;--warnbg:#fff7ed}
+@media(prefers-color-scheme:dark){:root{--bg:#111827;--fg:#e5e7eb;--muted:#a9b4c4;--line:#374151;--accent:#7cc4ff;--quote:#1f2937;--warn:#fdba74;--warnbg:#2b1d16}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--fg);font-family:system-ui,-apple-system,"Segoe UI",sans-serif;line-height:1.72}
+main{max-width:920px;margin:0 auto;padding:28px 22px 64px}h1{line-height:1.25}h2{margin-top:2.1em}h3{margin-top:1.5em}a{color:var(--accent)}
+hr{border:0;border-top:1px solid var(--line);margin:2.5em 0}blockquote{margin:1.5em 0;padding:.25em 1em;border-left:4px solid var(--accent);background:var(--quote)}
+ul{padding-left:1.35em}header p{font-size:1.04rem}footer{color:var(--muted);margin-top:3em;border-top:1px solid var(--line);padding-top:1em}
+</style></head><body><main><article>
+<header>
+<h1>AI算力架构前沿简报｜2026年11月11日</h1>
+<p><strong>今日判断：</strong>Agent基础设施正在同时改变GPU池和CPU池。新论文Evolving Infra表明，Agent负载的Prefill/Decode比例与KV复用价值会随任务类型、分支、压缩和工具等待持续变化，固定P/D切分与普通LRU开始失效；AMD第六代EPYC正式出货，则把CPU明确分成GPU主机、Agent沙箱和通用服务三类角色，并延伸到Helion CPU主导或CPU/GPU混合机架。</p>
+<p><strong>核心判断：</strong>下一代Agent集群不能再用“固定GPU角色＋通用CPU配套”规划。GPU节点需要在Prefill和Decode之间无重启切换，KV生命周期应跟随Agent分支语义；CPU则要按主机喂数、工具/沙箱执行和企业数据服务分别优化。真正的容量单位将从GPU数变成可持续完成任务的P/D算力、可复用KV、CPU工具槽位和网络/内存带宽组合。</p>
+</header>
+
+<section>
+<h2>信号总览</h2>
+<ul>
+<li><strong>Evolving Infra：</strong>研究团队在2026年11月9日发布Agent自适应推理框架，在最高256张GB300 GPU上测试，并在36张GPU的编码、数学和计算机使用负载中相较NVIDIA Dynamo报告最高4.1倍平均请求时延和14倍P95 TTFT改善。</li>
+<li><strong>第六代AMD EPYC：</strong>AMD于2026年11月10日宣布Zen 6、SP7平台正式可用，OEM/ODM系统开始出货；AMD将Agent基础设施CPU分成通用服务、GPU主机和沙箱三类，并把Helion机架扩展为液冷、风冷和本地GPU推理配置。</li>
+<li><strong>成熟度：</strong>Evolving Infra是未经独立生产验证的研究原型；AMD处理器已进入正式出货，但性能、每瓦和竞品对比主要来自AMD测试，Helion仍是开放蓝图而非统一量产整柜规格。</li>
+</ul>
+</section>
+
+<hr/>
+
+<section>
+<h2>01｜Evolving Infra：Agent让固定Prefill/Decode分工与普通LRU同时失效</h2>
+
+<h3>① 业务变化是什么</h3>
+<p>2026年11月9日，来自学术界与产业界的研究团队发布Evolving Infra，目标是在Agent负载运行过程中动态调整Prefill与Decode节点比例，同时让KV Cache独立于节点当前角色继续可用。</p>
+<p>框架的三个关键机制是：</p>
+<ul>
+<li>每个对称推理引擎可在Prefill和Decode之间切换，无需重启进程；</li>
+<li>各节点主存组成共享KV池，节点改变角色后KV仍能被其他节点读取；</li>
+<li>集群目录记录每个KV块被多少活跃Agent分支引用，按分支、压缩、完成和传输事件更新引用计数。</li>
+</ul>
+<p>论文在编码、Putnam数学和OSWorld计算机使用Agent上测试GLM-5.2与Kimi K2.6，主要实机配置为9台4×GB300节点、合计36张GPU，扩展实验最高256张GPU，并通过模拟评估3072张GPU。</p>
+<p>作者报告，相较NVIDIA Dynamo，固定负载下吞吐最高提高2.7倍，平均端到端请求时延最高降低4.1倍，P95 TTFT最高降低约14倍；变化负载中吞吐约为Dynamo的2.14倍、最佳静态切分的1.28倍。</p>
+<p><strong>证据边界：</strong>这些是论文作者在特定模型、NVFP4权重、FP8 KV、TP4和Agent Trace下的研究结果。Dynamo比较包含框架配置差异，Arrow部分使用作者复现版本；不能直接外推为所有生产Agent平台的通用收益。</p>
+
+<h3>② 为什么发生</h3>
+<p>Agent请求与普通聊天不同。每一步通常由一次模型调用和一段工具、子Agent或用户等待组成；后续请求可能复用长Prefix，也可能因上下文压缩而突然丢弃刚访问过的历史。</p>
+<p>论文观测到三类负载具有完全不同的P/D比例：</p>
+<ul>
+<li>数学推理生成长思维链，偏Decode；</li>
+<li>计算机使用每步追加截图，偏Prefill；</li>
+<li>编码Agent频繁产生子Agent、上下文压缩和长暂停，KV生命周期最动态。</li>
+</ul>
+<p>其测试中，最佳静态切分可从2P7D移动到7P2D；不同时间窗口固定切分最多损失24%吞吐。Claude Code Trace中，一次359秒子Agent调用后仍有98%的Prompt可复用，而一次仅12秒前发生的上下文压缩后只剩14%可复用，说明“最近访问”不能代表未来价值。</p>
+<p><strong>本简报判断：</strong>Agent Harness已经成为推理基础设施控制面的一部分。只有Harness把分支、压缩、完成和等待状态暴露给缓存与调度系统，GPU层才能判断哪些KV值得保留、何时改变P/D比例。</p>
+
+<h3>③ 计算与数据特征如何变化</h3>
+<p>Evolving Infra将计算角色与KV位置解耦。节点切换角色前先完成正在运行的请求，排队请求被转移；共享主存池保留其KV，使切换后的其他Prefill节点可以异步拉取。作者报告节点角色切换约0.7秒，而其Dynamo基线重启式切换平均约681秒。</p>
+<p>缓存管理也从访问时间变为Agent引用语义：</p>
+<ul>
+<li>新分支创建时增加相关KV块引用；</li>
+<li>上下文压缩释放被替换历史的引用；</li>
+<li>子Agent结束后释放其上下文；</li>
+<li>跨P/D传输保留两侧引用，避免仍在使用的数据被提前回收；</li>
+<li>优先淘汰零引用KV，再在同组内使用LRU。</li>
+</ul>
+<p>实验配置中，主机内存层可缓存GPU HBM约4倍Token容量。KV拉取可在请求排队时进行，路由器同时估计队列、Prefill工作量和远端KV传输，而不是只追随已有Prefix位置。</p>
+
+<h3>④ 触碰哪项技术边界</h3>
+<p><strong>开始失效的假设是：Prefill与Decode资源比例可以离线固定，KV价值可通过最近访问时间判断，节点角色与本地缓存应永久绑定。</strong></p>
+<p>第一道边界是角色切换与状态解耦。若切换需要重新加载权重或丢弃本地KV，适配收益会被分钟级停机和重算抵消。</p>
+<p>第二道边界是Agent语义一致性。Harness、KV目录和推理引擎必须对分支版本、压缩和完成事件保持一致；引用计数丢失可能导致有用KV被删除，泄漏则会造成主存长期占用。</p>
+<p>第三道边界是主机内存与网络。共享KV池增加可用容量，却把PCIe、NUMA、DRAM带宽和跨节点传输推入TTFT关键路径。论文主要使用同构GB300节点，尚未证明在异构GPU、CXL内存或跨机架拥塞下保持同样收益。</p>
+<p>第四道边界是尾延迟取舍。论文也报告，在Decode偏重的Putnam负载中，追求最高吞吐的少量Prefill节点可能使部分并发下P95 TTFT高于Dynamo，说明自动规划器需要显式权衡吞吐和SLO。</p>
+
+<h3>⑤ 可能催生什么硬件与架构应对</h3>
+<ul>
+<li><strong>已出现：</strong>无重启P/D角色切换、共享主存KV池、Agent分支引用目录和在线P/D规划器。</li>
+<li><strong>高概率方向：</strong>GPU节点采用对称硬件配置，同时支持Prefill和Decode；通过更高CPU内存容量、PCIe/CXL带宽与双NIC降低角色切换和KV远取成本。</li>
+<li><strong>高概率方向：</strong>Agent Harness向推理控制面输出分支ID、版本、压缩、工具等待和完成事件，形成KV生命周期协议。</li>
+<li><strong>高概率方向：</strong>DPU或智能NIC承担KV索引、压缩、加密、复制和带宽整形，防止状态流量挤压Scale-out集合通信。</li>
+<li><strong>高概率方向：</strong>调度器从固定P/D池转向分钟级或更快的弹性角色池，并同时约束吞吐、P95 TTFT、缓存命中和切换成本。</li>
+<li><strong>尚待验证：</strong>代码公开与独立复现、真实生产开放到达、故障恢复、多租户安全、异构GPU、跨机架KV传输和每个完成任务的总成本。</li>
+</ul>
+<blockquote><p><strong>架构师结论：</strong>Agent负载真正打破的不是Prefill/Decode分离，而是“分离后永远固定”的假设。计算角色应能变化，但KV必须跨角色保持可访问；缓存价值也应由仍然活跃的任务分支决定，而不是由最后访问时间决定。</p></blockquote>
+<p><strong>原始来源：</strong><a href="https://arxiv.org/abs/2611.12304">Evolving Infra论文，2026-11-09</a></p>
+</section>
+
+<hr/>
+
+<section>
+<h2>02｜第六代EPYC正式出货：Agent把CPU从配套主机变成三类独立资源池</h2>
+
+<h3>① 业务变化是什么</h3>
+<p>2026年11月10日，AMD宣布基于Zen 6架构、SP7平台的第六代EPYC正式可用，主要OEM和ODM系统开始出货，Azure与OCI实例计划随后提供。</p>
+<p>AMD把Agent基础设施的CPU作用明确拆成三类：</p>
+<ul>
+<li><strong>通用服务：</strong>数据库、检索、企业应用、API与工作流控制；</li>
+<li><strong>GPU主机：</strong>数据预处理、调度、网络与存储协议栈，为加速器持续供数；</li>
+<li><strong>Agent沙箱：</strong>运行代码、浏览器、工具、虚拟机或受隔离容器。</li>
+</ul>
+<p>AMD同时把EPYC延伸到Helion Agent机架：Helion Liquid面向与Helios GPU机架并列部署的高密度执行池；Helion Air面向既有风冷机房；Helion Air Inference把CPU执行和本地GPU推理组合在同一机架。AMD称部分高密配置达到每机架73728线程。</p>
+<p>AMD还给出最高5.3GHz主机CPU、相较上一代最高1.8倍LLM输出吞吐，以及相同35kW机架功率下约1.18倍Agent数量等结果。这些均为AMD测试或估算，需要按具体SKU、软件和功耗策略复核。</p>
+
+<h3>② 为什么发生</h3>
+<p>Agent在两次模型调用之间执行的工作显著增加：检索企业数据、运行Python、编译测试、操作浏览器、访问数据库、维护长期状态并等待外部工具。大量会话处于CPU突发计算与长时间等待交替状态，GPU并非持续参与。</p>
+<p>如果把所有工具执行放在GPU主机节点，会使GPU附近的CPU、内存和本地存储被沙箱占满；如果全部放到通用云虚机，又可能增加启动时延、数据移动和安全边界。</p>
+<p>AMD的商业目标是让同一x86平台覆盖GPU主机、独立Agent执行池和企业应用，并通过Helion把CPU/GPU比例、冷却和机架形态变成可选配置。</p>
+<p><strong>本简报判断：</strong>这不是“CPU替代GPU”，而是Agent系统的非模型工作已经足够大，需要与模型推理一样进行专门的节点、机架和功率规划。</p>
+
+<h3>③ 计算与数据特征如何变化</h3>
+<p>传统推理主机主要负责请求接入、Tokenization和GPU供数；Agent执行池还要处理高并发小进程、容器/微虚机启动、代码编译、浏览器渲染、数据库连接、加密和大量文件元数据。</p>
+<p>不同CPU角色的最优硬件也不同：</p>
+<ul>
+<li>GPU主机更依赖高频核心、PCIe带宽、内存带宽和NIC/NVMe局部性；</li>
+<li>Agent沙箱更依赖核心/线程密度、内存容量、本地NVMe、启动时延和隔离效率；</li>
+<li>企业数据服务更依赖缓存容量、可靠性、持久存储及一致性。</li>
+</ul>
+<p>Helion的液冷、风冷和本地GPU推理三种形态，实际是在数据中心层面对这些资源比例进行物理化：大型部署可把CPU执行机架与Helios推理机架分池，企业场景则可把执行与小规模推理合并。</p>
+
+<h3>④ 触碰哪项技术边界</h3>
+<p><strong>开始失效的假设是：每个GPU节点配置固定比例CPU即可覆盖Agent系统的全部非模型工作。</strong></p>
+<p>第一道边界是CPU/GPU比例。不同Agent的工具密度差异巨大；固定比例会造成GPU等待CPU，或大量主机核心长期闲置。</p>
+<p>第二道边界是内存与I/O。高线程密度只有在DRAM容量、带宽、NVMe和网络同步扩展时才有意义；73728线程并不等于同等数量可同时满负载运行的Agent。</p>
+<p>第三道边界是隔离。Agent执行模型生成代码，需要gVisor、Kata、微虚机或更强边界；高密度会扩大内核、镜像缓存、秘密管理和网络出口的共享故障域。</p>
+<p>第四道边界是机架功率口径。AMD的35kW比较、Agent数量及竞品性能使用特定默认电源管理与测试条件，不能直接推导生产机架TCO，也不能与液冷GPU机架按线程数简单比较。</p>
+
+<h3>⑤ 可能催生什么硬件与架构应对</h3>
+<ul>
+<li><strong>已出现：</strong>第六代EPYC SP7平台正式出货，Helion把Agent CPU机架拆成Liquid、Air和Air Inference形态。</li>
+<li><strong>高概率方向：</strong>GPU主机、CPU沙箱和数据服务分池部署，调度器按工具类型、信任级别、镜像、数据位置和延迟SLO分配任务。</li>
+<li><strong>高概率方向：</strong>CPU机架采用大容量内存、本地NVMe、镜像缓存和高密度网络，并与GPU机架通过低时延以太网或InfiniBand连接。</li>
+<li><strong>高概率方向：</strong>CPU与GPU之间不采用固定一比一配套，而是按Agent工具时间、模型调用占比和并发会话数动态配置。</li>
+<li><strong>高概率方向：</strong>DPU/智能NIC承担沙箱微分段、短期凭据、出口控制、存储虚拟化和审计，限制被攻破沙箱的横向移动。</li>
+<li><strong>尚待验证：</strong>各EPYC 9006 SKU的核心数、内存通道、PCIe/CXL资源、TDP与价格；Helion正式BOM、机架功率、液冷参数、沙箱启动P99和独立每任务成本。</li>
+</ul>
+<blockquote><p><strong>架构师结论：</strong>Agent时代的CPU不再只是GPU旁边的“Host”。它同时承担模型供数、工具执行与企业数据路径。CPU、GPU、内存和沙箱应按任务阶段分池，避免昂贵GPU等待可在高密度CPU节点完成的工作。</p></blockquote>
+<p><strong>原始来源：</strong><a href="https://newsroom.amd.com/news/6th-gen-epyc-lead-ai-enterprise-computing/">AMD第六代EPYC正式发布，2026-11-10</a>｜<a href="https://newsroom.amd.com/press-kits/6th-gen-epyc-venice/">AMD官方Press Kit，2026-11-10</a></p>
+</section>
+
+<section>
+<h2>今日架构主线</h2>
+<p><strong>Agent正在迫使推理系统同时重新分配GPU角色和CPU角色。</strong></p>
+<ul>
+<li>GPU侧，Prefill与Decode比例随任务组成变化，节点角色需要在线切换；</li>
+<li>状态侧，KV价值由活跃分支、压缩和工具等待决定，普通LRU不足以表达；</li>
+<li>CPU侧，GPU主机、沙箱与企业数据服务需要不同的核心频率、线程密度、内存和I/O配置；</li>
+<li>机架侧，未来可能形成GPU推理机架、CPU Agent执行机架和共享状态/存储机架的组合，而非每台服务器固定配比。</li>
+</ul>
+<p>新的规划指标应是每个完成任务消耗的GPU Prefill时间、Decode时间、可复用KV字节、CPU工具时间、沙箱占用和状态传输，而不只是每秒Token或GPU数量。</p>
+</section>
+
+<section>
+<h2>会议雷达与持续跟踪</h2>
+<ul>
+<li><strong>OCP 2026会后：</strong>官方资料库继续提供NPO、224/448Gbps连接、800VDC、光学和机柜供电演讲。本轮没有核实到新标日期且足以更新Scale-Up 128/512/1000+边界、NPO FRU/MTTR、误码率或生命周期成本的量化数据，不重复写入主信号。</li>
+<li><strong>SC26会前：</strong>11月15日至20日举行。最新公开日程包括存储分层KV Cache、持久上下文、CPU/DPU协同NVMe-oF、液冷流速边界、冷却液化学与AI工厂运营。会中应优先提取测试条件、P99、流量、压降、故障恢复和长期可靠性。</li>
+<li><strong>NVIDIA GTC Washington：</strong>11月30日至12月3日举行，主题演讲为12月1日。重点验证Rubin/DSX、Agent执行池、Context Memory、网络、电源和冷却的正式产品状态。</li>
+<li><strong>DesignCon 2027：</strong>2027年2月2日至4日举行，已进入90天雷达；继续关注224G/448G通道、封装、连接器、FEC及NPO/CPO可靠性。</li>
+<li><strong>云栖2026会后：</strong>未发现AL144、AL64、SNPO、ALink、HBD边界、单卡Scale-Up带宽或NPO光源位置的新正式资料；不把旧会期资料视为今日动态。</li>
+</ul>
+<p><strong>会议来源：</strong><a href="https://www.opencompute.org/events/ocp-summit/2026-ocp-global-summit/recorded-content/">OCP 2026会后资料库</a>｜<a href="https://sc26.conference-program.com/">SC26官方完整日程</a>｜<a href="https://www.nvidia.com/gtc/dc/">NVIDIA GTC Washington官网</a>｜<a href="https://www.designcon.com/">DesignCon 2027官网</a></p>
+</section>
+
+<section>
+<h2>系统健康自检与告警</h2>
+<p>五个RSS文件及最新归档均可读取，RSS闭合标签、GUID和CDATA数量检查正常：主简报最新为2026-11-10，竞品与成本周报为2026-11-09，下一代架构专题为2026-11-07，AI Memory为2026-11-06，关键技术预警最新发布为2026-10-27。</p>
+<p><strong>系统告警：</strong>任务状态查询显示“超节点关键技术预警”目前为暂停状态。其最近一次运行在2026年11月10日完成，结果明确为没有达到触发门槛的新突破，因此未发布新RSS条目；“没有新条目”本身正常，但任务被暂停意味着后续可能不会继续扫描。本次仅报告状态，未修改该任务或其他自动化。</p>
+<p>其余可读取任务均显示启用；当前主简报运行处于执行中，属于本次正常运行。Follow端缓存和客户端分发状态不可读取，因此不对订阅端延迟作判断。</p>
+</section>
+</article><footer>仅使用公开来源；实证、厂商口径与分析推断已分开标注。</footer></main></body></html>
