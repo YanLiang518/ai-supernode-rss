@@ -5,11 +5,178 @@
     <link>https://github.com/YanLiang518/ai-supernode-rss</link>
     <description>聚焦 AI 超节点、GPU/加速芯片、Scale-up 互联、NPO/CPO、液冷、供电与头部厂商架构动态。</description>
     <language>zh-cn</language>
-    <pubDate>Wed, 11 Nov 2026 05:00:00 +0800</pubDate>
-    <lastBuildDate>Wed, 11 Nov 2026 05:00:00 +0800</lastBuildDate>
+    <pubDate>Thu, 12 Nov 2026 05:00:00 +0800</pubDate>
+    <lastBuildDate>Thu, 12 Nov 2026 05:00:00 +0800</lastBuildDate>
     <ttl>15</ttl>
     <atom:link href="https://raw.githubusercontent.com/YanLiang518/ai-supernode-rss/main/feed.xml" rel="self" type="application/rss+xml"/>
-                    <item>
+                        <item>
+      <title>AI算力架构前沿简报｜2026-11-12</title>
+      <link>https://raw.githubusercontent.com/YanLiang518/ai-supernode-rss/main/archive/2026-11-12.html</link>
+      <guid isPermaLink="false">ai-supernode-brief-2026-11-12</guid>
+      <pubDate>Thu, 12 Nov 2026 05:00:00 +0800</pubDate>
+      <description><![CDATA[<article>
+<header>
+<h1>AI算力架构前沿简报｜2026年11月12日</h1>
+<p><strong>今日判断：</strong>Agent基础设施正在把“等待状态”变成可迁移的数据对象。NVIDIA发布的Agent Substrate以少量常驻Kubernetes Worker复用大量有状态Agent，将空闲会话的内存与文件系统快照化；NVIDIA Snapshot则把已完成权重加载、编译和CUDA Graph捕获的GPU进程封装成可恢复快照，使推理副本无需重复分钟级初始化。</p>
+<p><strong>核心判断：</strong>这两项变化共同引入一条新的快照数据路径：CPU Agent状态与GPU推理状态都可在计算资源之外持久化，再按任务阶段恢复。未来容量规划不能只问“有多少CPU/GPU”，还要问快照多大、写入多久、恢复P99、兼容范围、存储/网络带宽，以及大量会话或副本同时恢复时是否形成风暴。</p>
+</header>
+
+<section>
+<h2>信号总览</h2>
+<ul>
+<li><strong>Agent Substrate：</strong>把Agent会话抽象成可暂停和恢复的Actor，复用较小的Warm Worker池；与Dynamo交换KV位置、推理进度和GPU拥塞信号，协调CPU工具执行与GPU推理。</li>
+<li><strong>NVIDIA Snapshot：</strong>开源GPU工作负载Checkpoint/Restore组件。厂商测试覆盖B200、vLLM、SGLang和TensorRT-LLM，最大到8张GPU、约1TB快照；恢复时间3.6至42.7秒，较冷启动快8至36倍。</li>
+<li><strong>成熟度：</strong>两个项目与代码均已公开，但Agent Substrate的GPU DRA支持和部分Dynamo联动仍在演进；Snapshot结果来自NVIDIA及设计伙伴测试，且不包含机器供应和镜像拉取时间。</li>
+</ul>
+</section>
+
+<hr/>
+
+<section>
+<h2>01｜Agent Substrate：把空闲Agent从“一会话一Pod”改成可挂起、可迁移的Actor</h2>
+
+<h3>① 业务变化是什么</h3>
+<p>2026年11月10日，NVIDIA在KubeCon窗口公布Agent Substrate的最新架构，并说明该项目已进入CNCF Sandbox。它不再为每个Agent长期保留一个Kubernetes Pod，而是在一组已启动的Worker Pod上复用大量Actor。Actor空闲时，运行时保存其内存与文件系统并释放Worker；下一次请求到来时，Actor可在任意空闲Worker上恢复，无需重新经过API Server、Admission、etcd、Scheduler、Kubelet、镜像拉取和网络初始化的完整Pod创建路径。</p>
+<p>NVIDIA称该运行时面向数百万Agent与工具，密度最高可达标准容器方案的10倍；这是厂商目标和内部工程口径，公开资料没有给出同安全等级、同工具负载下的独立规模测试。</p>
+<p>已公开的机制包括：</p>
+<ul>
+<li>以gVisor或MicroVM作为沙箱边界，快照保存进程内存与文件系统状态；</li>
+<li>Worker满载时由Router进行有界Request Parking，而不是立即失败；</li>
+<li>MicroVM内支持逐容器CPU和内存限制，单个失控容器不必拖垮整个沙箱；</li>
+<li>基于Kubernetes Dynamic Resource Allocation设计设备可插拔机制，GPU是首个目标；</li>
+<li>与NVIDIA Dynamo和KAI Scheduler分别协调模型推理与Pod级资源放置。</li>
+</ul>
+<p><strong>证据边界：</strong>Actor复用、CPU沙箱、Request Parking和公开代码已经存在；GPU挂起/恢复、DRA设备匹配以及部分Dynamo双向信号仍在建设或实验阶段，不能写成已具备生产SLA。</p>
+
+<h3>② 为什么发生</h3>
+<p>Agent的工作模式是“短突发＋长等待”：运行一条Shell命令、编译、浏览器操作或调用模型后，可能等待毫秒、数分钟甚至更久。如果每个会话常驻一个Pod，内存、IP、文件系统和控制面对象会随会话数增长；若每步现建Pod，数秒级冷启动又会淹没10毫秒级工具执行。</p>
+<p>RL后训练进一步放大该矛盾。GPU训练器与生成服务会成批触发CPU密集的编译器、浏览器、仿真器和验证环境；最慢的环境决定下一批轨迹何时回到训练器。闲置沙箱浪费内存，临时拉起沙箱则让GPU等待。</p>
+<p><strong>本简报判断：</strong>业务目标不是提高单个容器性能，而是把Agent会话密度与活跃计算并发解耦。会话可以很多，真正占用热CPU、GPU和内存的只应是当前推进任务的部分。</p>
+
+<h3>③ 计算与数据特征如何变化</h3>
+<p>Agent Substrate形成两级调度：</p>
+<ul>
+<li>Kubernetes/KAI负责较低频的Worker Pod、配额、拓扑和租户放置；</li>
+<li>Substrate控制面在Worker池内进行高频Actor激活、挂起、排队和恢复。</li>
+</ul>
+<p>状态不再固定绑定Pod。每个Actor需要一个包含内存页、文件、进程、设备依赖和安全身份的快照；恢复位置取决于Worker空闲度、镜像与快照局部性、设备兼容和租户策略。</p>
+<p>更关键的是CPU与GPU调度开始交换信号。Dynamo可向Substrate返回预计TTFT、预计完成时间、请求进度、KV就绪和GPU池饱和度。Substrate可据此判断：模型仍需较长时间时挂起CPU Actor；模型即将返回时提前恢复；GPU队列已拥塞时限制子Agent扇出，避免启动一批只能等待的沙箱。</p>
+
+<h3>④ 触碰哪项技术边界</h3>
+<p><strong>开始失效的假设是：一个长期Agent必须对应一个长期Pod，CPU沙箱和GPU推理可以各自独立扩缩容。</strong></p>
+<p><strong>控制面边界：</strong>若每一步都触发Kubernetes对象创建，API Server、etcd与Scheduler会成为高频工具调用的瓶颈。独立Actor控制面降低这部分开销，却新增状态目录、租约、排队公平性和故障恢复问题。</p>
+<p><strong>快照兼容边界：</strong>CPU状态可跨同类Worker迁移，但GPU状态通常要求相同GPU型号，有时还要求相同驱动版本。没有匹配设备时只能冷启动；因此快照不是任意硬件间的通用容器镜像。</p>
+<p><strong>安全边界：</strong>快照可能包含代码、文件、短期凭据、模型响应和进程内秘密。gVisor或MicroVM提供执行隔离，但持久化层仍需加密、租户密钥、擦除、访问审计和防回滚。</p>
+<p><strong>恢复风暴：</strong>大量Agent在模型响应、人工审批或定时事件到达时同步恢复，会同时冲击对象存储/NVMe、网络、DRAM与CPU页恢复。平均恢复时间无法替代并发P99和故障域测试。</p>
+
+<h3>⑤ 硬件与架构应对</h3>
+<ul>
+<li>将GPU推理池、CPU沙箱池和快照存储池分离，按模型调用、工具时间和活跃会话分别扩缩容。</li>
+<li>沙箱Worker采用高核数CPU、大容量DRAM、本地NVMe镜像/快照缓存和高带宽NIC，而不是简单复用GPU主机。</li>
+<li>快照元数据记录CPU架构、内核/运行时、GPU型号、驱动、租户、密钥版本和完整性哈希。</li>
+<li>调度器联合考虑Actor快照位置、KV位置、预计模型完成时间和设备兼容，避免CPU与GPU各自局部最优。</li>
+<li>DPU或智能NIC可承担快照加密、压缩、租户隔离和流量整形；恢复流量应与Scale-out集合通信隔离或设置优先级。</li>
+<li>以Warm Worker命中率、每活跃Agent内存、挂起/恢复P95/P99、状态丢失率和每完成任务成本作为验收指标。</li>
+</ul>
+<blockquote><p><strong>架构师结论：</strong>Agent Substrate的本质不是另一种容器，而是把“会话身份”从“Pod生命周期”中剥离。CPU工具环境只有在需要推进任务时才占用热资源；GPU推理进度反过来控制沙箱何时恢复，形成跨CPU/GPU的联合调度。</p></blockquote>
+<p><strong>待验证：</strong>10倍密度的测试口径、百万级Actor的控制面P99、快照大小和写入放大、GPU DRA正式支持、跨节点恢复失败率、多租户密钥隔离及控制器故障恢复。</p>
+<p><strong>原始来源：</strong><a href="https://developer.nvidia.com/blog/agent-substrate-advancing-kubernetes-for-agents-at-scale/">NVIDIA：Agent Substrate技术说明，2026-11-10</a>｜<a href="https://github.com/agent-substrate/substrate">Agent Substrate开源仓库</a></p>
+</section>
+
+<hr/>
+
+<section>
+<h2>02｜NVIDIA Snapshot：GPU冷启动从重复初始化变成“恢复已就绪显存”</h2>
+
+<h3>① 业务变化是什么</h3>
+<p>同在2026年11月10日，NVIDIA发布开源NVIDIA Snapshot。它为Kubernetes GPU Pod保存完整CPU与GPU内存状态，并在兼容节点上恢复，使模型权重加载、torch.compile和CUDA Graph捕获不必在每个新副本上重复执行。</p>
+<p>公开测试覆盖vLLM、SGLang与TensorRT-LLM，模型从6亿参数到8张GPU上的大型MoE；最大快照约1TB。NVIDIA报告：</p>
+<ul>
+<li>恢复时间为3.6至42.7秒，所有测试配置低于45秒；</li>
+<li>相较分钟级冷启动，恢复加速8至36倍；</li>
+<li>快照创建耗时约15秒至5.5分钟；</li>
+<li>在B200与VAST NFS测试中，大型恢复的GPU状态恢复占18至29秒，CRIU CPU进程恢复占4.2至10.8秒；</li>
+<li>合作伙伴Crusoe称HGX B300上的GLM-5.3 Pod就绪时间从约8分钟降至31秒；Saturn Cloud称vLLM从2至8.5分钟降至6至34秒。</li>
+</ul>
+<p><strong>证据边界：</strong>这些均为NVIDIA或设计伙伴口径。测量从已具备兼容节点和可读快照开始，不包含机器供应、节点启动、镜像拉取与网络初始化；不能将“恢复低于45秒”解释为从无节点到服务可用的完整扩容SLA。</p>
+
+<h3>② 为什么发生</h3>
+<p>大模型副本的冷启动不仅是把权重从存储复制到HBM，还包括Python/运行时初始化、权重反序列化、并行组建立、内核编译、内存规划和CUDA Graph捕获。模型和并行度越大，GPU已经空闲却不能接流量的时间越长。</p>
+<p>这会影响三类业务：</p>
+<ul>
+<li>突发流量的Scale-from-zero或快速扩容；</li>
+<li>故障副本的恢复与滚动升级；</li>
+<li>低频大模型的按需驻留，避免长期占用整组GPU。</li>
+</ul>
+<p><strong>本简报判断：</strong>Snapshot把“已初始化推理引擎”从一次性过程变成可复制制品。商业目标是减少昂贵GPU在权重加载与编译阶段的不可服务时间，而不是提高单Token算力。</p>
+
+<h3>③ 计算与数据特征如何变化</h3>
+<p>启动路径从“小量配置＋大规模重复初始化”变为“大型快照顺序/并行读取＋内存恢复”。对于8张GPU、约1TB快照，恢复带宽、并行读、元数据和多GPU一致性进入服务扩容关键路径。</p>
+<p>快照通过Kubernetes自定义资源创建，可将单节点多GPU工作负载跨多个Rank作为一个制品保存，支持Tensor Parallel、Data/Expert Parallel与Decode Context Parallel。恢复时要求相同GPU型号和兼容驱动，进程从保存点继续运行。</p>
+<p>新的缓存层次由三种制品组成：</p>
+<ul>
+<li>容器镜像：提供代码和依赖；</li>
+<li>模型权重：提供参数；</li>
+<li>运行时快照：包含已加载权重、编译结果、CUDA Graph和CPU/GPU内存状态。</li>
+</ul>
+<p>运行时快照远大于普通镜像，也比只保存权重更依赖硬件版本，因此其分发、去重、版本和淘汰需要独立管理。</p>
+
+<h3>④ 触碰哪项技术边界</h3>
+<p><strong>开始失效的假设是：推理副本扩容主要受空闲GPU数量限制，节点获得GPU后可以快速从镜像和权重启动。</strong></p>
+<p><strong>存储带宽边界：</strong>1TB快照若在30秒内恢复，理想平均读带宽已约33GB/s，尚未计协议、校验和多副本竞争。多组8-GPU副本同时恢复会迅速把共享文件系统和ToR上行推到瓶颈。</p>
+<p><strong>一致性边界：</strong>多Rank必须从同一逻辑时刻恢复；任一GPU、CPU进程或通信组状态不兼容都会使整个副本回退冷启动。快照必须与模型、引擎、CUDA、驱动、GPU型号和并行布局绑定。</p>
+<p><strong>容量与成本边界：</strong>保留多个模型、版本和并行度的TB级快照会显著增加高速存储容量。节省的GPU初始化时间必须高于快照创建、存储、复制和失效重建成本。</p>
+<p><strong>安全边界：</strong>GPU内存快照可能包含权重、KV、编译缓存和租户数据。静态加密、访问控制、生命周期擦除与供应链证明必须覆盖快照，而不只覆盖模型仓库。</p>
+
+<h3>⑤ 硬件与架构应对</h3>
+<ul>
+<li>为推理恢复建立高吞吐只读快照层，可采用机架/Pod级NVMe缓存加共享并行文件系统或对象存储。</li>
+<li>按GPU型号、驱动和引擎版本预热快照，调度器优先把副本放到已缓存兼容制品的节点。</li>
+<li>恢复流量使用RDMA/GPUDirect路径、独立队列或带宽配额，避免与KV迁移和训练Checkpoint互相阻塞。</li>
+<li>采用分块、内容寻址、压缩和跨版本去重，降低TB级快照的容量与复制成本；同时保留端到端校验。</li>
+<li>为快照创建设置低峰窗口或影子副本，避免暂停生产实例；故障时应有自动冷启动回退路径。</li>
+<li>验收应测节点已就绪与节点未就绪两种SLA，并覆盖1、10、100个副本并发恢复的P50/P99和网络退化。</li>
+</ul>
+<blockquote><p><strong>架构师结论：</strong>GPU快照把扩容瓶颈从“重复编译和权重加载”转移到“TB级状态读取和兼容调度”。它可能大幅缩短恢复时间，但也会催生新的快照存储、版本矩阵和恢复风暴问题。</p></blockquote>
+<p><strong>待验证：</strong>跨节点与跨机架多GPU恢复、并发恢复P99、故障中断后的原子性、快照增量/去重、加密开销、不同存储后端结果，以及包含节点供应与镜像拉取的端到端扩容时间。</p>
+<p><strong>原始来源：</strong><a href="https://developer.nvidia.com/blog/start-and-restore-gpu-workloads-in-seconds-with-nvidia-snapshot/">NVIDIA Snapshot技术说明与测试，2026-11-10</a></p>
+</section>
+
+<section>
+<h2>今日架构主线</h2>
+<p><strong>CPU Agent状态与GPU推理状态正在进入同一套“挂起—持久化—兼容放置—恢复”设计空间。</strong></p>
+<ul>
+<li>Agent Substrate压缩空闲会话的CPU、内存和Pod占用；</li>
+<li>NVIDIA Snapshot压缩GPU副本初始化造成的不可服务时间；</li>
+<li>两者都需要快照目录、硬件/软件兼容标签、高吞吐存储和恢复背压；</li>
+<li>Dynamo的KV与推理进度信号可决定CPU Actor何时恢复，形成跨资源池联合调度。</li>
+</ul>
+<p>新的容量指标应包括每个活跃任务的CPU/GPU时间、每个暂停任务的快照字节、恢复P99、快照命中率、冷启动回退率及每个完成任务的存储与网络成本。只有节省的空闲资源和初始化时间超过快照写入、保存和恢复成本，这种架构才产生净收益。</p>
+<p><strong>补充信号：</strong>NVIDIA在2026年11月11日将运行时AIBOM加入AI Cluster Runtime，用CycloneDX 1.6记录实际运行的模型、镜像和证据位置，并公布稳态约每分钟4次API请求、2.2 millicores CPU和28至34MiB内存的资格测试。这不会直接改变计算拓扑，但说明动态Actor、快照与可变运行时需要可追溯的版本和制品身份；因此列为控制面补充，不单独凑成主新闻。</p>
+<p><strong>补充来源：</strong><a href="https://developer.nvidia.com/blog/validating-gpu-platforms-with-runtime-ai-inventory-via-the-nvidia-dsx-ai-factory/">NVIDIA运行时AIBOM说明，2026-11-11</a></p>
+</section>
+
+<section>
+<h2>会议雷达</h2>
+<ul>
+<li><strong>SC26会前：</strong>11月15日至20日在芝加哥举行。完整日程新增/确认的高价值议题包括存储分层KV Cache、持久上下文、AI存储系统、CPU/DPU协同NVMe-oF、液冷互操作与洁净度、动态热控制、GW级AI设施运营以及近光速GPU集合通信。会中优先提取快照/KV并发带宽、P99、压降、冷却液化学、故障恢复和长期可靠性。</li>
+<li><strong>OCP 2026会后补扫：</strong>官方资料库仍提供224G AEC、高密液冷光互连、800VDC、机架电源、AI Cluster和Photonics录播/PPT。本轮未发现新标日期且足以改变Scale-Up 128/512/1000+边界、NPO量产FRU/MTTR或全生命周期成本判断的量化修订，不把旧会议口径重复当作今日新闻。</li>
+<li><strong>NVIDIA GTC Washington：</strong>11月30日至12月3日举行，主题演讲为12月1日。重点验证DSX、Rubin、Agent执行池、GPU快照、Context Memory、网络与电源冷却的正式产品边界。</li>
+<li><strong>DesignCon 2027：</strong>2027年2月2日至4日，处于90天雷达内；继续关注224G/448G通道、连接器、封装、FEC和NPO/CPO可靠性。</li>
+<li><strong>云栖2026会后：</strong>未发现阿里云针对AL144、AL64、SNPO、ALink、HBD边界、单卡Scale-Up带宽或NPO光源位置的新正式规格/PPT/量产数据；保留历史对照，不列为今日新增。</li>
+</ul>
+<p><strong>会议来源：</strong><a href="https://sc26.conference-program.com/">SC26官方完整日程</a>｜<a href="https://www.opencompute.org/events/ocp-summit/2026-ocp-global-summit/recorded-content/">OCP 2026会后资料库</a>｜<a href="https://www.nvidia.com/gtc/dc/">NVIDIA GTC Washington官网</a>｜<a href="https://www.designcon.com/">DesignCon 2027官网</a></p>
+</section>
+
+<section>
+<h2>系统健康自检与告警</h2>
+<p>五个RSS文件及各自最新归档均可读取；XML闭合标签、GUID和CDATA数量检查正常：主简报最新为2026-11-11，竞品与成本周报为2026-11-09，下一代架构专题为2026-11-07，AI Memory为2026-11-06，关键技术预警最新发布为2026-10-27。日报与周报均未超过“周期＋36小时”的疑点阈值。</p>
+<p><strong>系统告警：</strong>任务状态查询显示“超节点关键技术预警”仍处于暂停状态。其最近一次运行于2026年11月10日完成，记录结果不是失败；但暂停意味着后续可能不会继续扫描。本次仅报告状态，没有修改该任务或其他自动化。</p>
+<p>其余可读取任务均显示启用；当前主简报运行状态为执行中，符合本次运行。Follow端缓存和客户端分发状态不可读取，因此不对订阅端延迟作判断。</p>
+</section>
+</article>]]></description>
+    </item>
+<item>
       <title>AI算力架构前沿简报｜2026-11-11</title>
       <link>https://raw.githubusercontent.com/YanLiang518/ai-supernode-rss/main/archive/2026-11-11.html</link>
       <guid isPermaLink="false">ai-supernode-brief-2026-11-11</guid>
