@@ -5,11 +5,200 @@
     <link>https://github.com/YanLiang518/ai-supernode-rss</link>
     <description>聚焦 AI 超节点、GPU/加速芯片、Scale-up 互联、NPO/CPO、液冷、供电与头部厂商架构动态。</description>
     <language>zh-cn</language>
-    <pubDate>Thu, 12 Nov 2026 05:00:00 +0800</pubDate>
-    <lastBuildDate>Thu, 12 Nov 2026 05:00:00 +0800</lastBuildDate>
+    <pubDate>Fri, 13 Nov 2026 05:00:00 +0800</pubDate>
+    <lastBuildDate>Fri, 13 Nov 2026 05:00:00 +0800</lastBuildDate>
     <ttl>15</ttl>
     <atom:link href="https://raw.githubusercontent.com/YanLiang518/ai-supernode-rss/main/feed.xml" rel="self" type="application/rss+xml"/>
-                        <item>
+                            <item>
+      <title>AI算力架构前沿简报｜2026-11-13</title>
+      <link>https://raw.githubusercontent.com/YanLiang518/ai-supernode-rss/main/archive/2026-11-13.html</link>
+      <guid isPermaLink="false">ai-supernode-brief-2026-11-13</guid>
+      <pubDate>Fri, 13 Nov 2026 05:00:00 +0800</pubDate>
+      <description><![CDATA[<article>
+<header>
+<h1>AI算力架构前沿简报｜2026年11月13日</h1>
+<p><strong>今日判断：</strong>本期三条信号分别把AI系统的容量、控制与网络边界推向新的层级：Dell与KIOXIA把对象存储压缩到单42U机柜157PB原始闪存容量；Google Cloud Pathways正式GA，把数千乃至数万TPU的多切片训练、推理和RL置于单控制器与弹性容错之下；Cornelis CN6000则以PCIe 6.0×16承载800Gbps网卡，说明高速Fabric的瓶颈开始从链路速率转向主机I/O、消息率和每核网络并发。</p>
+<p><strong>核心判断：</strong>AI基础设施正同时出现“更密的状态、更大的统一资源域、更高的主机注入率”。容量密度、单控制器可扩展性和800G链路本身都不是最终价值；真正需要验证的是故障域、恢复时间、尾延迟、端到端带宽与每个有效训练/推理任务成本。</p>
+</header>
+
+<section>
+<h2>信号总览</h2>
+<ul>
+<li><strong>Dell ObjectScale＋KIOXIA LC9：</strong>16台2U服务器、640块245.76TB E3.L QLC NVMe SSD，在单42U机柜提供157PB十进制原始容量。</li>
+<li><strong>Cloud Pathways GA：</strong>单JAX控制器统一编排多TPU切片，并支持主机内存快照、故障时缩减至N−1切片和恢复后重新扩展；Google称过去90天承载超过1.3亿TPU芯片小时。</li>
+<li><strong>Cornelis CN6000：</strong>800Gbps多协议SuperNIC采用PCIe 6.0×16；厂商报告16亿消息/秒与较NVIDIA XDR InfiniBand低23%的MPI时延，OEM系统计划2027年第一季度开始提供。</li>
+<li><strong>成熟度：</strong>157PB是原始容量而非可用容量或吞吐指标；Pathways已GA但Slurm集成仍为Preview；CN6000处于验证/采样与OEM导入阶段，性能数字来自厂商测量。</li>
+</ul>
+</section>
+
+<hr/>
+
+<section>
+<h2>01｜157PB单柜对象存储：容量密度开始反向放大故障域与重建压力</h2>
+
+<h3>① 业务变化是什么</h3>
+<p>2026年11月11日，KIOXIA与Dell Technologies宣布基于Dell ObjectScale的软件定义对象存储配置：单个标准42U机柜内放置16台PowerEdge R7725xd服务器，每台配置40块245.76TB KIOXIA LC9 Series E3.L NVMe SSD，共640块盘，形成约157PB十进制原始闪存容量。</p>
+<p>算术口径为640×245.76TB＝157,286.4TB，即约157.3PB原始容量。公开资料没有披露EC/副本后的可用容量、对象大小、读写带宽、IOPS、机柜功率、SSD写耐久、网络配置、节点故障重建时间或正式报价。</p>
+<p><strong>证据边界：</strong>服务器与245.76TB SSD已经是明确产品配置，157PB来自原始盘容量相加；“全球首个”和更高TB/W属于厂商声明。不能把原始容量写成用户可用容量，也不能从容量密度推导训练数据吞吐。</p>
+
+<h3>② 为什么发生</h3>
+<p>AI训练、合成数据、多模态语料、Checkpoint、日志和长期Agent状态共同推动非结构化数据增长。传统对象存储以大容量HDD提供低成本深容量，但在相同PB规模下需要更多机柜、网络端口、线缆和冷却设备；高容量QLC NVMe试图以更高介质成本换取更小占地、更高访问并发和更低系统级功耗。</p>
+<p>对数据中心运营者而言，业务驱动力不只是“存更多数据”，而是让PB级数据靠近GPU集群，同时减少机柜、交换机、布线和运维对象数量。</p>
+<p><strong>本简报判断：</strong>157PB单柜的价值首先是空间与基础设施压缩，而不是自动获得高性能。若网络、CPU、纠删码或元数据没有同步扩展，更多闪存容量可能只是把数据集中到更少的故障域中。</p>
+
+<h3>③ 计算与数据特征如何变化</h3>
+<p>单柜内16台服务器和640块SSD使数据路径呈现极高扇入：</p>
+<ul>
+<li>大量对象、向量、训练样本和Checkpoint共享有限的服务器CPU、PCIe根端口与NIC；</li>
+<li>单盘容量达到245.76TB后，盘级故障需要搬移和重建的数据量显著增加；</li>
+<li>对象存储纠删码、校验、后台Scrub与前台AI读取竞争同一网络和介质带宽；</li>
+<li>一个机柜的电源、ToR、冷却或维护事件可能同时影响百PB级原始容量。</li>
+</ul>
+<p>容量单位从“每机柜数PB”跃升至百PB后，性能指标必须归一到每PB可用带宽、每PB元数据能力、故障时每PB恢复时间和每TB持续功耗，不能只看总容量。</p>
+
+<h3>④ 触碰哪项技术边界</h3>
+<p><strong>开始失效的假设是：提高单盘与单柜容量只会线性减少空间和功耗，不会改变可靠性与网络设计。</strong></p>
+<p><strong>重建窗口：</strong>245.76TB介质即使以1GB/s持续读取，完整扫描也需约68小时；实际重建还受EC计算、其他节点写入、网络限速和前台业务影响。容量越密，故障暴露窗口和同一期间第二故障风险越值得关注。</p>
+<p><strong>网络注入：</strong>640块NVMe SSD的介质并发远高于少量ToR上联能持续承载的带宽。若机柜只有数个800G上联，总体网络可能远早于介质达到饱和。</p>
+<p><strong>QLC耐久：</strong>高密QLC适合读多写少和大对象，但训练Checkpoint、数据重排和小对象更新可能引起写放大。公开资料未给出DWPD、工作负载假设和寿命模型。</p>
+<p><strong>故障域与维护：</strong>单柜断电、冷却异常、ToR维护或固件升级会影响极大容量。容量密度降低设备数量，却提高单次事件的业务影响面。</p>
+
+<h3>⑤ 硬件与架构应对</h3>
+<ul>
+<li>将对象存储跨多个电源、ToR、机柜和故障域做EC放置，不把单柜157PB视为独立可靠单元。</li>
+<li>为重建、Scrub和前台AI流量设置独立队列、带宽保留与拥塞优先级。</li>
+<li>按每PB持续读写、对象大小、元数据P99和降级性能选择NIC与ToR，而不是按盘数简单配置网络。</li>
+<li>引入DPU或存储处理器承担EC、校验、压缩、加密和网络虚拟化，避免CPU成为百PB数据路径瓶颈。</li>
+<li>采用机架级NVMe缓存、对象存储与训练并行文件系统分层，避免所有训练I/O直接落到容量层。</li>
+<li>采购验收必须包含盘故障、节点故障、ToR故障和整柜维护下的重建时间、前台P99和剩余冗余度。</li>
+</ul>
+<blockquote><p><strong>架构师结论：</strong>157PB单柜真正改变的是故障影响的量级。容量密度每提高一个数量级，网络、重建、维护和保护域必须同步重新设计；否则“省机柜”会转化为更长的恢复窗口和更大的单点事件。</p></blockquote>
+<p><strong>待验证：</strong>可用容量、EC参数、机柜功率、NIC/ToR拓扑、混合对象性能、SSD耐久、单盘/节点/整柜故障恢复及每PB全生命周期成本。</p>
+<p><strong>原始来源：</strong><a href="https://americas.kioxia.com/en-us/business/news/2026/ssd-20261111-1.html">KIOXIA与Dell 157PB单柜对象存储公告，2026-11-11</a>｜<a href="https://www.dell.com/en-us/infohub/articles/dell-poweredge-r7725xd-economics-of-high-capacity-ssds-in-the-data-center">Dell高容量SSD经济性技术说明</a></p>
+</section>
+
+<hr/>
+
+<section>
+<h2>02｜Cloud Pathways正式GA：多TPU切片从并列控制器变成可弹性收缩的统一资源域</h2>
+
+<h3>① 业务变化是什么</h3>
+<p>2026年11月9日，Google宣布Cloud Pathways在GKE上正式GA，覆盖支持TPU v5e、v5p、Trillium v6e和Ironwood TPU7x的区域。Cluster Director上的Slurm集成仍为Preview。</p>
+<p>Cloud Pathways用一个JAX客户端与单控制器统一查看和调度多个大型TPU Slice，支持SPMD与MPMD负载、异步XLA HLO分发、持久化编译缓存、共置Python Sidecar、交互式执行和共享Pathways服务。</p>
+<p>Google称过去90天客户通过Pathways on GKE处理超过1.3亿TPU芯片小时；其中一个未具名大型消费科技客户每季度使用超过1亿芯片小时，在数万颗v5p、v6e与TPU7x上运行批量推理和RL。以上规模为Google披露，客户身份和独立利用率数据未公开。</p>
+
+<h3>② 为什么发生</h3>
+<p>传统多控制器JAX在每个TPU Host上运行Python解释器，以锁步方式执行相同SPMD程序。训练、推理和RL走向多切片、异构代际及MPMD后，跨切片资源发现、Python状态、编译缓存和故障处理变得复杂。</p>
+<p>RL尤其要求训练器、采样器、奖励模型和数据处理程序以不同并行策略并行运行。若各切片拥有独立控制器，权重版本、故障恢复和资源重分配容易形成额外同步点。</p>
+<p><strong>本简报判断：</strong>Pathways GA的业务意义是把“多TPU Slice拼成一个作业”从Google内部能力变为公开云运行时。客户购买的将不只是TPU实例，而是跨切片持续运行和在故障下保持训练进度的能力。</p>
+
+<h3>③ 计算与数据特征如何变化</h3>
+<p>单控制器拥有跨切片全局视图，可异步向不同设备分发HLO并运行MPMD任务。共置Python Sidecar在TPU Host上执行数据加载与Checkpoint，避免所有Python逻辑回到远端客户端。</p>
+<p>弹性训练使用主机内存快照保存状态。某个切片故障时，运行时可将训练动态重分片到N−1个健康切片，不必终止客户端；替换切片加入后再扩展。计划性GKE抢占还可将HBM状态保存到Cloud Storage并恢复。</p>
+<p>这使训练状态流量呈现三层路径：</p>
+<ul>
+<li>TPU HBM内的活跃参数与优化器状态；</li>
+<li>Host DRAM中的快速弹性快照；</li>
+<li>Cloud Storage中的计划性挂起/恢复状态。</li>
+</ul>
+<p>计算资源可弹性变化，但每次变化都涉及张量重分片、网络传输和编译/拓扑缓存，恢复时间取决于模型状态规模而非只取决于控制器逻辑。</p>
+
+<h3>④ 触碰哪项技术边界</h3>
+<p><strong>开始失效的假设是：大规模训练作业的设备拓扑在整个生命周期内固定，任一Slice故障应通过全作业重启恢复。</strong></p>
+<p><strong>单控制器规模：</strong>统一控制简化全局调度，却扩大控制器故障域。需要验证数万设备下的调度队列、状态存储、主备切换与网络分区行为。</p>
+<p><strong>弹性数值语义：</strong>从N个Slice缩到N−1会改变全局Batch、数据顺序、并行布局和通信模式；必须确保优化器、随机数与Checkpoint语义可重复。</p>
+<p><strong>状态传输：</strong>模型与优化器达到TB级后，Host快照和Cloud Storage恢复会与训练数据、KV及Checkpoint争用网络。弹性能力不等于无损切换。</p>
+<p><strong>异构代际：</strong>Pathways覆盖多代TPU，但公开资料没有证明单个作业能在不同代TPU间无代价混用。设备能力、HBM、编译结果和集合通信差异仍需调度约束。</p>
+
+<h3>⑤ 硬件与架构应对</h3>
+<ul>
+<li>训练集群需要独立的控制平面网络和高可用控制器，避免数据面拥塞阻塞全局调度。</li>
+<li>Host DRAM容量与带宽应纳入TPU节点配置，用于弹性快照、数据预处理和故障恢复。</li>
+<li>Checkpoint、主机快照和训练数据使用分层存储与独立QoS，防止恢复风暴拖慢健康作业。</li>
+<li>调度器记录TPU代际、Slice拓扑、HBM容量和编译缓存兼容性，限制不合理异构放置。</li>
+<li>验收指标从单作业吞吐扩展到Slice故障后的有效训练损失、缩容时间、扩容时间和每次重分片网络字节。</li>
+</ul>
+<blockquote><p><strong>架构师结论：</strong>Cloud Pathways把TPU Slice从静态资源块变成可收缩、恢复和共享的运行时资源。规模扩展的关键不再只是互联带宽，而是控制器、Host状态与Checkpoint能否在故障期间保持训练连续性。</p></blockquote>
+<p><strong>待验证：</strong>数万TPU控制器HA、N→N−1重分片时间、跨代TPU放置边界、故障期间吞吐和数值一致性、Cloud Storage恢复P99及真实每芯片小时利用率。</p>
+<p><strong>原始来源：</strong><a href="https://cloud.google.com/blog/topics/ai-infrastructure/cloud-pathways-a-distributed-ml-runtime-is-ga">Google Cloud Pathways GA公告，2026-11-09</a>｜<a href="https://docs.cloud.google.com/release-notes">Google Cloud正式发布说明</a></p>
+</section>
+
+<hr/>
+
+<section>
+<h2>03｜CN6000：800G网卡把主机瓶颈推到PCIe 6.0、消息率与每核注入</h2>
+
+<h3>① 业务变化是什么</h3>
+<p>2026年11月10日，Cornelis Networks与AMD公布下一代平台联合验证计划。CN6000是一款800Gbps多协议SuperNIC，主机接口为PCIe 6.0×16，面向AMD EPYC 9006与下一代Instinct平台；配套OEM系统计划2027年第一季度开始提供。</p>
+<p>Cornelis宣称CN6000可达到16亿消息/秒，并在其测量中比NVIDIA XDR InfiniBand低23%的MPI时延；在双路512核服务器上，相当于理论上为每个核心提供独立网络连接资源。这些均为厂商测试/表述，公开资料未给出消息大小、拓扑、交换级数、节点数量、P99或功耗。</p>
+<p>CN6000还支持RoCEv2和Ultra Ethernet兼容接口，但端到端Fabric仍以Omni-Path为基础。产品正在验证和导入，不能将计划中的Q1 2027 OEM可用性写成当前大规模量产。</p>
+
+<h3>② 为什么发生</h3>
+<p>随着CPU达到双路数百核心、GPU并行任务产生更多细粒度同步，网络压力不再只由大块带宽决定。MPI、小消息控制、MoE Dispatch、存储元数据和Agent工具调用都会提高每秒消息数。</p>
+<p>PCIe 5.0×16的理论单向带宽约63GB/s，低于800Gbps链路对应的100GB/s线速；PCIe 6.0×16通过PAM4与更高传输率把理论单向带宽提高到约126GB/s，才有空间承载800G有效负载及协议开销。</p>
+<p><strong>本简报判断：</strong>CN6000的架构信号不是“又一张800G网卡”，而是800G开始迫使服务器CPU、PCIe代际、NUMA、内存和消息处理能力共同升级。链路可达到800G，并不代表应用能持续注入800G。</p>
+
+<h3>③ 计算与数据特征如何变化</h3>
+<p>网络负载出现两种并存形态：</p>
+<ul>
+<li>训练Checkpoint、参数交换和存储流量需要大块顺序带宽；</li>
+<li>MPI、Collective控制、MoE路由与Agent任务图产生大量小消息和并发队列。</li>
+</ul>
+<p>高核心数CPU会让发送队列、Doorbell、DMA映射、IOMMU和NUMA局部性成为关键。若512个核心共享有限队列或跨Socket访问NIC，消息率和尾延迟可能在链路饱和前失效。</p>
+<p>多协议SuperNIC还需在Omni-Path、RoCEv2和UEC语义之间保持拥塞控制、顺序、可靠性和软件栈兼容，增加NIC SRAM、状态表与固件复杂度。</p>
+
+<h3>④ 触碰哪项技术边界</h3>
+<p><strong>开始失效的假设是：只要网卡端口达到800G，服务器就能按比例获得两倍400G应用吞吐。</strong></p>
+<p><strong>PCIe边界：</strong>PCIe 6.0×16虽然提供足够理论带宽，但有效吞吐还受FEC、协议编码、DMA粒度、Root Complex和双向争用影响。</p>
+<p><strong>内存/NUMA边界：</strong>800G对应100GB/s线速，已足以显著占用单Socket内存带宽；跨Socket数据访问会增加时延和UPI/Infinity Fabric流量。</p>
+<p><strong>消息率边界：</strong>16亿消息/秒必须明确消息尺寸、队列数量、是否为单向峰值和CPU占用。小消息性能不能由Gbps替代。</p>
+<p><strong>成熟度边界：</strong>当前数字主要来自Cornelis内部测量，且OEM系统尚待2027年。与XDR InfiniBand比较需统一主机、拓扑、MPI库和测试负载。</p>
+
+<h3>⑤ 硬件与架构应对</h3>
+<ul>
+<li>800G节点应把NIC、CPU Socket、GPU和内存通道做NUMA共置，避免跨Socket搬运。</li>
+<li>主板需要PCIe 6.0信号完整性、Retimer数量、连接器损耗和热设计的系统验证。</li>
+<li>NIC应提供足够队列、消息匹配/Collective卸载、拥塞遥测和细粒度速率控制。</li>
+<li>DPU/SuperNIC固件需支持多协议隔离与可回滚升级，避免一个状态表故障扩大到全Fabric。</li>
+<li>验收同时测GB/s、消息/秒、P50/P99、CPU占用、功耗及跨Socket惩罚。</li>
+</ul>
+<blockquote><p><strong>架构师结论：</strong>800G代际的真正门槛是“主机能否持续喂满网卡”。PCIe 6.0×16解决理论通道宽度，但消息率、NUMA和软件栈决定应用是否得到实际收益。</p></blockquote>
+<p><strong>待验证：</strong>16亿消息/秒口径、23%时延对比条件、NIC功耗、交换拓扑、UEC/RoCE互操作、故障恢复与Q1 2027 OEM实际供货。</p>
+<p><strong>原始来源：</strong><a href="https://www.cornelis.com/stories/amd-and-cornelis-expand-collaboration-for-hpc-and-ai-for-science-as-gwdg-deploys-emmy-p4-supercomputer">Cornelis与AMD联合公告，2026-11-10</a>｜<a href="https://www.cornelis.com/technology/active-compute-fabric">Cornelis Active Compute Fabric技术说明</a></p>
+</section>
+
+<section>
+<h2>今日架构主线</h2>
+<p><strong>三条信号共同说明，AI系统的瓶颈正在从单一芯片资源转向“密度、控制域和注入率”的耦合：</strong></p>
+<ul>
+<li>157PB单柜提高介质密度，同时扩大重建与整柜事件的影响；</li>
+<li>Pathways扩大统一计算域，同时把控制器和状态恢复推入关键路径；</li>
+<li>CN6000提高链路速率，同时要求PCIe 6.0、NUMA和每核消息处理同步升级。</li>
+</ul>
+<p>架构评估应从峰值容量、芯片数和端口速率，转向故障下可用容量、有效训练进度、应用注入率和P99恢复时间。</p>
+</section>
+
+<section>
+<h2>会议雷达</h2>
+<ul>
+<li><strong>SC26会前：</strong>会议于11月15日至20日举行，展览重点日期为11月17日至19日。新增厂商预告包括800G Fabric、Rubin NVL8、BlueField-4/ConnectX-9/Spectrum-6、CXL内存PoC、KV Cache存储和高密液冷。会中只采纳带测试条件、拓扑、功耗、故障恢复或量产状态的原始资料。</li>
+<li><strong>OCP 2026会后：</strong>资料库仍持续提供224G AEC、224/448G铜/光连接、800VDC、AI Cluster、CXL与Photonics录播/PPT。本轮未发现足以改变Scale-Up 128/512/1000+边界或NPO FRU/MTTR/TCO判断的新量化修订。</li>
+<li><strong>液冷专项：</strong>OCP活动页新增面向Vera Rubin/Feynman高TDP与45℃温水运行的冷却液洁净度专题预告；重点跟踪微通道尺度、颗粒上限、过滤、腐蚀及长期堵塞数据，不把预告当作已验证规格。</li>
+<li><strong>GTC Washington：</strong>11月30日至12月3日举行，继续验证Rubin、DSX、Context Memory、GPU快照、网络与电源冷却的正式产品边界。</li>
+<li><strong>云栖2026会后：</strong>未发现AL144、AL64、SNPO、ALink、HBD边界、单卡Scale-Up带宽或NPO光源位置的新正式资料。</li>
+</ul>
+<p><strong>会议来源：</strong><a href="https://sc26.conference-program.com/">SC26官方完整日程</a>｜<a href="https://www.opencompute.org/events/ocp-summit/2026-ocp-global-summit/recorded-content/">OCP 2026会后资料库</a>｜<a href="https://www.opencompute.org/events/">OCP活动与液冷专题</a>｜<a href="https://www.nvidia.com/gtc/dc/">NVIDIA GTC Washington</a></p>
+</section>
+
+<section>
+<h2>系统健康自检与告警</h2>
+<p>五个RSS文件均可读取：主简报最新为2026-11-12，竞品与成本周报为2026-11-09，下一代架构专题为2026-11-07，AI Memory为2026-11-06，关键技术预警最新发布为2026-10-27。各源现有GUID、CDATA和闭合结构检查正常；日报与周报未超过“周期＋36小时”的疑点阈值。</p>
+<p><strong>系统告警：</strong>任务状态查询显示“超节点关键技术预警”仍处于暂停状态。最近一次运行于2026年11月10日完成，记录结果不是失败；但暂停意味着后续可能不会继续扫描。本次只读检查，没有修改该任务或其他自动化。</p>
+<p>其余可读取任务均显示启用；Follow端缓存与客户端分发状态无法读取，因此不对订阅端延迟作判断。</p>
+</section>
+</article>]]></description>
+    </item>
+<item>
       <title>AI算力架构前沿简报｜2026-11-12</title>
       <link>https://raw.githubusercontent.com/YanLiang518/ai-supernode-rss/main/archive/2026-11-12.html</link>
       <guid isPermaLink="false">ai-supernode-brief-2026-11-12</guid>
