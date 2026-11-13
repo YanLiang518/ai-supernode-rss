@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI算力架构前沿简报｜2026年11月14日</title>
+<style>
+:root{color-scheme:light dark;--bg:#fff;--fg:#18212f;--muted:#536176;--line:#d8dee8;--accent:#1769aa;--quote:#f2f6fa;--warn:#9a3412;--warnbg:#fff7ed}
+@media(prefers-color-scheme:dark){:root{--bg:#111827;--fg:#e5e7eb;--muted:#a9b4c4;--line:#374151;--accent:#7cc4ff;--quote:#1f2937;--warn:#fdba74;--warnbg:#2b1d16}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--fg);font-family:system-ui,-apple-system,"Segoe UI",sans-serif;line-height:1.72}
+main{max-width:920px;margin:0 auto;padding:28px 22px 64px}h1{line-height:1.25}h2{margin-top:2.1em}h3{margin-top:1.5em}a{color:var(--accent)}
+hr{border:0;border-top:1px solid var(--line);margin:2.5em 0}blockquote{margin:1.5em 0;padding:.25em 1em;border-left:4px solid var(--accent);background:var(--quote)}
+ul{padding-left:1.35em}header p{font-size:1.04rem}footer{color:var(--muted);margin-top:3em;border-top:1px solid var(--line);padding-top:1em}
+</style></head><body><main><article>
+<header>
+<h1>AI算力架构前沿简报｜2026年11月14日</h1>
+<p><strong>今日判断：</strong>本期三条信号分别把AI系统的瓶颈推向存储分层、推理运行时和电力选址：HPE用32TB SAS-4 HDD与SSD重组HPC存储，并把液冷遥测和控制纳入机架控制器；SGLang由单一开源引擎升级为跨NVIDIA、AMD、Intel、Google、Meta与云服务商的共同优化层；Torus则把1–20MW推理容量、飞轮/电池储能、冷却和网络预制成可部署单元，试图在既有电力接入处放置算力。</p>
+<p><strong>核心判断：</strong>下一阶段的AI基础设施竞争不只是更快芯片，而是能否把冷热数据、异构加速器和受限电力容量编排成可持续运行的系统。厂商峰值、规划与已交付能力必须分开验收。</p>
+</header>
+
+<section><h2>信号总览</h2><ul>
+<li><strong>HPE E2000与Rack Management Controller：</strong>混合配置每柜最高116GB/s读、92GB/s写；32TB SAS-4 HDD机箱支持74或100盘。液冷控制器计划2027年3月先支持Cray GX，AMD/NVIDIA机架支持计划2027年6月跟进。</li>
+<li><strong>SGLang Consortium：</strong>硬件、云与模型方建立共同路线图，重点覆盖推理、推理型模型、多模态、分布式推理和硬件优化；技术决策与代码接纳仍由项目维护者负责。</li>
+<li><strong>Torus Foundry：</strong>厂商称可在12–16周内部署1–20MW站点，以飞轮与电池吸收功率峰值；已披露首批客户与数千GPU，但47,000 GPU是2027年底目标。</li>
+<li><strong>成熟度：</strong>HPE新品尚待2027年供货；SGLang联盟是治理与协作机制而非新性能基准；Torus的部署速度、节水和规模数据主要来自厂商，缺少独立的站点级验收结果。</li>
+</ul></section>
+
+<hr/>
+<section>
+<h2>01｜HPE把混合存储与液冷控制同时下沉到机架：容量、数据流和热控制开始共用运维边界</h2>
+<h3>① 业务变化是什么</h3>
+<p>2026年11月12日，HPE公布HPE Cray Supercomputing Storage Systems E2000混合配置与HPE Rack Management Controller。E2000把SSD与32TB SAS-4 HDD组合，新增支持74盘或100盘的SAS-4机箱；HPE给出的单柜峰值为116GB/s读取和92GB/s写入，并称相较其选定的DDN混合方案每柜吞吐最高高41%。</p>
+<p>HPE还称，在满足1024 GPU集群性能要求、比较15PB可用容量的厂商分析中，该混合配置的采购成本可比全闪存方案低最高82%；每柜可用容量相较当前HPE混合E2000最高增加32%。这些是厂商选定口径，不是独立、全工作负载基准。</p>
+<p>Rack Management Controller提供实时监控、漏液检测、自动控制与机架级视图，并接入HPE Foundation、Composable和Observability管理软件。混合E2000计划2027年初可用；控制器计划2027年3月支持Cray GX，AMD与NVIDIA机架支持计划2027年6月提供。</p>
+
+<h3>② 为什么发生</h3>
+<p>训练数据、Checkpoint和推理KV/检索状态同时增长，但大部分数据并不需要长期驻留昂贵闪存。大容量SSD价格上涨后，系统需要把热数据留在SSD、容量数据放在HDD，同时让带宽仍能匹配千卡集群。另一方面，液冷机架的泵、阀、CDU、漏液传感器和功率状态若各自管理，会使扩容、故障定位与联锁变复杂。</p>
+<p><strong>本简报判断：</strong>HPE的商业目标是把“存储分层”和“机架热控制”都纳入整套超级计算管理面，使客户按GPU规模购买可预测的数据流和冷却可用性，而不是分别集成文件系统、盘柜和设施控制。</p>
+
+<h3>③ 计算与数据特征如何变化</h3>
+<p>混合E2000要求缓存和数据放置判断更准确：顺序样本扫描、模型装载与Checkpoint可利用HDD容量；元数据、随机读取和恢复热点更依赖SSD。116/92GB/s若由单柜共享，1024 GPU平均只相当于约113/90MB/s每GPU，实际可用值还要扣除冗余、协议、后台Scrub与重建。</p>
+<p>机架控制器则把温度、流量、压差、漏液和功率遥测带入计算管理域。训练调度器可在热余量下降或局部泄漏时降功率、排空节点或迁移作业，而不是等设施系统触发整柜停机。</p>
+
+<h3>④ 触碰哪项技术边界</h3>
+<p><strong>开始失效的假设是：存储分层只由容量与平均带宽决定，液冷只由设施侧独立管理。</strong></p>
+<ul>
+<li><strong>尾延迟：</strong>HDD层在混合随机I/O、重建和Checkpoint并发下可能拖长启动/恢复P99；峰值GB/s不能替代小文件、混合读写与降级测试。</li>
+<li><strong>故障耦合：</strong>单柜数据、冷却与控制高度集成后，控制器、传感器或网络失效可能同时影响计算与存储运维。</li>
+<li><strong>控制闭环：</strong>漏液检测后的动作必须与GPU功率、阀门、泵和作业Checkpoint有明确优先级；误报、传感器漂移或固件升级不能引发大范围停机。</li>
+<li><strong>比较口径：</strong>41%吞吐与82%成本优势来自HPE指定竞品和假设，尚不能外推到不同对象大小、冗余策略、介质价格和生命周期。</li>
+</ul>
+
+<h3>⑤ 硬件与架构应对</h3>
+<ul>
+<li>建立SSD—HDD—对象存储分层，按数据温度、恢复价值与作业阶段迁移，而非固定文件目录绑定介质。</li>
+<li>为Checkpoint、重建和训练读取设置独立QoS与带宽保留，验证故障降级时GPU等待比例。</li>
+<li>把CDU、泵、阀、流量、压差、漏液和机架功率纳入统一遥测，但保留设施安全PLC与计算控制面的故障隔离。</li>
+<li>控制器需支持冗余、离线安全状态、传感器交叉验证和可回滚固件；作业调度器应理解热/液冷故障域。</li>
+<li>验收同时测每柜持续读写、元数据P99、单盘/节点重建、漏液联锁时间、误报率和控制器故障后的降级方式。</li>
+</ul>
+<blockquote><p><strong>架构师结论：</strong>HPE的新增价值不在单个吞吐数字，而在把数据温度和机架热状态都变成可调度资源。只有在故障和混合负载下仍能缩短GPU等待，混合介质与智能液冷控制才会转化为有效算力。</p></blockquote>
+<p><strong>原始来源：</strong><a href="https://www.hpe.com/us/en/newsroom/press-release/2026/11/hpe-addresses-industry-demand-for-scalable-hpc-solutions-with-worlds-fastest-hybrid-supercomputing-storage-and-intelligent-rack-management.html">HPE正式公告，2026-11-12</a></p>
+</section>
+
+<hr/>
+<section>
+<h2>02｜SGLang成立跨硬件联盟：推理引擎开始成为异构加速器的共同性能接口</h2>
+<h3>① 业务变化是什么</h3>
+<p>2026年11月12日，LMSYS Org在首届SGLang Summit宣布成立SGLang Consortium，创始成员包括NVIDIA、AMD、Intel、Google、Meta、Cloudflare、Modal和RadixArk。联盟聚焦前沿模型、推理型负载、多模态、分布式推理和硬件优化；各成员指定技术代表，每年参加两次路线图会议，并可通过工程、测试资源与联合开发参与。</p>
+<p>项目维护者继续负责技术决策与代码接纳。LMSYS称SGLang运行在数十万GPU上并用于多家大型生产部署；该规模为项目方披露，未给出统一的芯片代际、利用率、请求分布或独立审计。</p>
+
+<h3>② 为什么发生</h3>
+<p>推理负载已从短问答变为长上下文、Reasoning、多模态和Agent工具循环。不同GPU/加速器拥有不同HBM、互联、矩阵精度、编译器与通信栈，如果每家硬件维护独立Serving实现，模型新特性、KV缓存、并行策略和量化支持会重复开发且难以比较。</p>
+<p><strong>本简报判断：</strong>联盟试图把推理引擎变成类似编译器/运行时的共同接口：模型开发者面对稳定语义，硬件厂商在Kernel、通信、内存管理和调度层竞争。商业目标是缩短新模型落地时间并降低硬件切换成本，而不是消除硬件差异。</p>
+
+<h3>③ 计算与数据特征如何变化</h3>
+<p>Reasoning与Agent请求的输出长度和工具等待高度可变；多模态请求又混合图像/视频Prefill与文本Decode。运行时必须同时调度Prefill、Decode、KV Cache、Prefix复用、张量/流水线/专家并行，并跨不同硬件后端保持一致的模型语义。</p>
+<p>共同推理层还会把“硬件性能”暴露为可测量接口：TTFT、ITL、Goodput、缓存命中、抢占恢复与每任务能耗可以在同一工作负载下比较。但若优化只针对少数公开Benchmark，真实多租户尾延迟仍可能被掩盖。</p>
+
+<h3>④ 触碰哪项技术边界</h3>
+<p><strong>开始失效的假设是：推理框架只是上层软件，换硬件只需重新编译Kernel。</strong></p>
+<ul>
+<li><strong>内存语义：</strong>KV分页、Prefix缓存、量化和跨节点迁移与HBM容量、DMA、互联及一致性紧密耦合。</li>
+<li><strong>调度长尾：</strong>Reasoning长度和工具调用不可预测，固定Batch难以同时满足低延迟与高利用率。</li>
+<li><strong>多厂商一致性：</strong>数值精度、算子融合、Collective、故障恢复和可观测性必须有共同测试，否则“支持”不等于生产等价。</li>
+<li><strong>治理：</strong>成员既是合作方又是硬件竞争者；路线图会议本身不能保证补丁、基准与性能数据公开。</li>
+</ul>
+
+<h3>⑤ 硬件与架构应对</h3>
+<ul>
+<li>推理集群按Prefill、Decode与工具执行分池，并让调度器读取上下文长度、缓存位置、SLA与硬件能力。</li>
+<li>在HBM—主存—CXL/扩展内存—NVMe间建立KV分层，运行时记录模型版本、租户与Prefix身份。</li>
+<li>为异构后端建立统一的算子正确性、TTFT/ITL/Goodput、功耗、故障恢复和多租户P99测试套件。</li>
+<li>NIC/DPU承担跨节点KV搬运、限速、加密与租户隔离，减少CPU和GPU同步开销。</li>
+<li>硬件采购从“能否运行模型”升级为“在同一SGLang工作负载下，每个完成任务的成本、尾延迟和恢复能力”。</li>
+</ul>
+<blockquote><p><strong>架构师结论：</strong>SGLang联盟的架构意义是把推理运行时提升为硬件生态的共同控制层。真正价值要由跨厂商可复现基准、生产故障数据和代码合入速度证明，而不是成员名单本身。</p></blockquote>
+<p><strong>原始来源：</strong><a href="https://www.lmsys.org/blog/2026-11-12-sglang-consortium/">LMSYS SGLang Consortium公告，2026-11-12</a></p>
+</section>
+
+<hr/>
+<section>
+<h2>03｜Torus Foundry把算力搬到现有电力接入点：推理集群开始由“芯片选址”转向“电力选址”</h2>
+<h3>① 业务变化是什么</h3>
+<p>2026年11月11日，Torus发布Foundry模块化推理基础设施并宣布5亿美元增长资本。厂商称Foundry把电力、储能、冷却、网络和计算预制为1–20MW站点，可利用既有变压器与表后余量，在合同到Token的12–16周内上线；现场准备约一周，安装调试一至两天。</p>
+<p>每个站点配套Torus Reserve飞轮与电池系统，用于功率峰值、快速爬升、负荷削减和断电备援。Torus称Foundry已有首批客户、部署数千GPU，并计划2027年底超过47,000 GPU；生产线当前目标500MW IT负载、远期1GW。已部署数量、12–16周和95%节水均为厂商披露，未提供独立站点清单、PUE/WUE、可用率或并网验收。</p>
+
+<h3>② 为什么发生</h3>
+<p>新建超大数据中心常受变电站、输电、许可和建设周期限制；同时，企业推理需要低延迟、数据主权和本地控制，不一定适合全部集中到远端园区。把较小的模块化算力放到已有电力和光纤附近，可绕开部分新建园区周期。</p>
+<p><strong>本简报判断：</strong>Torus的商业目标是把“未充分利用的接入容量”转化为可售推理算力，并用储能把GPU的瞬时功率阶跃整形成电网可接受的负荷。它卖的不是单一GPU集群，而是电力接入、负荷整形和运维的一体化交付。</p>
+
+<h3>③ 计算与数据特征如何变化</h3>
+<p>分布式1–20MW站点更适合持续、地域相关或单租户推理，但会把模型权重、KV Cache、日志与更新分散到多个地点。控制面需要跨站点做模型版本、容量、数据驻留和故障路由；Scale-out训练式全局同步不适合跨广域网络。</p>
+<p>储能把电网看到的负荷与GPU实际负荷解耦：GPU可能毫秒级升降功率，飞轮/电池吸收峰值，控制器再按接入容量平滑充放电。容量规划因此必须联合计算Token流量、功率波形、储能能量/功率、冷却惯性和网络出口。</p>
+
+<h3>④ 触碰哪项技术边界</h3>
+<p><strong>开始失效的假设是：AI站点规模越大越经济，电力只要按平均IT功率配置即可。</strong></p>
+<ul>
+<li><strong>能量边界：</strong>飞轮擅长高功率短持续，电池负责较长时间；若推理负载长期超过接入上限，储能只能延迟而不能消除容量不足。</li>
+<li><strong>热边界：</strong>“水less闭环”不等于低能耗；高环境温度下干式散热可能增加风机、泵和压缩机功耗。</li>
+<li><strong>网络边界：</strong>分布式站点需要足够光纤与模型分发带宽；广域故障会影响控制、缓存一致性和请求路由。</li>
+<li><strong>可维护性：</strong>数十个小站点会增加备件、现场人员、安防、固件和电池维护对象，可能抵消预制部署收益。</li>
+<li><strong>证据边界：</strong>47,000 GPU、500MW/1GW产能与12–16周是目标或厂商口径，不能等同于已验收容量。</li>
+</ul>
+
+<h3>⑤ 硬件与架构应对</h3>
+<ul>
+<li>把GPU功率上限、储能SoC、接入容量、冷却余量和请求优先级纳入统一调度器。</li>
+<li>飞轮与电池分工覆盖毫秒至分钟功率阶跃，并设置长期超载时的Token限流与作业迁移。</li>
+<li>站点采用可替换计算Tray、标准化电力/液冷/光纤边界，避免20年电力资产绑定单代GPU。</li>
+<li>模型权重与热门Prefix在站点本地缓存，日志和冷数据异步汇聚；跨站点只传必要状态。</li>
+<li>验收必须公开合同到上线周期分解、接入MW、储能持续时间、PUE/WUE、SLA、故障切换、维护工时和每有效Token成本。</li>
+</ul>
+<blockquote><p><strong>架构师结论：</strong>“把芯片带到电力旁”是对接电瓶颈的真实架构回应，但模块化与储能不会创造持续电量。其成败取决于站点级负荷整形、网络、运维和可升级性，而不是预制箱体本身。</p></blockquote>
+<p><strong>原始来源：</strong><a href="https://www.torus.co/news/torus-launches-modular-ai-infrastructure-foundry">Torus Foundry正式公告，2026-11-11</a></p>
+</section>
+
+<section><h2>今日架构主线</h2>
+<p><strong>三条信号共同把“资源编排”从GPU扩展到数据温度、运行时和电力波形：</strong></p>
+<ul><li>HPE让存储介质和液冷机架状态进入统一运维域；</li><li>SGLang让不同加速器通过共同推理运行时竞争；</li><li>Torus让电力接入和储能状态直接决定推理容量。</li></ul>
+<p>架构评价应围绕每个完成任务的GPU等待、数据移动、缓存复用、功率峰值、恢复时间和运维成本，而不是分别追逐峰值GB/s、成员名单或名义MW。</p>
+</section>
+
+<section><h2>会议雷达</h2><ul>
+<li><strong>SC26会前：</strong>会议将于2026年11月15–20日在芝加哥举行。11月17日TeraCule液冷演讲摘要称，其17.6kW晶圆级验证降低热阻55%、压降67%，并扩展到250W/cm²；会中需取得测试台、流量、冷却液温度、热均匀性、泵功与可靠性，摘要数字暂列为演讲方声明。</li>
+<li><strong>SC26 KV专项：</strong>11月18日VDURA演讲将讨论“本地SSD一致缓冲＋全局命名空间＋RDMA/DMA＋异步KV写回”。重点追问命中率、每请求写放大、SSD耐久、恢复P99和何时持久化优于重算；会前摘要没有性能数字。</li>
+<li><strong>OCP 2026会后：</strong>官方资料库仍覆盖224/448G、NPO/CPO、800VDC和高功率机架。本轮没有发现改变既有Scale-Up 128/512/1000+端口/radix边界，或NPO FRU、MTTR与全生命周期成本结论的新量化修订。</li>
+<li><strong>云栖2026历史跟踪：</strong>未发现阿里云正式新文档补充AL144、AL64、SNPO/ALink的GPU—交换端口映射、真实HBD边界、单卡光带宽、光源FRU、误码率、MTTR或液冷/供电验收；不把9月会期内容当作本周新闻。</li>
+</ul>
+<p><strong>会议原始来源：</strong><a href="https://sc26.conference-program.com/presentation/?id=exforum120&sess=sess561">SC26液冷演讲议程，2026-11-17</a>｜<a href="https://sc26.conference-program.com/presentation/?id=exforum178&sess=sess487">SC26持久KV Cache演讲议程，2026-11-18</a>｜<a href="https://www.opencompute.org/events/ocp-summit/2026-ocp-global-summit/recorded-content/">OCP 2026官方录播与PPT目录</a></p>
+</section>
+
+<section><h2>系统健康自检</h2>
+<ul>
+<li>五个RSS文件均可读取；最新条目分别为：日报2026-11-13、技术预警2026-10-27、竞品成本2026-11-09、下一代架构2026-11-07、AI Memory 2026-11-13。</li>
+<li>五份最新归档链接均已读取成功；本轮对五个RSS执行结构检查，未发现未闭合标签、重复最新GUID或失效最新归档。</li>
+<li><strong>系统告警：</strong>“超节点关键技术预警”任务当前为暂停状态；其最近一次记录运行于2026-11-10并完成、结果为未达到条件触发门槛。暂停不是“无变化所以未发”，后续不会自动检查，建议人工确认是否为有意暂停。本任务未自行修改其状态。</li>
+<li>竞品成本、下一代架构、AI Memory与本日报任务状态可用，最近周期未见明确GitHub发布失败。Follow/第三方阅读器缓存延迟无法从仓库侧判定。</li>
+</ul>
+</section>
+</article><footer>公开资料架构分析；厂商目标与本简报推断均已显式区分。发布于北京时间2026年11月14日。</footer></main></body></html>
