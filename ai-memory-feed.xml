@@ -1,12 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/">
   <channel>
+<item><title>AI Memory 周报｜2026-11-13</title><link>https://raw.githubusercontent.com/YanLiang518/ai-supernode-rss/main/ai-memory-archive/2026-11-13.html</link><guid isPermaLink="false">ai-memory-2026-11-13</guid><pubDate>Fri, 13 Nov 2026 17:01:00 +0800</pubDate><description><![CDATA[<article><h2>本周长期架构认知</h2><ol><li><strong>800VDC与54V按全链路比较：</strong>电流比14.81及等电阻局部铜损比219.5不能代替转换热耗、保护、冗余和维护的系统评价。<a href="https://raw.githubusercontent.com/YanLiang518/ai-supernode-rss/main/next-gen-architecture-archive/2026-11-07.html">公开来源</a></li><li><strong>异构Prefill/Decode应计入KV交接成本：</strong>跨芯片状态迁移、网络排队、调度和P99尾延迟决定真实收益。<a href="https://raw.githubusercontent.com/YanLiang518/ai-supernode-rss/main/archive/2026-11-07.html">公开来源</a></li><li><strong>Agent/GPU快照使恢复带宽成为容量变量：</strong>应同时核算快照存储、恢复P99、兼容性及并发恢复风暴。<a href="https://raw.githubusercontent.com/YanLiang518/ai-supernode-rss/main/archive/2026-11-12.html">公开来源</a></li><li><strong>高密存储应按有效容量和重建窗口评价：</strong>原始PB/柜不等于可用容量或可持续吞吐，需验证故障域与重建网络。<a href="https://raw.githubusercontent.com/YanLiang518/ai-supernode-rss/main/archive/2026-11-13.html">公开来源</a></li></ol><p>私人Notion已更新。公开规格和研究原型不等同于独立量产验收。</p></article>]]></description></item>
+
     <title>AI Memory 知识沉淀周报</title>
     <link>https://github.com/YanLiang518/ai-supernode-rss</link>
     <description>每周长期可复用知识的公开、脱敏摘要；涉及非公开信息的内容不会发布。</description>
     <language>zh-cn</language>
     <pubDate>Fri, 06 Nov 2026 17:00:00 +0800</pubDate>
-    <lastBuildDate>Fri, 06 Nov 2026 17:00:00 +0800</lastBuildDate>
+    <lastBuildDate>Fri, 13 Nov 2026 17:01:00 +0800</lastBuildDate>
     <ttl>15</ttl>
     <atom:link href="https://raw.githubusercontent.com/YanLiang518/ai-supernode-rss/main/ai-memory-feed.xml" rel="self" type="application/rss+xml"/>
     <item>
