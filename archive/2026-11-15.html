@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>AI算力架构前沿简报｜2026年11月15日</title>
+</head>
+<body>
+<article>
+<header>
+<h1>AI算力架构前沿简报｜2026年11月15日</h1>
+<p><strong>观察窗口：</strong>北京时间11月14日05:00—11月15日05:00。过去24小时未检索到足以改变系统架构、且有一手证据支撑的新发布；按规则回溯7天，并优先补扫OCP 2026会后资料。</p>
+<p><strong>今日判断：</strong>Agent推理的关键状态已不只是“最近访问过的KV”，而是“仍被哪个上下文分支引用”；Scale-Up、Scale-Out、Scale-Across必须分开核算，不能用十万卡Scale-Out证明千卡Scale-Up；NPO的“可插拔”也不等于在线热插拔。与此同时，OCP的800V差分直流侧车已把MW级功率、瞬态和维护要求写入参考规范。</p>
+</header>
+
+<section>
+<h2>信号总览</h2>
+<ul>
+<li><strong>Agent推理：</strong>动态Prefill/Decode资源比例与Agent上下文感知KV管理需要解耦；36张GB300实测、256张实机扩展和3072张仿真给出量化证据。</li>
+<li><strong>Scale-Up边界：</strong>Meta披露MTIA 300的51.2T Ethernet Scale-Up和72加速器/机架下一代预览；OCP目录出现“5000+ GPU多机架Scale-Up”方案，但公开页面没有足够拓扑与实测细节。</li>
+<li><strong>NPO/高速电接口：</strong>OpenCPX MSA 1.0定义6.4T/7.2T近封装插座，但模块不支持热插拔；OIF新启动448G RTLR、200G/lane BiDi O-band和40W ELSFP项目。</li>
+<li><strong>供电：</strong>OCP Mt. Diablo v1.0.0定义差分800VDC侧车，目标功率800kW—1.1MW，并量化毫秒级负载阶跃、45—90秒电池备援和端到端效率。</li>
+</ul>
+<p><strong>证据等级：</strong>论文实验与生产运行数据分别标注；OCP/OIF规范中的数值属于设计要求，不等于量产现场表现；厂商预览、项目目标和第三方转述不作为已验证结论。</p>
+</section>
+
+<hr/>
+
+<section>
+<h2>01｜Evolving Infra：Agent工作负载要求PD拆分与KV生命周期联合调度</h2>
+<p><strong>发布日期：</strong>2026-11-09。<strong>证据类型：</strong>arXiv论文预印本及作者实验，尚非跨厂商生产验证。</p>
+<h3>业务变化</h3>
+<p>Agent会在模型请求、工具调用、子Agent等待、上下文压缩之间反复切换。不同任务的Prefill/Decode比例差异很大，且集群负载随时间变化；同一Agent的KV是否还会被复用，取决于上下文分支是否仍然有效，而不是最近一次访问时间。</p>
+<h3>计算与数据特征</h3>
+<ul>
+<li>论文观测到最佳PD资源比例可随工作负载从3P6D变化到7P2D；固定5P4D在部分时段损失最高24%吞吐。</li>
+<li>Claude Code轨迹中，子Agent调用后等待359秒的上下文，后续提示仍有98%可匹配旧KV；但12秒上下文压缩后，匹配率只有14%。单纯LRU会保留已被压缩替代的历史，却可能驱逐仍在等待工具的活跃分支。</li>
+<li>系统把各节点Host DRAM组成共享KV池，GPU HBM作为本地热层；节点可在线切换Prefill/Decode角色，KV不随节点角色变化而失效。论文测得RDMA大块KV搬运约52GB/s，64K—128K token取回中位数约129ms；92%的小于16K token取回中位数约7ms，并可与请求排队重叠。</li>
+</ul>
+<h3>技术边界</h3>
+<p>在36张GB300的实验中，Evolving Infra平均PD角色切换约6.2秒，而Dynamo重新拉起Worker平均约754秒；论文还报告最高约2.73倍吞吐、最高约4.12倍端到端延迟改善和最高约13.92倍P95 TTFT改善。实机扩展到256张GB300，3072张GPU结果为仿真，不能把仿真规模写成生产部署规模。</p>
+<h3>硬件架构应对</h3>
+<ul>
+<li>将HBM视为KV热层、Host DRAM视为跨节点共享L2；优先验证RDMA/NIC注入率、NUMA局部性、Host DRAM容量和KV搬运QoS。</li>
+<li>KV目录应记录活跃Agent分支引用计数、fork/compaction/finish事件及重复副本，而非只记录访问时间。</li>
+<li>PD调度器按“未缓存Prefill工作量＋Decode生成量＋活跃KV局部性”估算负载；异步预取必须在排队期间启动，避免把取回时延叠加到TTFT。</li>
+<li>验收增加PD切换时间、KV复用损失、分支结束后的回收效率、RDMA P99和多租户隔离；不要仅用静态Batch吞吐评估Agent集群。</li>
+</ul>
+<p><strong>架构判断：</strong>Agent基础设施正在从“按请求调度GPU”转向“按上下文分支调度计算与内存”。这会让Host DRAM、RDMA和KV目录成为推理系统的一等资源。</p>
+<p><strong>原始证据：</strong><a href="https://arxiv.org/abs/2611.12304">Evolving Infra: Agent-Adaptive LLM Serving at Scale，2026-11-09</a></p>
+</section>
+
+<hr/>
+
+<section>
+<h2>02｜OCP 2026：必须区分Scale-Up、Scale-Out与Scale-Across</h2>
+<p><strong>资料范围：</strong>OCP Global Summit于2026-10-12至10-15举行；本次核对会后录播目录、Meta官方技术总结及OpenAI公开网络设计。以下属于会后资料梳理，不把过期会期当作本日新发布。</p>
+<h3>已披露的拓扑边界</h3>
+<ul>
+<li><strong>Scale-Up：</strong>Meta称MTIA 300使用Tahan Ethernet Scale-Up交换，交换容量51.2T、每颗MTIA加速器6.4Tbps；下一代预览为每机架72颗加速器、基于102.4T交换芯片。注意这是MTIA，不是72张GPU的通用GPU域规格。</li>
+<li><strong>Scale-Out：</strong>Meta IceCube为102.4T交换机，128×800G非阻塞端口，采用2OU混合液冷/风冷、无PHY设计；FPF让每颗GPU连接8个网络平面，将三层Clos压缩为两层，并使用NIC侧packet spraying和主机/交换机联合控制。</li>
+<li><strong>100K级Scale-Out：</strong>OpenAI MRC把一张800Gb/s NIC拆成8个100Gb/s平面；64×800G交换端口可转为512×100G端口，公开拓扑推算约131,000 GPU可由两层交换连接。MRC已部署在OpenAI最大的GB200超算及Microsoft Fairwater等环境，但131,000是拓扑容量估算，不是公开披露的单一生产集群卡数。OpenAI报告训练期间每分钟出现多次链路flap、曾重启4台T1交换机，MRC下同步训练未出现可测量影响。</li>
+<li><strong>Scale-Across：</strong>Meta BAG是连接建筑、园区和区域的petabit级super-spine，属于跨园区/跨地域网络，不应与机架内Scale-Up混为一谈。</li>
+<li><strong>5000+ GPU多机架Scale-Up：</strong>OCP录播目录列有Eridu/Delos的“An Open Architecture for Multi-rack Scale-up Domain of 5000+ GPUs”演讲。公开目录只确认演讲题目与讲者，没有足够可核验的radix、端口映射、跳数、收敛比、All-Reduce负载、P99时延和生产部署数据，因此只能视作方案/目标线索，不能认定已实现5000+ GPU单一Scale-Up域。</li>
+</ul>
+<h3>可维护性是铜互连扩展的硬边界</h3>
+<p>Meta的OCP演讲摘要指出，机架内有数千条铜连接时，即使连接直通率达到99.9%，统计上仍可能出现约10条坏链路；盲插Cable Cartridge又无法逐条链路独立维护。它意味着连接器/线缆的良率、故障定位和FRU策略必须作为系统设计问题，而非只看单条链路的SI余量。</p>
+<h3>架构应对与结论</h3>
+<ul>
+<li>把Scale-Up、Scale-Out、Scale-Across分成独立网络域，分别定义拓扑、拥塞控制、故障域和维护边界。</li>
+<li>对128/512/1000+ GPU单域，不以“多机架Scale-Up”标题代替证据；至少要求端口映射、交换层级、全双工带宽、收敛比、集合通信实测、链路故障降级和恢复时间。</li>
+<li>铜互连需要链路级可观测性、预检、可定位/可替换的连接单元、备用路径和降带宽继续运行能力；仅靠99.9%单件良率不够。</li>
+</ul>
+<p><strong>原始证据：</strong><a href="https://engineering.fb.com/2026/10/26/open-source/ocp-summit-2026-meta-networking-talks/">Meta OCP 2026网络技术总结，2026-10-26</a>；<a href="https://openai.com/index/mrc-supercomputer-networking/">OpenAI MRC生产网络说明，2026-05-05</a>；<a href="https://www.opencompute.org/events/ocp-summit/2026-ocp-global-summit/recorded-content/">OCP 2026官方录播与PPT目录</a></p>
+</section>
+
+<hr/>
+
+<section>
+<h2>03｜OpenCPX与OIF：NPO可插拔不等于在线热插拔，448G与高功率ELS仍在推进</h2>
+<p><strong>OpenCPX MSA 1.0：</strong>2026-09-16批准，定义6.4T/7.2T的共封装/近封装插座和光模块，主机侧电接口最高212.5Gb/s/lane，并覆盖机械、光、电、热、管理和固件互操作。它是MSA规范，不等同于OCP正式标准。</p>
+<ul>
+<li>规范明确称CPX模块不预期支持hot-plug/hot-unplug；Type-1 RF socket可焊接在ASIC封装基板或近封装PCB，MP socket焊接在主板。即模块可从插座机械拆装，不代表可带电在线更换；Socket也不是压接式现场FRU。</li>
+<li>热规范以冷板覆盖模块顶盖：入口冷却液52°C、Host substrate 85°C、模块顶盖到冷却液等效热阻不高于0.91 K·cm²/W，适用于最高40W模块；更高功率需要更强换热能力。</li>
+<li>OCP 2026还安排了OpenCPX/NPO生态、Meta 51.2T CPO验证及向102.4T演进的专题，但公开目录没有给出NPO量产出货量、现场失效率、FRU更换步骤、MTTR或全生命周期成本的可核验数字。</li>
+</ul>
+<p><strong>OIF 2026-11-09新项目：</strong>Q4技术会议启动7项工作，包括448G/lane EEI-RTLR、200G/lane BiDi O-band单模光纤Scale-Up、ELSFP IA 3.0、40W Power Class 8 Type-3 ELSFP、可插拔模块MACsec管理、CMIS管理接口USB化，以及相干光接口ZRsec。</p>
+<p>这代表448G正在从Framework推进到具体接口项目，200G/lane双向O-band也进入标准化工作；但项目启动不等于最终IA发布或产品量产。40W ELSFP会把外置光源的供电、热设计、冗余和维护进一步推到机架级。</p>
+<h3>硬件架构应对</h3>
+<ul>
+<li>NPO选型必须把Socket焊接工艺、模块拆装工具、冷板拆装、光纤弯折/清洁、板级返修和停机范围一起评估。</li>
+<li>把“模块可拆装”“可现场更换”“可带电热插拔”分成三个不同等级，分别定义MTTR和备件策略。</li>
+<li>448G/200G光链路在最终IA和多厂商互通前，不提前固化IL、BER、Reach、FEC和功耗预算；跟踪OIF后续测试方法及互通结果。</li>
+</ul>
+<p><strong>原始证据：</strong><a href="https://www.opencpxmsa.org/wp-content/uploads/OpenCPX-Specification-v1.0.pdf">OpenCPX Specification 1.0，2026-09-16</a>；<a href="https://www.oiforum.com/oif-launches-seven-new-technical-projects-at-q4-member-meeting-reflecting-accelerating-demand-for-next-generation-connectivity/">OIF Q4新项目公告，2026-11-09</a>；<a href="https://www.oiforum.com/meetings-events/oif-workshop-enabling-an-open-scalable-sustainable-ai-infrastructure/">OIF与OCP联合会议议程，2026-10-13</a></p>
+</section>
+
+<hr/>
+
+<section>
+<h2>04｜OCP Mt. Diablo：800V差分直流侧车把MW级供电要求具体化</h2>
+<p><strong>规范日期：</strong>2026-10-08，Mt. Diablo Disaggregated Power Rack Specification v1.0.0，由Microsoft、Meta、Google共同贡献。它是电源侧车参考规范，不是已部署机柜的现场实测报告。</p>
+<ul>
+<li><strong>供电形态：</strong>独立Power Rack/Sidecar接收三相480/415/400VAC，输出标称±400VDC或差分800VDC，可向多个IT Rack供电；规范目标功率在480VAC输入下为800kW—1.1MW，415VAC下最高1.1MW，400VAC下最高718kW。1.1MW指Power Rack输出能力，不是单个计算机柜功率。</li>
+<li><strong>瞬态：</strong>规范列出小于2ms负载阶跃175% TDP、小于0.5ms阶跃180% TDP、小于50ms阶跃150% TDP；1秒移动平均回到100% TDP。动态负载测试覆盖最高10kHz、每PSU 1A/µs的50%、90%、140%阶跃，输出电压要求3ms内稳定，过冲/欠冲控制在±3%。</li>
+<li><strong>备援与效率：</strong>BBU在100%负载下要求45—90秒备援；端到端效率把冷却、配电、控制和储能/备援损耗计入，480VAC输入下20%负载高于95%、50%负载高于98%、100%负载高于97%。</li>
+<li><strong>维护与保护：</strong>单个DC PDU模块支持最高400kW输出，线缆选项为50kW或100kW；每路具有输出开关、熔断/继电器、残余电流检测，并要求拔线前先断开连接器电压。PSU从机架前侧维护，支持热插拔/热更换。</li>
+</ul>
+<h3>架构应对</h3>
+<p>800V的价值是降低同功率下的配电电流与I²R损耗，但设计重点会转向差分800V绝缘、接地方案、直流电弧、接插件防触电、逐路隔离、残余电流/接地故障检测，以及多Power Rack并联的电流均流与同步上/下电。该规范没有给出所有冷却实现细节，不能仅凭“端到端效率”推断具体液冷拓扑。</p>
+<p><strong>原始证据：</strong><a href="https://www.opencompute.org/wp-content/uploads/2026/10/OCP-Specification-Mt.-Diablo-Disaggregated-Power-Rack-Specification-v1.0.0.pdf">OCP Mt. Diablo Disaggregated Power Rack Specification v1.0.0，2026-10-08</a></p>
+</section>
+
+<hr/>
+
+<section>
+<h2>阿里云AL64/AL144/SNPO/ALink跟踪</h2>
+<p>云栖2026的AL64/AL144发布仍以2026-09-22公开资料为基线，本轮没有找到新的阿里官方规格修订或新的量产/维护数据，不将9月发布会重新包装为本日新闻。</p>
+<p>OCP官方录播目录确认阿里云Feng Zhu、Shu Li在“Beyond DRAM: Byte-Addressable Persistent Memory via Compute Interconnects for AI”作了专题分享，方向与Agent时代的持久化KV、计算互连内存扩展有关。第三方会后摘要将其概括为UMX、CXL池化、UALink和AliSCM分层存储，并转述了推理性能提升数字；但本轮未能从阿里官方公开PPT/论文核验这些具体测试配置与结果，因此不把第三方数字纳入架构基线。后续重点核对AliSCM介质、CXL 2.0实际时延/带宽、UALink接入GPU的路径，以及AL144的Scale-Up域拓扑和FRU边界。</p>
+<p><strong>来源：</strong><a href="https://www.opencompute.org/events/ocp-summit/2026-ocp-global-summit/recorded-content/">OCP官方录播目录</a>；<a href="https://m.x-techcon.com/article/205070.html">第三方OCP会后技术梳理，2026-11-02（仅作线索）</a>；<a href="https://www.besthub.dev/articles/alibaba-cloud-s-panjiu-supernode-cpu-gpu-co-evolution-for-agentic-ai-at-ocp-2026-de1aeb8da132">第三方会议摘要，2026-10-19（性能数字未作一手核验）</a></p>
+</section>
+
+<hr/>
+
+<section>
+<h2>会议雷达｜未来90天与近30天</h2>
+<ul>
+<li><strong>SC26：</strong>11月15—20日，今天开幕；Workshop为11月15—16日及20日，展览11月17—19日。关注GPU网络、KV Cache/存储、液冷、能效和大规模系统集成的现场技术披露。官方议程覆盖AI/ML、架构与网络、云与分布式计算、存储和大规模部署。</li>
+<li><strong>NVIDIA GTC Washington：</strong>11月30日Workshop，12月1—3日会议与展览；12月1日Keynote。11月30日Workshop已列出“Accelerated Networking for AI Infrastructure”，重点跟踪GPU—机架—存储通信方法。</li>
+<li><strong>DesignCon 2027：</strong>2027年2月2—4日。OIF已预告448G电信号与224G CEI进展、能效光互连标准两场Panel，具体时间待公布。</li>
+<li><strong>Digital Infrastructure World：</strong>2027年2月3—4日，San Jose，关注IT/OT融合、设施供电、冷却和控制系统。</li>
+<li><strong>OCP EMEA 2027：</strong>会议为2027年4月6—8日（不在未来90天内），但Call for Presentations于11月16日开放、2027年1月11日截止，值得提前筛选电源、液冷、开放互连和可维护性议题。</li>
+<li><strong>OFC 2027：</strong>2027年3月7—11日（超出90天），继续跟踪448G/224G、CPO/NPO、ELSFP、CMIS和多厂商互通。</li>
+<li><strong>UALink/UEC：</strong>本轮未找到未来90天内已公开确认的专门大会日期；继续跟踪规范修订、互通测试和OCP相关演讲，不把工作组活动误报为正式会议。</li>
+</ul>
+<p><strong>会后资料跟踪：</strong>OCP 2026官方录播目录已开放多轨道视频和PPT。本轮重点核对Networking、Server: Composable Memory Systems、OCP Special Focus: Photonics、OIF Workshop、Rack &amp; Power等资料；公开目录能确认演讲主题，但部分视频/PPT正文仍需逐份核验，未披露的FRU/MTTR/LCC不作推断。</p>
+</section>
+
+<hr/>
+
+<section>
+<h2>系统健康自检</h2>
+<p>只读检查中，主RSS及4个专题RSS均可访问；XML标签结构、CDATA成对闭合、GUID唯一性和ttl=15检查通过；五个最新文章对应的HTML归档均可读取。</p>
+<ul>
+<li>主简报feed：最新2026-11-14，本期写入后应为2026-11-15。</li>
+<li>关键技术预警：最新2026-10-27；对应自动化处于暂停状态。其最近一次运行于2026-11-10正常完成，结果为未达到预警触发条件、未执行GitHub写入；这与“运行后发布失败”不同。</li>
+<li>竞品与成本周报：最新2026-11-09，下一周期尚未逾期。</li>
+<li>下一代架构专题：最新2026-11-07，下一周期尚未逾期。</li>
+<li>AI Memory周报：最新2026-11-13，下一周期尚未逾期。</li>
+</ul>
+<p><strong>限制：</strong>Follow客户端缓存和订阅端分发状态无法读取；不据此判断延迟或故障。本次不修改任何其他RSS文件或自动化状态。</p>
+</section>
+</article>
+</body>
+</html>
