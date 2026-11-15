@@ -1,0 +1,100 @@
+<article lang="zh-CN">
+<h1>超节点竞品与成本变化周报｜2026-11-16</h1>
+<p><strong>观察期：</strong>2026-11-09至2026-11-15（北京时间）；相对上一期2026-11-09周报比较。<strong>口径：</strong>仅记录本周新增公开证据；历史规格仅作对照。厂商宣称、第三方报道、产品规划和已交付状态分别标注。没有公开价格或可比BOM时，不推算采购成本。</p>
+
+<h2>一、摘要：两项值得更新的变化</h2>
+<p>本周最重要的两项增量来自百度与AMD：</p>
+<ul>
+<li><strong>百度（11月12日）：</strong>正式发布天池1024卡超节点，采用光引擎互连，计划2027年推向市场；配套G3.5 KV Cache加速柜。单套产品规模已进入1024卡级，但交换层级、每卡带宽和单一HBD边界没有公开，不能把“1024卡超节点”直接等同于1024卡单层全互联域。</li>
+<li><strong>AMD（11月12日）：</strong>为Helios增加MI450X GPU选项，单GPU 288GB HBM4；AMD同时公布MI455X在Helios上的DeepSeek-R1推理测试结果。Helios的计算/互联配置选择更细，但公开售价和整柜功耗未披露。</li>
+</ul>
+<p>NVIDIA NVL、华为Atlas/CloudMatrix、中兴OEX、阿里云磐久本周没有核实到足以修订其公开硬件基线的新系统规格、量产数据或价格。结论不是“没有研发进展”，而是本周没有足够公开证据支持更新。</p>
+
+<h2>二、本周竞品变化矩阵</h2>
+<table>
+<thead><tr><th>平台</th><th>本周新增</th><th>拓扑/带宽证据</th><th>功率、冷却、维护与价格</th><th>状态判断</th></tr></thead>
+<tbody>
+<tr><td>NVIDIA Vera Rubin NVL72</td><td>未发现本周新增NVL72硬件SKU或Scale-Up拓扑发布；AMD本周的MI455X测试将Vera Rubin作为对照对象</td><td>沿用72 GPU、NVLink 6的公开基线；本周无新端口映射或交换级数</td><td>本周无新公开整柜功率、液冷验收、MTTR或售价</td><td>既有平台量产/供货状态不变；无新增价格证据</td></tr>
+<tr><td>AMD Helios</td><td>11月12日新增MI450X选项；公布MI455X的DeepSeek-R1推理测试结果</td><td>72 GPU、4个Scale-Up cartridge、UALink over Ethernet；官方产品页沿用260TB/s Scale-Up与43TB/s Scale-Out基线</td><td>MI450X/MI455X形成不同HBM容量配置；本周无GPU价格、整柜功耗或维护工时数据</td><td>GPU配置选择扩展；不能仅凭新品公告判断所有OEM整柜已批量交付</td></tr>
+<tr><td>华为CloudMatrix / Atlas</td><td>本周未发现新的Atlas/CloudMatrix硬件发布或公开价格</td><td>沿用9月Atlas 960E/Hi-ONE/UnifiedBus历史基线；本周无新拓扑或NPO端口数据</td><td>无本周新增机柜功率、液冷、MTTR或成交价</td><td>历史发布与厂商量产宣称不变；缺少本周新增交付证据</td></tr>
+<tr><td>中兴OEX</td><td>本周未发现新的OEX系统版本或量产指标</td><td>沿用11月3日官方公开的单柜128卡高带宽域、正交无背板互联基线；本周无新交换/光互联数据</td><td>无本周新增功率、液冷和公开价格</td><td>不调整既有架构与成本假设</td></tr>
+<tr><td>百度天池</td><td>11月12日发布1024卡超节点，配套G3.5 KV Cache加速柜；计划2027年上市</td><td>采用光引擎；厂商称卡间带宽较上一代提升3倍；绝对带宽、光引擎数量、交换层级和单一HBD边界未披露</td><td>未披露整柜功率、液冷参数、维护FRU、MTTR及价格</td><td>正式发布/规划上市，不等于已批量交付</td></tr>
+<tr><td>阿里云磐久AL64/AL144</td><td>本周未发现ALink/SNPO新规格或交付公告</td><td>继续保留云栖2026 AL64/AL144分布式SNPO作为历史基线；本周无新的单GPU光带宽、交换级数或光源部署数据</td><td>无本周新增功率、冷却、维护及公开价格</td><td>不调整历史比较结论</td></tr>
+</tbody>
+</table>
+
+<h2>三、百度天池1024：产品级规模跃迁，不等于单层HBD跃迁</h2>
+<p><strong>事件日期：2026-11-12。</strong>百度世界2026发布天池1024卡超节点。新华社报道确认该系统已正式发布、计划2027年上市，采用光引擎互连，单套可支持5万亿参数模型训练，并可横向扩展至万卡规模。新浪科技现场报道补充了厂商披露的相对性能：卡间互联带宽较上一代提升3倍，训练性能提升2.5倍、推理性能提升3倍。</p>
+<p>配套G3.5 KV Cache显存加速柜用于增强缓存复用。百度披露，在多轮对话且缓存命中的场景下，长上下文推理性能提升2倍、TTFT降低90%、整体吞吐提升7倍。上述均为厂商披露的特定场景结果，不应外推为所有请求、所有缓存命中率下的通用收益。</p>
+<h3>与既有天池单层架构基线的关系</h3>
+<p>百度现有公开产品页仍将天池超节点描述为“32卡一层全互联”。本次1024卡公告给出的是单套超节点的产品规模，没有披露1024卡是否处于同一个全互联交换域、是否采用多层交换、跨柜链路如何组织。</p>
+<p>按卡数计算，1024/32=32，即产品级卡数是既有32卡公开基线的32倍；但这只是卡数比，不是单层HBD规模扩大32倍的证据。当前应将“1024卡单套产品规模”与“单一低跳数Scale-Up域规模”分开记录。</p>
+<h3>仍待公开的关键参数</h3>
+<ul>
+<li>1024卡内部的物理分组、交换层级、每卡双向注入带宽、端到端跳数和时延分布</li>
+<li>光引擎单体速率、数量、光源位置、可更换单元及链路故障隔离方式</li>
+<li>计算柜与G3.5缓存柜的数量、功率、冷却接口、机柜占地和维护流程</li>
+<li>2027年上市对应的客户验收、批量交付节奏、整柜价格及服务备件成本</li>
+</ul>
+<p><strong>成本影响：</strong>成本模型需将1024卡计算系统与G3.5 KV Cache柜分开核算。缓存柜的资本开支、网络端口、存储介质、功耗和软件调度成本，必须与缓存命中带来的GPU节省一起计算；“吞吐提升7倍”不能直接解释为单位Token成本下降7倍。</p>
+
+<h2>四、AMD Helios：MI450X把HBM容量变成可选配置</h2>
+<p><strong>事件日期：2026-11-12。</strong>AMD宣布MI450X加入Helios GPU选项。AMD给出的MI450X单GPU HBM4容量为288GB，并称其核心计算、内存带宽及Scale-Up/Scale-Out连接能力与MI455X相同；AMD Helios产品页列出的MI455X单GPU HBM4容量最高为432GB。</p>
+<p>以Helios 72 GPU机柜配置作纯容量换算：</p>
+<table>
+<thead><tr><th>配置</th><th>单GPU HBM4</th><th>72 GPU理论总容量</th></tr></thead>
+<tbody>
+<tr><td>MI450X</td><td>288GB</td><td>20.736TB</td></tr>
+<tr><td>MI455X</td><td>432GB</td><td>31.104TB</td></tr>
+</tbody>
+</table>
+<p>MI450X相对MI455X的单GPU HBM容量减少33.3%，72 GPU理论总容量减少10.368TB。该换算是原始容量求和，不代表可用共享内存池容量。若模型、上下文长度和并发能够装入较小容量SKU，MI450X可能减少HBM过配；但AMD没有公布两种GPU的价格差，不能直接认定MI450X的采购成本或每Token成本更低。</p>
+<h3>MI455X推理性能披露</h3>
+<p>AMD称，MI455X在Helios上运行DeepSeek-R1的MLPerf Inference Offline配置，达到21,333 tokens/s/GPU；AMD称其比NVIDIA Vera Rubin最新公布的MLPerf Offline结果最高高约30%。AMD脚注说明该结果由AMD Performance Labs于2026年10月测试，比较基准来自MLCommons公开结果。</p>
+<p><strong>比较边界：</strong>这是AMD厂商实验室测试与公开MLPerf结果之间的厂商比较，不应写成“MLCommons已认证MI455X提交结果”。Offline场景侧重吞吐，不等同于带请求到达模型和延迟约束的Server/Interactive场景；AMD本次没有同时给出可对照的整机墙上功率，因此不能由21,333 tokens/s/GPU推导性能/W或生产服务的P99时延优势。</p>
+<p>Helios原有72 GPU、4个Scale-Up cartridge、UALink over Ethernet、260TB/s聚合Scale-Up和43TB/s Scale-Out公开基线本周未变。本次变化是GPU容量SKU和性能证据，不是新的交换层级或机柜拓扑。</p>
+<p><strong>成本影响：</strong>将MI450X/MI455X视为同一Helios架构下的容量分档选项；后续应比较GPU采购价、可容纳模型/上下文、并发密度、HBM利用率和每有效Token成本。没有公开SKU价格、整柜功耗与相同SLO测试前，不计算两种配置的成本优劣。</p>
+
+<h2>五、其余竞品：维持历史基线</h2>
+<h3>NVIDIA NVL</h3>
+<p>本周未发现NVL72新的GPU数量、NVLink交换结构、机柜功率或公开售价更新。仍以72 GPU NVL72、NVLink 6及独立Scale-Out网络为历史基线。AMD本周的MI455X对比声明是竞品性能信息，不代表NVIDIA平台本身发生了架构变化。</p>
+<h3>华为CloudMatrix / Atlas</h3>
+<p>本周未发现新规格。Atlas 960E的4096 NPU SuperPoD、UnifiedBus、Hi-ONE NPO和全液冷仍是9月官方发布基线。华为对Hi-ONE量产状态、系统可用度和功耗节省的数字属于厂商披露；本周没有新增第三方量产交付、现场功率或MTTR验证数据。</p>
+<h3>中兴OEX</h3>
+<p>本周未发现新的OEX硬件版本或公开价格。11月3日中兴官方材料披露的单柜128卡高带宽域、正交无背板和面向更大集群的电交换/光互联路线，作为上一期之前的历史基线保留，不重复计作本周增量。</p>
+<h3>阿里云磐久AL64/AL144</h3>
+<p>本周未发现ALink/SNPO新版本、端口映射、NPO光源维护或量产报价的官方更新。云栖2026公布的AL64/AL144分布式SNPO仍作为历史对照；不能把本周没有新公告解释为方案停止演进。</p>
+
+<h2>六、跨厂商成本与可比边界</h2>
+<p>本周没有六家厂商发布可直接比较的整柜售价、GPU/NPU成交价或完整互联BOM。建议继续采用统一模型：</p>
+<p><strong>单位有效Token成本</strong> =（GPU/加速卡折旧 + Scale-Up互联 + Scale-Out网络 + KV Cache存储 + 供电与冷却CAPEX折旧 + 电费 + 维护与备件 + 软件运营成本）÷ 满足同一模型、精度、并发和SLO的有效输出Token数。</p>
+<p>本周两项更新对成本模型的影响：</p>
+<ol>
+<li><strong>百度：</strong>将计算柜、光互联和G3.5 KV Cache柜拆成独立成本层；缓存收益按实际命中率、缓存驻留时间和有效吞吐测算，不能把特定多轮缓存命中场景的7倍吞吐直接外推。</li>
+<li><strong>AMD：</strong>增加MI450X/MI455X两种HBM容量配置；先按可运行模型集合与HBM利用率判断容量价值，再用公开SKU报价和整柜实测功率计算成本，不按HBM容量比例推算价格。</li>
+</ol>
+<p>本周未获得足以更新的NVIDIA、华为、中兴、阿里云公开价格；也没有新的可比机柜功率、液冷流量/温升、现场维护工时或MTTR数据。故不输出伪精确的每GPU互联成本排名。</p>
+
+<h2>七、结论与下周验证项目</h2>
+<p><strong>结论：</strong>百度天池1024卡是本周最重要的产品规模信息，但其单一HBD边界和交换层级仍未知；AMD Helios新增MI450X容量SKU，并披露MI455X的厂商测试性能，改变的是配置选择和性能比较证据，不是Helios物理互联拓扑。其余竞品的硬件与成本基线暂不调整。</p>
+<ol>
+<li><strong>百度天池：</strong>核实1024卡内部交换层级、每卡双向带宽、端到端时延、光引擎速率/数量，以及G3.5缓存柜的功率、容量和故障域。</li>
+<li><strong>AMD Helios：</strong>获取MI450X与MI455X的正式SKU价格、72 GPU整柜功率和相同模型下Server/Interactive实测；确认21,333 tokens/s/GPU测试对应的完整系统配置及可复现性。</li>
+<li><strong>跨厂商：</strong>继续追踪NVL、Atlas/CloudMatrix、OEX和磐久的正式交付、机柜验收、维护数据及公开报价；只有同口径数据进入成本比较。</li>
+</ol>
+
+<h2>八、公开来源及事件日期</h2>
+<ul>
+<li><a href="https://www.news.cn/tech/20261112/2241773a6d474756811071b96b2c0622/c.html">新华网：百度智能云发布天池1024卡超节点，2026-11-12</a></li>
+<li><a href="https://finance.sina.cn/2026-11-12/detail-iniymwrm3884335.d.html">新浪科技现场报道：天池1024卡、光引擎及G3.5性能数据，2026-11-12</a></li>
+<li><a href="https://cloud.baidu.com/product/tianchi.html">百度智能云天池超节点官方产品页：既有32卡一层全互联基线</a></li>
+<li><a href="https://newsroom.amd.com/news/amd-advances-instinct-mi400-series-ai-scientific-computing/">AMD Newsroom：MI450X加入Helios、MI455X推理测试，2026-11-12</a></li>
+<li><a href="https://www.amd.com/en/products/rackscale-solutions/helios.html">AMD Helios官方架构、72 GPU及Scale-Up/Scale-Out基线</a></li>
+<li><a href="https://mlcommons.org/benchmarks/inference-datacenter/">MLCommons：Inference Datacenter场景、可用性类别与功率测量口径</a></li>
+<li><a href="https://investor.nvidia.com/news/press-release-details/2026/NVIDIA-Vera-Rubin-Opens-Agentic-AI-Frontier/default.aspx">NVIDIA Vera Rubin官方历史平台基线，2026-03-16</a></li>
+<li><a href="https://www.huawei.com/en/news/2026/9/hc-ascend960-supernode">华为Atlas 960E/Hi-ONE官方历史基线，2026-09-17</a></li>
+<li><a href="https://www.zte.com.cn/china/about/news/20261103C2.html">中兴OEX官方历史基线，2026-11-03</a></li>
+<li><a href="https://www.alibabagroup.com/zh-CN/document-2041268239081668608">阿里巴巴2026云栖大会官方信息，2026-09-25</a></li>
+</ul>
+<p><strong>公开信息边界：</strong>本报告不包含任何用户、公司或客户非公开项目架构、内部BOM、目标价格、采购信息、客户需求或私人文件。</p>
+</article>
