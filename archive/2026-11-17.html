@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>AI算力架构前沿简报｜2026年11月17日</title>
+</head>
+<body>
+<article>
+<header>
+<h1>AI算力架构前沿简报｜2026年11月17日</h1>
+<p><strong>观察窗口：</strong>北京时间11月16日05:00—11月17日05:00；必要时回溯至11月10日。另按要求专项补扫OCP Global Summit 2026（10月12—15日）会后录播、技术议题和厂商原始资料。</p>
+<p><strong>今日判断：</strong>Agentic训练与推理正在把“GPU利用率”扩展成训练、生成、沙箱、KV状态和存储的联合调度问题；Scale-Up域扩大后，NVLink与HBM资源不再天然低争用；KV Cache正形成HBM—CXL池化内存—NVMe SSD分层；可重构光网络的收益取决于可预测空闲窗口和状态重建成本。</p>
+</header>
+
+<section>
+<h2>信号总览</h2>
+<ul>
+<li><strong>MLPerf Training v6.1：</strong>首次纳入Qwen3.5-397B的GRPO Agentic Post-training；153个系统、12个千卡以上系统，最大10,240加速器。该规模是跨节点/机架训练集群，不是10,240卡单一Scale-Up域。</li>
+<li><strong>Scale-Up资源争用：</strong>HotNets论文测得KV迁移与Collective重叠时，AllReduce最高增加52%、AllGather/ReduceScatter最高增加83%，Attention最高变慢23.8%；单节点实验已能看到问题。</li>
+<li><strong>KV分层：</strong>OCP 2026的Samsung CXL池化内存演示最高降低TTFT 38%、Goodput提高3.3倍；SK hynix给出256GB CXL 3.2模块及单H100 SSD-KV实验。指标分别属于厂商演示、厂商规格和单节点实验，不能混作生产集群结论。</li>
+<li><strong>可重构Fabric：</strong>SC26 HPE研究显示动态重构需要足够长的空闲窗口；约72秒才开始超过静态方案，160秒达到1.34倍Goodput。</li>
+</ul>
+<p><strong>证据分级：</strong>MLCommons结果页为公开基准数据；HotNets/SC26为论文或会议研究结果；Samsung、SK hynix、NVIDIA及Delta数据分别标为厂商演示、规格或厂商提交结果；由这些数据推导的机柜/网络建议均明确标为架构判断。</p>
+</section>
+
+<hr/>
+
+<section>
+<h2>01｜Agentic Post-training进入系统级基准：训练、推理、沙箱和KV Cache必须一起算</h2>
+<p><strong>发布日期：</strong>2026-11-16。<strong>来源类型：</strong>MLCommons官方MLPerf Training v6.1结果；硬件性能对比另含NVIDIA厂商提交数据。</p>
+<h3>业务变化</h3>
+<p>MLPerf Training v6.1首次加入Qwen3.5-397B的GRPO后训练工作负载。目标不是单纯扩大预训练Token吞吐，而是让模型在软件工程任务中通过多轮工具调用、执行测试、获得奖励并更新策略。Agentic能力的形成因此需要训练、推理生成、容器沙箱和结果评估共同工作。</p>
+<h3>计算与数据特征</h3>
+<ul>
+<li>模型为397B总参数、17B每Token激活的MoE；结合Gated DeltaNet（GDN）与稀疏MoE。GDN以固定大小的压缩状态替代标准Attention随上下文线性增长的KV Cache，是长上下文内存设计的重要变化。</li>
+<li>基准约束包括65,536 Token上下文、最多30轮Agent交互、每题16次生成；训练集700题、验证集251题。验证采用Pass@4质量指标，而不是只看Token吞吐。</li>
+<li>参考系统包含Megatron训练、vLLM生成、NeMo Gym/OpenHands沙箱和Ray编排。数百个并发Rollout同时争用CPU、GPU、内存和存储；训练与生成还需要控制异步权重陈旧度。</li>
+<li>MLPerf Training v6.1共收到153个系统、250项结果，其中57个为云端系统；12个系统使用1,000颗或更多加速器，最大系统为10,240颗。参与硬件包括NVIDIA、AMD和Google，首次纳入Rubin代GPU及Google TPUv7。</li>
+</ul>
+<h3>技术边界</h3>
+<p>“千卡以上训练系统”不等于“千卡以上单一Scale-Up域”。10,240是完整训练作业的集群规模，不能据此推断单跳交换、全域NVLink或单一HBD的端口和拓扑边界。另一方面，Agentic后训练的瓶颈可能在Rollout生成、CPU沙箱、数据装载、策略权重刷新或KV复用；只提升GPU峰值算力未必缩短Time-to-Quality。</p>
+<p>补充核对MLPerf Endpoints的Kimi K3结果：Rubin提交在1,024并发时为41,414 Token/s、P90 TTFT 4.674秒、32颗加速器、8节点，系统Provisioned Power为100.89kW，状态仍为Provisional；GB300提交在同为1,024并发时为13,906 Token/s、P90 TTFT 15.223秒、48颗加速器，Provisioned Power为90kW且结果已Verified。按这两行公开数据推导，Provisioned TPS/kW约为2.66倍；这不是MLCommons官方独立指标，且两边加速器数量不同。MLPerf Endpoints的每瓦吞吐使用Provisioned Power，不是现场电表实测能耗。</p>
+<h3>硬件架构应对</h3>
+<ul>
+<li>把Agent训练平台拆成Policy Training、Rollout/Inference、Sandbox/CPU、KV/数据服务四类资源池，按Time-to-Quality和Pass@k统一调度，而非分别追求GPU利用率。</li>
+<li>为策略权重刷新、Rollout生成、KV Cache读写和沙箱数据I/O配置独立QoS；避免异步权重传输或容器存储I/O侵占训练Collective。</li>
+<li>在硬件选型中同时核算CPU核心与内存、Host DRAM、NVMe容量与写耐久、GPU互联、NIC带宽及功率；Agent沙箱不是免费的软件负载。</li>
+<li>Scale-Up评审分别给出单机架域与跨机架训练集群：明确72-GPU级机架互联、跨机架RDMA/IB/Ethernet、拓扑跳数、收敛比和Collective效率，不能用集群总卡数代替Scale-Up规格。</li>
+</ul>
+<p><strong>厂商路线图补充：</strong>NVIDIA于11月16日在SC26公布Rubin HPC GPU，单GPU超过50,000 CUDA Core，增加Sparse Data Acceleration并采用NVLink 7，目标2028年可用。它面向科学模拟、稀疏数据处理和Agent驱动的科学工作流；目前未公开足以完成系统选型的HBM容量/带宽、功耗、板级接口和整机拓扑数据，应按远期路线图而非近期可交付产品处理。</p>
+<p><strong>原始证据：</strong><a href="https://mlcommons.org/2026/11/mlperf-training-v6-1-results/">MLCommons：MLPerf Training v6.1 Results，2026-11-16</a>；<a href="https://mlcommons.org/2026/09/mlperf-training-llm-post-training/">MLCommons：LLM Post-training benchmark设计，2026-09-24</a>；<a href="https://endpoints.mlcommons.org/report?run=0e23ae90-9b1d-4966-8d14-ed163f4d3702&amp;source=phase2&amp;submission=5a8af467-e182-4c57-9102-402cc0b5d16d">MLPerf Endpoints：Rubin Kimi K3提交</a>；<a href="https://endpoints.mlcommons.org/report?run=632bb8b5-17e8-411b-a414-0b8c64c91644&amp;source=phase2&amp;submission=b987824f-ff60-4444-b532-ac0d77e7229b">MLPerf Endpoints：GB300 Kimi K3提交</a>；<a href="https://mlcommons.org/2026/10/mlperf-endpoints-matters-to-buyers/">MLCommons：Endpoints功耗与指标口径说明</a>；<a href="https://blogs.nvidia.com/blog/rubin-hpc/">NVIDIA：Rubin HPC，2026-11-16</a>。</p>
+</section>
+
+<hr/>
+
+<section>
+<h2>02｜Scale-Up不再天然低争用：KV迁移会反过来拖慢Attention和Collective</h2>
+<p><strong>会议/论文日期：</strong>HotNets ’26，2026-11-16至17。<strong>证据类型：</strong>同行评审会议论文中的B200/B300节点实验与工作负载回放；不是128/512卡生产集群实测。</p>
+<h3>业务变化与计算特征</h3>
+<p>随着Scale-Up域从8颗GPU扩大到机架级，Tensor/Expert/Pipeline/Context Parallelism、FSDP和Prefill-Decode KV搬运越来越多地共用NVLink端点与GPU内存子系统。过去“通信可以异步发出，和计算重叠就不会互相影响”的假设正在失效。</p>
+<ul>
+<li>论文在B200/B300节点上研究LMCache默认256 Token分块的Prefill到Decode推送式KV迁移，并用Qwen3-30B-A3B、vLLM及LMCache回放请求。</li>
+<li>在Batch 2,048的测试点，KV迁移与Decode Collective重叠时，AllReduce延迟最高增加52%，AllGather与ReduceScatter合计延迟最高增加83%；GEMM和Attention等共跑Kernel平均慢5%—10%。</li>
+<li>Attention Kernel最高慢23.8%。即使NVLink尚未饱和，HBM吞吐只有约53%的测试点也出现明显下降，说明争用可能发生在内存控制器、读写服务或GPU端点，而不只是总带宽耗尽。</li>
+<li>不同数据搬运引擎（Copy Engine、TMA、SM驱动Copy）之间还存在不对称竞争，单一传输流最高慢34%。</li>
+</ul>
+<h3>第二篇HotNets研究揭示交换语义的限制</h3>
+<p>《Programmable Scale-Up Switches for Software-Defined GPU Fabrics》在GB200 NVL72上测得，NVLS AllReduce相对Ring在8—16 GPU时仅有约1.07—1.15倍算法带宽，约达到900GB/s NVLink带宽的44.4%；4 GPU及以下没有收益。论文提出SUMO可编程Scale-Up Switch编程模型，以支持动态MoE目的集合和交换侧归约，但它是架构提案，不是已经交付的可编程交换芯片。</p>
+<h3>技术边界</h3>
+<p>上述KV争用实验主要是单节点B200/B300微基准和请求回放，不能直接外推成128/512 GPU域的固定性能损失；但它证明问题在小域内已经存在。域越大、并行维度越多，通信重叠的机会和流量异质性越高，风险只会更值得量化。</p>
+<h3>硬件架构应对</h3>
+<ul>
+<li>运行时不应无条件“尽早发出”所有异步传输；应按NVLink端点、HBM读写、Copy Engine/TMA、Collective关键路径做资源感知调度，决定启动、限速或延后。</li>
+<li>把KV迁移与训练Collective、MoE All-to-All、Decode Attention分成可观测流类，暴露每流吞吐、排队、端点占用和拥塞计数器。</li>
+<li>对不敏感的后台流评估RDMA loopback、NVLink-C2C或独立Scale-Out路径；不能认为把KV从网络迁到NVLink就必然更快。</li>
+<li>对128/256/512 GPU域建立混合压力测试：KV迁移、FSDP AllGather/ReduceScatter、MoE All-to-All、Attention同时运行，测P50/P99、GPU有效算力、HBM读写和故障恢复。</li>
+<li>若考虑可编程Scale-Up交换芯片，需验证动态目的集合、原位归约、缓冲/流控、可观测性、软件API和故障域；仅增加交换容量不一定解决GPU端点和HBM争用。</li>
+</ul>
+<p><strong>架构判断：</strong>未来Scale-Up的核心不只是每GPU多少Tbps，而是能否管理同一GPU端点、HBM和交换资源上的多种通信。对NPO/光Scale-Up而言，光链路提升可达距离和密度，但不会自动消除GPU内存子系统竞争。</p>
+<p><strong>原始证据：</strong><a href="https://doi.org/10.1145/3847290.3859960">HotNets ’26：Understanding Contention in GPU Scale-Up Domains，2026-11-16/17</a>；<a href="https://djapg7v42ea9q.cloudfront.net/pdf/hotnets26-final216.pdf">论文全文PDF</a>；<a href="https://daehyeok.kim/assets/papers/scale-up-hotnets26.pdf">HotNets ’26：Programmable Scale-Up Switches for Software-Defined GPU Fabrics</a>。</p>
+</section>
+
+<hr/>
+
+<section>
+<h2>03｜OCP 2026低曝光高价值议题：KV Cache正在形成CXL池化内存与SSD性能层</h2>
+<p><strong>会议日期：</strong>OCP Global Summit，2026-10-12至15；本轮重新核对Samsung、SK hynix原始资料与演示数据。此项是会后资料补扫，不是11月17日新产品发布。</p>
+<h3>业务变化</h3>
+<p>长上下文、多轮Agent、RAG和多模型工作流扩大了可复用KV工作集。缓存命中率提高后，Prefill瓶颈会从GPU重算转向KV状态搬运；若所有KV都放在HBM，容量成本和并发用户数受限；若只放在SSD，读带宽、PCIe通道和写耐久又会成为瓶颈。</p>
+<h3>公开方案与量化证据</h3>
+<ul>
+<li><strong>Samsung CXL池化演示：</strong>CMM-D基于CXL内存池做弹性分配，厂商公布相对静态内存分配最高降低TTFT 38%、Goodput提高3.3倍。Samsung还披露其内部AI Memory Node生产部署增加L3.5可组合内存层后，KV Cache利用率达到原来的5—7倍。两组数据均为厂商演示/内部生产数据，公开页面没有完整披露模型、并发、容量、P99及基线拓扑。</li>
+<li><strong>SK hynix CMM-DDR5：</strong>第二代256GB CXL 3.2模块，厂商披露带宽80GB/s、相较前代超过2倍，能效提升约30%。其OCP演示包括跨服务器共享KV Cache、Embedding共享及MARS Memory-Centric AI Rack；其中Agent KV共享明确标为PoC。</li>
+<li><strong>SK hynix SSD-backed Prompt Cache：</strong>公开实验使用单张H100 PCIe、Qwen3-14B、LMCache 0.3.1和vLLM 0.9.1。4块NVMe SSD相较1块SSD将TTFT降低42%；进一步通过1MB I/O块、Queue Depth 16、8个发起线程及更大Chunk等I/O优化，再降低约45%。在ShareGPT 0.1—0.5 QPS测试中，优化后的SSD缓存TTFT约为DRAM基线的0.97—1.05倍。</li>
+</ul>
+<h3>技术边界</h3>
+<p>Samsung的38%/3.3倍是厂商演示指标，SK hynix的80GB/s是模块规格，SSD接近DRAM TTFT则是单H100、特定模型和缓存命中条件下的实验；三者都不能直接等同于多机架生产服务的P99。CXL池化内存也不等于HBM，实际GPU取数路径仍要核对Host DRAM、NUMA、PCIe/CXL Switch、DMA和软件拷贝；SSD还必须按每日写入量、DWPD、Over-Provisioning和ZNS策略做耐久性设计。</p>
+<h3>硬件架构应对</h3>
+<ul>
+<li>把KV Cache按访问频率和复用概率分层：HBM放当前Decode热状态，CXL池化DRAM放跨实例/跨节点温热状态，NVMe SSD放可重用但非即时状态；冷KV应与重算成本比较后再保留。</li>
+<li>建立KV目录、租户隔离、Cache TTL、迁移准入、预取和淘汰策略，避免只增加内存容量而没有有效命中率。</li>
+<li>按GPU PCIe通道预算SSD数量；单GPU x16链路最多只能提供有限的主机侧传输预算，不能把多块SSD标称带宽简单相加后当作GPU可用带宽。</li>
+<li>对SSD-backed KV同时验收TTFT、P99、写放大、DWPD、寿命、重建和断电恢复；对CXL池化验收跨主机访问时延、带宽公平性、隔离与故障域。</li>
+</ul>
+<p><strong>架构判断：</strong>Agent Memory不应被简化成“再加一层内存”。真正的设计对象是KV的价值、位置、迁移代价和持久化耐久性；CXL与SSD分别解决容量池化和低成本扩展，但需要软件协同才能转化为Goodput。</p>
+<p><strong>原始证据：</strong><a href="https://semiconductor.samsung.com/events/ocp-2026/">Samsung OCP 2026演示与产品资料</a>；<a href="https://semiconductor.samsung.com/news-events/tech-blog/ocp-global-summit-2026-scaling-innovation-for-the-ai-era/">Samsung OCP会后技术总结</a>；<a href="https://news.skhynix.com/en/ocp-global-summit-2026/">SK hynix OCP 2026技术总结，2026-10-16</a>；<a href="https://github.com/skhynix/LMCache/wiki/Storage-as-a-Performance-Tier-for-LLM-Serving">SK hynix/LMCache：Storage as a Performance Tier for LLM Serving</a>。</p>
+</section>
+
+<hr/>
+
+<section>
+<h2>04｜SC26：可重构AI/HPC Fabric的收益取决于空闲窗口与状态重建</h2>
+<p><strong>演讲时间：</strong>2026-11-16 11:30—11:45 CST（北京时间11月17日01:30—01:45）。<strong>来源类型：</strong>SC26官方会议议程摘要，HPE/Georgia Tech研究。</p>
+<h3>业务变化与实验结果</h3>
+<p>HPE研究评估11种应用、两种边界，覆盖训练、推理、分子动力学、线性代数和图分析，研究通过软件资源组合与实时光路重构改变计算/通信域的可行性。</p>
+<ul>
+<li>关闭Peer-to-Peer通信后，All-to-All带宽下降36.1倍，AllReduce下降16.3倍；HPL无法初始化，训练慢2.23倍，但GPU HPCG和DeepDriveMD在该实验中没有受到影响。</li>
+<li>原型系统的重构后带宽可匹配原生连接，但State Reconstruction会带来明显额外时延。</li>
+<li>动态组合方案约在72秒空闲窗口开始超过静态Goodput；在160秒空闲窗口达到1.34倍Goodput。</li>
+</ul>
+<h3>技术边界</h3>
+<p>这说明光交换/可组合网络不是“重构越频繁越灵活”。如果应用没有足够长且可预测的空闲窗口，拓扑切换和状态重建成本可能抵消收益；不同应用对P2P与Collective的依赖差异也很大。</p>
+<h3>硬件架构应对</h3>
+<ul>
+<li>将OCS/光路重构与作业阶段、Checkpoint、数据迁移和拓扑感知调度结合，优先在长空闲窗口或作业边界切换。</li>
+<li>把状态重建、连接收敛、路由更新、Collective重启和故障恢复计入切换成本，不只比较光交换机的端口数和切换时间。</li>
+<li>在设计Scale-Across/可组合集群时，按应用建立通信敏感度分类；不要把HPL、All-to-All密集训练和通信不敏感作业用同一重构策略。</li>
+</ul>
+<p><strong>架构判断：</strong>OCS更适合有明确阶段边界、可预测空闲窗口的资源重组；对低时延在线推理和频繁小粒度通信，不能假设动态光路重构天然优于固定拓扑。</p>
+<p><strong>原始证据：</strong><a href="https://sc26.conference-program.com/presentation/?id=ws_hpf117&amp;sess=sess136">SC26官方演讲：Workload-Derived Requirements for Reconfigurable AI/HPC Fabrics，2026-11-16</a>。</p>
+</section>
+
+<hr/>
+
+<section>
+<h2>政策与部署风险观察｜BIS发布远程访问先进算力临时最终规则文本</h2>
+<p><strong>发布日期：</strong>2026-11-16。美国BIS发布针对先进半导体远程访问的Interim Final Rule（IFR）文本，关注第三国数据中心向受限主体提供远程算力。文本提出：若一个数据中心或通过数字/物理网络连接、共享资源、平衡负载并复制数据的Linked Data Centers，向Macau或Country Group D:5总部企业提供超过12,000,000 Aggregate TPP的算力访问，可能触发许可要求；同时把新加坡、马来西亚、印度尼西亚、泰国和巴西列入先进计算物项的目的地许可要求范围，并设置特定美国总部主体的条件性例外。</p>
+<p><strong>法律状态必须谨慎：</strong>当前公开IFR文本的生效日期仍写作“Federal Register publication date”，评论截止日期也保留占位符；本次截至北京时间11月17日05:00未核实到正式Federal Register生效公告。因此本期不把它描述为已经生效的全面禁令，也不将其解释为所有先进GPU进入新加坡都被禁止。具体适用范围、物项ECCN、最终用户/最终母公司、远程使用关系和例外条件需由合规/法律团队逐案判断。</p>
+<p><strong>架构影响（推测/风险管理建议）：</strong>跨区域GPU池化、算力转售、远程租户、资源调度和数据复制可能被纳入Linked Data Centers的整体判断。区域云平台应在控制面记录最终用户及Ultimate Parent、物项分类、站点位置、Aggregate TPP、跨站点资源共享/负载均衡/复制关系和访问审计；不能仅靠把GPU放在第三国或拆分逻辑Region就假设规避规则。</p>
+<p><strong>原始证据：</strong><a href="https://www.bis.gov/press-release/bis-issues-rule-addressing-remote-access-american-super-intelligence-technology">美国BIS新闻稿，2026-11-16</a>；<a href="https://www.bis.gov/media/documents/rin-0694-ak50.pdf">BIS IFR文本RIN 0694-AK50</a>。</p>
+</section>
+
+<hr/>
+
+<section>
+<h2>OCP 2026专项补扫｜128/512/1000+ Scale-Up、NPO维护、448G与800VDC</h2>
+<p><strong>资料时间：</strong>OCP Global Summit 2026于10月12—15日举行；本轮复核官方Recorded Content、厂商原始演讲摘要和规格。以下为会后资料盘点，不作为11月17日新发布。</p>
+<h3>Scale-Up规模边界</h3>
+<ul>
+<li>OCP官方录播目录列出Meta的Tahan Ethernet Scale-Up、ESUN验证、Multi-Accelerator Copper Scale-Up测试方法，以及Eridu/Delos的“Multi-rack Scale-up Domain of 5000+ GPUs”演讲。</li>
+<li>5000+是多机架单跳架构提案的演讲题目；公开目录本身没有提供radix、每端口速率、oversubscription、跳数、二分带宽、All-to-All实测和现场故障数据。不能把演讲题目写成已经部署的5000+ GPU Scale-Up产品。</li>
+<li>Alibaba在OCP的公开议题包括“Rethinking AI Scale-up with optics: from pluggable to (n)PO”以及Ethernet Scale-Up验证中的LLR/CBFC进展；这是技术方向/标准验证讨论，不是AL144、AL64、SNPO或ALink的新增产品规格。</li>
+</ul>
+<h3>NPO/CPO量产、FRU与MTTR</h3>
+<p>官方目录列出Meta NPO生态、Oracle NPO部署、Microsoft NPO生态、Ciena OpenCPX、Huawei NPO标准化、外置光源等演讲；但本轮公开资料仍没有找到可复核的NPO量产数量、现场失效率、模块/光源更换MTTR、冷板与FAU拆装工时、备件比例或全生命周期成本。模块可拆、光源可换、模块可带电热插拔是不同维护边界，必须分别验证。</p>
+<h3>224G/448G接口</h3>
+<p>OCP目录包括224G AEC、224/448Gbps铜光连接路径、448G及以上高速互连、448G Co-Packaged Copper、400G/lane光模块连接器和500W-Class HSIO直冷热设计专题。OIF于11月9日启动448G/lane RTLR、200G/lane BiDi O-band、ELSFP 3.0和40W Electrical Power Class 8等项目。它们说明接口、光源和热设计进入下一轮标准化，但项目启动不等于最终IA、互通或量产。</p>
+<h3>800VDC与高功率机柜</h3>
+<ul>
+<li>OCP官方目录列出1MW+ IT Rack开放母排接口、600kW 800VDC Sidecar、800VDC端到端性能要求、训练功率振荡治理和液冷Power Shelf等专题。</li>
+<li>Delta在OCP展示的800VDC In-Row Power Rack标称660kW输出、480kW备援；另有最高2.5MW Liquid-to-Liquid CDU。2.5MW是冷却设备能力，不是单机柜IT功率。具体现场效率、N+1切换、故障隔离和长期可靠性仍需客户数据。</li>
+<li>本轮没有发现OCP 800VDC规范的新版本或能改变既有±400V/800V Sidecar判断的新增量化证据；现有演讲目录中的1MW+标题不能替代规范和现场验收数据。</li>
+</ul>
+<p><strong>阿里跟踪：</strong>过去7天未发现阿里官方新增AL144/AL64/SNPO/ALink物理拓扑、端口映射、单卡光带宽、Scale-Up跳数、光源位置、量产数量或FRU/MTTR数据。云栖2026会期材料继续作为历史基线，不当作本期最新动态。</p>
+<p><strong>原始证据：</strong><a href="https://www.opencompute.org/events/ocp-summit/2026-ocp-global-summit/recorded-content/">OCP 2026官方Recorded Content</a>；<a href="https://www.delta-americas.com/en-US/landing/2026-OCP-Summit">Delta OCP 2026产品展示</a>；<a href="https://www.oiforum.com/oif-launches-seven-new-technical-projects-at-q4-member-meeting-reflecting-accelerating-demand-for-next-generation-connectivity/">OIF七项技术项目公告，2026-11-09</a>。</p>
+</section>
+
+<hr/>
+
+<section>
+<h2>会议雷达｜过去30天与未来90天</h2>
+<ul>
+<li><strong>HotNets ’26：</strong>11月16—17日，正在举行；已补读《Understanding Contention in GPU Scale-Up Domains》和《Programmable Scale-Up Switches》。重点继续追踪Scale-Up资源管理、可编程交换、MoE与KV迁移的实测边界。</li>
+<li><strong>SC26：</strong>11月15—20日，正在举行。未来两天重点场次（均为北京时间）：11月18日00:30 HieraSparse（KV压缩1.2倍、Attention最高4.57倍）；11月18日03:52 Meta HCCL Collective；11月19日00:30 CoreFlow（摘要报告端到端延迟降低57.6%、工作流吞吐提高63.1%）；11月19日01:37 BidKV（摘要报告P95 TTFT降低超过90%、300ms SLO达成率提高14.8个百分点）。这些是论文/会议摘要数据，需会后核对完整实验条件。</li>
+<li><strong>NVIDIA GTC Washington：</strong>11月30日Workshop，12月1—3日会议；重点跟踪Agentic AI、AI Factory、Accelerated Networking和推理系统。<a href="https://www.nvidia.com/gtc/dc/conference-schedule/">官方议程</a>。</li>
+<li><strong>DesignCon 2027：</strong>2027年2月2—4日；重点跟踪224G/448G SI/PI、封装、连接器、线缆和板级热设计。<a href="https://www.designcon.com/">官方会议主页</a>。</li>
+<li><strong>OCP Tech Day @ Digital Infrastructure World：</strong>2027年2月3—4日；官方已明确Rack Track覆盖趋近1MW的开放机柜、多加速器混部、Scale-Up、液冷和800VDC。<a href="https://www.opencompute.org/events/ocp-tech-day/digital-infrastructure-world/">OCP官方议程入口</a>。</li>
+<li><strong>OFC 2027：</strong>2027年3月7—11日，超出未来90天窗口，作为长期跟踪；重点关注NPO/CPO、ELSFP、448G和多厂商互通。</li>
+<li><strong>UALink/UEC：</strong>本轮未发现未来90天内已公开确认的独立大会日期；继续跟踪规范修订、互通测试和OCP相关技术议题，不把工作组活动误报为正式会议。</li>
+</ul>
+</section>
+
+<hr/>
+
+<section>
+<h2>系统健康自检</h2>
+<p>本次只读检查5个RSS文件及其最新归档。5个XML均可读取，结构检查通过，GUID无重复，ttl均为15；Follow客户端缓存和实际拉取时间无法读取。</p>
+<ul>
+<li><strong>主简报feed.xml：</strong>写入前最新11月16日，共88期；本期加入后89期，未超过90期保留上限。</li>
+<li><strong>tech-alert-feed.xml：</strong>最新10月27日，5条，最新归档可读。对应“超节点关键技术预警”自动化已禁用；最近运行11月10日08:28（北京时间），结果未达到条件触发门槛。禁用后没有继续扫描，不能解释为近期持续运行且无变化。</li>
+<li><strong>competitor-cost-feed.xml：</strong>最新11月16日，5条，归档可读。对应周报自动化当前已禁用；11月16日运行已完成并发布，但禁用状态下不会自动产生下一期。</li>
+<li><strong>next-gen-architecture-feed.xml：</strong>最新RSS条目仍为11月7日，共3条；11月14日HTML归档实际存在，但RSS未包含该期，且频道日期仍停留在11月7日。对应自动化11月14日运行完成并报告发布成功，因此可确认“任务运行且归档存在，但RSS未同步该期”的发布一致性异常；仅凭现有信息不能确定是任务写入遗漏还是校验逻辑问题。本次按只读要求未修改。</li>
+<li><strong>ai-memory-feed.xml：</strong>最新11月13日，4条，归档可读；对应自动化启用，最近运行11月13日完成。</li>
+</ul>
+<p><strong>系统告警：</strong>关键技术预警和竞品成本周报自动化当前均已禁用；下一代架构专题存在11月14日归档与RSS条目不一致。其余任务没有超过周期加36小时的未发布疑点。Follow缓存/客户端状态不可见，不据此判断延迟。本次仅更新主简报feed.xml与本期归档，不修改其他RSS和自动化状态。</p>
+</section>
+
+<hr/>
+
+<section>
+<h2>本期结论</h2>
+<p>最重要的架构变化是：Agentic训练/推理已成为CPU、GPU、KV、存储和网络共同参与的系统工作流；Scale-Up扩大后必须具备类似Scale-Out的资源管理与可观测性；KV Cache开始形成HBM、CXL和SSD分层，但性能收益取决于真实数据路径与耐久性；可重构光网络只有在足够长的空闲窗口中才可能兑现Goodput收益。OCP 2026的NPO、448G和800VDC方向明确，但量产FRU、MTTR、TCO及现场可靠性仍是公开证据缺口。</p>
+</section>
+</article>
+</body>
+</html>
