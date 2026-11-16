@@ -41,7 +41,7 @@
 </ul>
 <h3>技术边界</h3>
 <p>“千卡以上训练系统”不等于“千卡以上单一Scale-Up域”。10,240是完整训练作业的集群规模，不能据此推断单跳交换、全域NVLink或单一HBD的端口和拓扑边界。另一方面，Agentic后训练的瓶颈可能在Rollout生成、CPU沙箱、数据装载、策略权重刷新或KV复用；只提升GPU峰值算力未必缩短Time-to-Quality。</p>
-<p>补充核对MLPerf Endpoints的Kimi K3结果：Rubin提交在1,024并发时为41,414 Token/s、P90 TTFT 4.674秒、32颗加速器、8节点，系统Provisioned Power为100.89kW，状态仍为Provisional；GB300提交在同为1,024并发时为13,906 Token/s、P90 TTFT 15.223秒、48颗加速器，Provisioned Power为90kW且结果已Verified。按这两行公开数据推导，Provisioned TPS/kW约为2.66倍；这不是MLCommons官方独立指标，且两边加速器数量不同。MLPerf Endpoints的每瓦吞吐使用Provisioned Power，不是现场电表实测能耗。</p>
+<p>补充核对MLPerf Endpoints的Kimi K3结果：在同为1,024并发时，Rubin提交为41,414 Token/s、P90 TTFT 4.674秒、每用户平均交互速率50.4 Token/s，使用32颗加速器/8节点，报告Operating-point Power为100.89kW，结果仍为Provisional；GB300为13,906 Token/s、P90 TTFT 15.223秒、每用户16.8 Token/s，使用48颗加速器/12节点，报告Operating-point Power为60kW，结果已Verified。按同并发数据推导，总吞吐约2.98倍、每用户交互速率约3倍、P90 TTFT约快3.26倍；按报告功率推导的TPS/kW约1.77倍（这是本报告计算，不是MLCommons官方指标）。NVIDIA宣传的“10倍TPS/kW”采用相同最低交互门槛50 Token/s/用户，但比较的是Rubin 1,024并发与GB300 48并发，是同一SLA门槛下的容量对比，不是相同并发数对比。Rubin结果仍待MLCommons验证；功率是基准报告的Operating-point/Provisioned Power口径，不等于现场电表测得的整机能耗。</p>
 <h3>硬件架构应对</h3>
 <ul>
 <li>把Agent训练平台拆成Policy Training、Rollout/Inference、Sandbox/CPU、KV/数据服务四类资源池，按Time-to-Quality和Pass@k统一调度，而非分别追求GPU利用率。</li>
@@ -50,7 +50,7 @@
 <li>Scale-Up评审分别给出单机架域与跨机架训练集群：明确72-GPU级机架互联、跨机架RDMA/IB/Ethernet、拓扑跳数、收敛比和Collective效率，不能用集群总卡数代替Scale-Up规格。</li>
 </ul>
 <p><strong>厂商路线图补充：</strong>NVIDIA于11月16日在SC26公布Rubin HPC GPU，单GPU超过50,000 CUDA Core，增加Sparse Data Acceleration并采用NVLink 7，目标2028年可用。它面向科学模拟、稀疏数据处理和Agent驱动的科学工作流；目前未公开足以完成系统选型的HBM容量/带宽、功耗、板级接口和整机拓扑数据，应按远期路线图而非近期可交付产品处理。</p>
-<p><strong>原始证据：</strong><a href="https://mlcommons.org/2026/11/mlperf-training-v6-1-results/">MLCommons：MLPerf Training v6.1 Results，2026-11-16</a>；<a href="https://mlcommons.org/2026/09/mlperf-training-llm-post-training/">MLCommons：LLM Post-training benchmark设计，2026-09-24</a>；<a href="https://endpoints.mlcommons.org/report?run=0e23ae90-9b1d-4966-8d14-ed163f4d3702&amp;source=phase2&amp;submission=5a8af467-e182-4c57-9102-402cc0b5d16d">MLPerf Endpoints：Rubin Kimi K3提交</a>；<a href="https://endpoints.mlcommons.org/report?run=632bb8b5-17e8-411b-a414-0b8c64c91644&amp;source=phase2&amp;submission=b987824f-ff60-4444-b532-ac0d77e7229b">MLPerf Endpoints：GB300 Kimi K3提交</a>；<a href="https://mlcommons.org/2026/10/mlperf-endpoints-matters-to-buyers/">MLCommons：Endpoints功耗与指标口径说明</a>；<a href="https://blogs.nvidia.com/blog/rubin-hpc/">NVIDIA：Rubin HPC，2026-11-16</a>。</p>
+<p><strong>原始证据：</strong><a href="https://mlcommons.org/2026/11/mlperf-training-v6-1-results/">MLCommons：MLPerf Training v6.1 Results，2026-11-16</a>；<a href="https://mlcommons.org/2026/09/mlperf-training-llm-post-training/">MLCommons：LLM Post-training benchmark设计，2026-09-24</a>；<a href="https://endpoints.mlcommons.org/report?run=0e23ae90-9b1d-4966-8d14-ed163f4d3702&amp;source=phase2&amp;submission=5a8af467-e182-4c57-9102-402cc0b5d16d">MLPerf Endpoints：Rubin Kimi K3提交</a>；<a href="https://endpoints.mlcommons.org/report?run=632bb8b5-17e8-411b-a414-0b8c64c91644&amp;source=phase2&amp;submission=b987824f-ff60-4444-b532-ac0d77e7229b">MLPerf Endpoints：GB300 Kimi K3提交</a>；<a href="https://mlcommons.org/2026/10/mlperf-endpoints-matters-to-buyers/">MLCommons：Endpoints功耗与指标口径说明</a>；<a href="https://developer.nvidia.com/blog/nvidia-vera-rubin-nvl72-leads-agentic-inference-performance-on-mlperf-endpoints-v1-0/">NVIDIA：Vera Rubin MLPerf Endpoints分析，2026-11-16</a>；<a href="https://blogs.nvidia.com/blog/rubin-hpc/">NVIDIA：Rubin HPC，2026-11-16</a>。</p>
 </section>
 
 <hr/>
