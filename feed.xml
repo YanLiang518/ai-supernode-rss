@@ -180,13 +180,27 @@
 <h2>会议雷达｜过去30天与未来90天</h2>
 <ul>
 <li><strong>HotNets ’26：</strong>11月16—17日，正在举行；已补读《Understanding Contention in GPU Scale-Up Domains》和《Programmable Scale-Up Switches》。重点继续追踪Scale-Up资源管理、可编程交换、MoE与KV迁移的实测边界。</li>
-<li><strong>SC26：</strong>11月15—20日，正在举行。未来两天重点场次（均为北京时间）：11月18日00:30 HieraSparse（KV压缩1.2倍、Attention最高4.57倍）；11月18日03:52 Meta HCCL Collective；11月19日00:30 CoreFlow（摘要报告端到端延迟降低57.6%、工作流吞吐提高63.1%）；11月19日01:37 BidKV（摘要报告P95 TTFT降低超过90%、300ms SLO达成率提高14.8个百分点）。这些是论文/会议摘要数据，需会后核对完整实验条件。</li>
+<li><strong>SC26：</strong>11月15—20日，正在举行。接下来两天的高价值场次（北京时间，按芝加哥CST换算）：</li>
+</ul>
+<ul>
+<li><strong>11月18日00:30｜HieraSparse：</strong>KV Cache压缩1.2倍、同稀疏度Attention最高4.57倍加速，Prefill最高1.85倍；摘要报告在质量无显著下降时Prefill 1.37倍、Decode 1.77倍。属于论文结果，需会后核对模型与稀疏率。</li>
+<li><strong>11月18日03:30｜BaGuaLu-2：</strong>面向10,000+ GPU MoE训练的动态内存波动管理；现场重点问每GPU显存峰值、Expert并行通信、重计算/迁移代价和跨机架拓扑，不能把“10K GPU”题目理解成单一Scale-Up域。</li>
+<li><strong>11月18日03:52｜Meta HCCL：</strong>Meta训练与推理加速器Collective通信，重点核实机架内/跨机架带宽、尾延迟、拓扑约束和故障恢复。</li>
+<li><strong>11月18日04:15｜X-MoE-4D：</strong>面向万亿参数MoE的分层HPC系统，重点核实层级并行与跨层通信边界。</li>
+<li><strong>11月18日05:52｜LRCCL：</strong>长距离RDMA Collective；真实ESnet长途RDMA测试床中，相比MPICH+UCX默认RC传输报告4.2—22.6倍加速，NPB/LLM端到端提升2.0—3.4倍，并覆盖中等与突发丢包。该结果是长途测试床，不是大规模生产云WAN部署。</li>
+<li><strong>11月19日00:30｜CoreFlow：</strong>面向Agentic Workflow的上下文中心资源管理，摘要报告端到端延迟降低57.6%、工作流吞吐提高63.1%。</li>
+<li><strong>11月19日01:37｜BidKV：</strong>基于可恢复容量与中断代价的KV压力抢占；Llama-3.1-8B-Instruct/ShareGPT测试报告P95 TTFT降低超过90%，300ms SLO达成率提高14.8个百分点。需关注其负载分布和缓存命中率边界。</li>
+<li><strong>11月18日00:00—07:00｜SC26 Poster：</strong>优先补看AAFLOW+（多Agent分布式KV Cache状态编排）与Inference in Motion（Agentic AI的存储层KV Offload）；目前以议题/海报为线索，不把标题当作性能结论。</li>
+</ul>
+<p><strong>会后核验问题：</strong>这些论文的性能增益分别来自算法、内存层级、运行时调度还是特定硬件；是否包含真实多机架网络、P99、故障恢复和功耗；在128/512 GPU HBD或更大Scale-Out域中是否仍成立。</p>
+<ul>
 <li><strong>NVIDIA GTC Washington：</strong>11月30日Workshop，12月1—3日会议；重点跟踪Agentic AI、AI Factory、Accelerated Networking和推理系统。<a href="https://www.nvidia.com/gtc/dc/conference-schedule/">官方议程</a>。</li>
 <li><strong>DesignCon 2027：</strong>2027年2月2—4日；重点跟踪224G/448G SI/PI、封装、连接器、线缆和板级热设计。<a href="https://www.designcon.com/">官方会议主页</a>。</li>
-<li><strong>OCP Tech Day @ Digital Infrastructure World：</strong>2027年2月3—4日；官方已明确Rack Track覆盖趋近1MW的开放机柜、多加速器混部、Scale-Up、液冷和800VDC。<a href="https://www.opencompute.org/events/ocp-tech-day/digital-infrastructure-world/">OCP官方议程入口</a>。</li>
+<li><strong>OCP Tech Day @ Digital Infrastructure World：</strong>2027年2月3—4日；官方Rack Track覆盖趋近1MW的开放机柜、多加速器混部、Scale-Up、液冷和800VDC。<a href="https://www.opencompute.org/events/ocp-tech-day/digital-infrastructure-world/">OCP官方议程入口</a>。</li>
 <li><strong>OFC 2027：</strong>2027年3月7—11日，超出未来90天窗口，作为长期跟踪；重点关注NPO/CPO、ELSFP、448G和多厂商互通。</li>
 <li><strong>UALink/UEC：</strong>本轮未发现未来90天内已公开确认的独立大会日期；继续跟踪规范修订、互通测试和OCP相关技术议题，不把工作组活动误报为正式会议。</li>
 </ul>
+<p><strong>SC26原始议程：</strong><a href="https://sc26.conference-program.com/search-program/">SC26官方Search Program</a>；<a href="https://sc26.conference-program.com/presentation/?id=pap262&amp;sess=sess204">HieraSparse演讲页</a>；<a href="https://sc26.conference-program.com/presentation/?id=pap104&amp;sess=sess235">CoreFlow演讲页</a>。</p>
 </section>
 
 <hr/>
