@@ -161,7 +161,7 @@
 <li>Alibaba在OCP的公开议题包括“Rethinking AI Scale-up with optics: from pluggable to (n)PO”以及Ethernet Scale-Up验证中的LLR/CBFC进展；这是技术方向/标准验证讨论，不是AL144、AL64、SNPO或ALink的新增产品规格。</li>
 </ul>
 <h3>NPO/CPO量产、FRU与MTTR</h3>
-<p>官方目录列出Meta NPO生态、Oracle NPO部署、Microsoft NPO生态、Ciena OpenCPX、Huawei NPO标准化、外置光源等演讲；但本轮公开资料仍没有找到可复核的NPO量产数量、现场失效率、模块/光源更换MTTR、冷板与FAU拆装工时、备件比例或全生命周期成本。模块可拆、光源可换、模块可带电热插拔是不同维护边界，必须分别验证。</p>
+<p>官方目录列出Meta NPO生态、Oracle NPO部署、Microsoft NPO生态、Ciena OpenCPX、Huawei NPO标准化和外置光源等演讲。OpenCPX Specification 1.0（2026-09-16）定义6.4T（32×212.5Gbps）和7.2T（36×212.5Gbps）CPX Socket/Module，并复用CMIS管理；但规范第11.2.6节明确写明：CPX模块<strong>不预期支持热插拔/热拔出</strong>，ELS/ELSFP则由独立ELSFP规范管理。也就是说，socketed/removable不等于在线FRU，不能按前面板光模块热插拔方式估算MTTR。规范热合规测试还给出40W模块功耗、冷却液出口不高于52℃、热传递系数至少11,000W/m²·K、Host substrate维持85℃等条件；这些是测试边界，不是现场MTBF/MTTR数据。本轮仍没有找到可复核的NPO量产数量、现场失效率、模块/光源更换工时、冷板与FAU拆装工时、备件比例或全生命周期成本。</p>
 <h3>224G/448G接口</h3>
 <p>OCP目录包括224G AEC、224/448Gbps铜光连接路径、448G及以上高速互连、448G Co-Packaged Copper、400G/lane光模块连接器和500W-Class HSIO直冷热设计专题。OIF于11月9日启动448G/lane RTLR、200G/lane BiDi O-band、ELSFP 3.0和40W Electrical Power Class 8等项目。它们说明接口、光源和热设计进入下一轮标准化，但项目启动不等于最终IA、互通或量产。</p>
 <h3>800VDC与高功率机柜</h3>
@@ -171,7 +171,7 @@
 <li>本轮没有发现OCP 800VDC规范的新版本或能改变既有±400V/800V Sidecar判断的新增量化证据；现有演讲目录中的1MW+标题不能替代规范和现场验收数据。</li>
 </ul>
 <p><strong>阿里跟踪：</strong>过去7天未发现阿里官方新增AL144/AL64/SNPO/ALink物理拓扑、端口映射、单卡光带宽、Scale-Up跳数、光源位置、量产数量或FRU/MTTR数据。云栖2026会期材料继续作为历史基线，不当作本期最新动态。</p>
-<p><strong>原始证据：</strong><a href="https://www.opencompute.org/events/ocp-summit/2026-ocp-global-summit/recorded-content/">OCP 2026官方Recorded Content</a>；<a href="https://www.delta-americas.com/en-US/landing/2026-OCP-Summit">Delta OCP 2026产品展示</a>；<a href="https://www.oiforum.com/oif-launches-seven-new-technical-projects-at-q4-member-meeting-reflecting-accelerating-demand-for-next-generation-connectivity/">OIF七项技术项目公告，2026-11-09</a>。</p>
+<p><strong>原始证据：</strong><a href="https://www.opencompute.org/events/ocp-summit/2026-ocp-global-summit/recorded-content/">OCP 2026官方Recorded Content</a>；<a href="https://www.delta-americas.com/en-US/landing/2026-OCP-Summit">Delta OCP 2026产品展示</a>；<a href="https://www.oiforum.com/oif-launches-seven-new-technical-projects-at-q4-member-meeting-reflecting-accelerating-demand-for-next-generation-connectivity/">OIF七项技术项目公告，2026-11-09</a>；<a href="https://www.opencpxmsa.org/wp-content/uploads/OpenCPX-Specification-v1.0.pdf">OpenCPX Specification 1.0，2026-09-16</a>。</p>
 </section>
 
 <hr/>
