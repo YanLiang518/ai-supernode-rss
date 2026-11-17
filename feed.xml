@@ -27,10 +27,10 @@
 <li><strong>Agent自适应推理：</strong>11月12日公开的Evolving Infra报告，在最多256颗GB300上用Agent-aware调度动态调整P/D资源和KV管理；作者报告端到端延迟最高改善4.1倍、P95 TTFT最高改善14倍。属于研究系统的作者实验，不是独立第三方复现。</li>
 <li><strong>KV Cache路由产品化：</strong>AWS于11月16日为SageMaker AI推出KV-aware routing，按最长匹配前缀把请求路由到持有相应KV块的实例；无缓存或查询过慢时退回负载感知路由。官方功能发布，没有给出统一的性能提升百分比。</li>
 <li><strong>800VDC供电链：</strong>Vertiv于11月17日公布5MW、800VDC固态变压器及4.8MW SuperPod参考架构，宣称最高98% AC-DC效率；目前仍处于客户试点和技术验证阶段。</li>
-<li><strong>Scale-Up拓扑边界：</strong>Meta披露Tahan以51.2Tbps Tomahawk 5交换芯片连接16颗MTIA 300加速器；下一代72加速器/机架为预览。Eridu/Delos的5000+ GPU多机柜方案是提案，相关2304-xPU结果是仿真，不是实物部署。</li>
+<li><strong>Scale-Up拓扑边界：</strong>Meta披露Tahan以51.2Tbps Tomahawk 5交换芯片连接16颗MTIA 300加速器；下一代72加速器/机架为预览。Eridu/Delos面向数百至数千xPU的多机柜方案仍是提案，相关2304-xPU结果是仿真，不是实物部署。</li>
 <li><strong>NPO可维护性边界：</strong>Open CPX MSA 1.0定义6.4T/7.2T、最高212.5Gbps/lane的接口，但规范明确CPX模块不预期热插拔；外置激光源另按ELSFP规范管理。模块可插拔不等于在线可热更换。</li>
 </ul>
-<p><strong>证据分级：</strong>云服务功能和标准条文按正式发布/规范处理；Meta系统按厂商公开架构披露处理；Vertiv效率与功率按厂商指标处理；Evolving Infra按论文/作者实验处理；5000+ GPU及2304-xPU按提案/仿真处理。本文推导的设计建议均标为架构判断。</p>
+<p><strong>证据分级：</strong>云服务功能和标准条文按正式发布/规范处理；Meta系统按厂商公开架构披露处理；Vertiv效率与功率按厂商指标处理；Evolving Infra按论文/作者实验处理；数百至数千xPU多机柜提案及2304-xPU仿真按提案/仿真处理。本文推导的设计建议均标为架构判断。</p>
 </section>
 
 <hr/>
@@ -149,7 +149,7 @@
 
 <section>
 <h2>会议雷达</h2>
-<p><strong>过去30天与会后资料：</strong>SC26于11月15—20日在芝加哥举行，当前仍在会期；继续跟踪论文、专题会议、海报和现场演示。OCP Global Summit本身于10月12—15日举行，已超出过去30天窗口，本期仅按专项要求补扫官方录播和PPT。OCP官方录播目录已经列出224/448G、NPO、800VDC、1MW+机柜母线、铜Scale-Up验证和多机柜5000+ GPU等低曝光专题。</p>
+<p><strong>过去30天与会后资料：</strong>SC26于11月15—20日在芝加哥举行，当前仍在会期；继续跟踪论文、专题会议、海报和现场演示。OCP Global Summit本身于10月12—15日举行，已超出过去30天窗口，本期仅按专项要求补扫官方录播和PPT。OCP官方录播目录已经列出224/448G、NPO、800VDC、1MW+机柜母线、铜Scale-Up验证和多机柜Scale-Up等低曝光专题。</p>
 <ul>
 <li><strong>SC26：</strong>2026-11-15至11-20，当前进行中。重点看AI/HPC网络、存储、Agent工作流和系统软件论文。官网：<a href="https://sc26.supercomputing.org/program/">SC26技术议程</a>。</li>
 <li><strong>NVIDIA GTC Washington：</strong>2026-11-30至12-03；11月30日Workshop，12月1—3日会议与展览。关注Agent、AI Infrastructure、Open Models和HPC。官网：<a href="https://www.nvidia.com/gtc/dc/">GTC Washington</a>；<a href="https://www.nvidia.com/gtc/dc/session-catalog/">Session Catalog</a>。</li>
