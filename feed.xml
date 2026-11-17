@@ -18,7 +18,7 @@
 <header>
 <h1>AI算力架构前沿简报｜2026年11月18日</h1>
 <p><strong>观察窗口：</strong>北京时间11月17日05:00—11月18日05:00；必要时回溯7天至11月11日。OCP Global Summit 2026按要求进行会后专项补扫，明确作为历史会议资料，不冒充本期新动态。</p>
-<p><strong>本期判断：</strong>Agent推理开始要求运行时联合调整Prefill/Decode算力与KV状态；托管推理服务把KV命中率纳入请求路由；800VDC从机柜级向计算Pod和数据大厅级供电链扩展；Scale-Up从单机柜走向多机柜开放域，但5000+ GPU仍是架构提案而非量产实证；Open CPX给出可插拔CPO/NPO接口规范，同时明确光引擎本体不预期在线热插拔。</p>
+<p><strong>本期判断：</strong>Agent推理开始要求运行时联合调整Prefill/Decode算力与KV状态；托管推理服务把KV命中率纳入请求路由；800VDC从机柜级向计算Pod和数据大厅级供电链扩展；Scale-Up从单机柜走向多机柜开放域，但数百至数千xPU多机柜域仍是架构提案而非量产实证；Open CPX给出可插拔CPO/NPO接口规范，同时明确光引擎本体不预期在线热插拔。</p>
 </header>
 
 <section>
@@ -106,9 +106,9 @@
 <li><strong>Meta下一代预览：</strong>公开预览72颗加速器/机架的Scale-Up设计，使用102.4T级交换硅。属于下一代设计预览，不应直接视为已规模交付产品；OCP会后资料目录提供了Tahan和ESUN专题录播及PPT入口。</li>
 <li><strong>Meta IceCube：</strong>102.4Tbps、128×800G的液冷网络交换刀片，部署在IcePack网络机架，支持Broadcom Tomahawk 6C或NVIDIA Spectrum-6。该公开描述对应AI网络交换平台；不能把IceCube的128×800G规格直接等同于72加速器Scale-Up拓扑。</li>
 </ul>
-<h3>1000+ GPU与5000+ GPU的证据等级</h3>
-<p>Eridu/Delos在OCP提出“5000+ GPU多机柜单域”开放架构，主张通过分离计算柜与网络柜、采用高Radix单层交换和开放标准实现跨柜连接；目前是架构提案，公开资料没有给出可核验的完整交换端口映射、链路数量、全域阻塞比、实际跳数、生产功耗和现场MTTR。</p>
-<p>提案方文章引用Turba Labs与Lawrence Berkeley National Laboratory在Hot Interconnects 2026的仿真：20T参数、2304专家的MoE工作负载运行于2304-xPU单域，假设每xPU 28.8Tbps；相较机架受限NVL144且跨柜Scale-Out为6.4Tbps的对照模型，仿真显示xPU利用率提高38%。这是仿真结果，不是2304颗或5000颗GPU的实物部署。</p>
+<h3>1000+ GPU与多机柜数千xPU的证据等级</h3>
+<p>Eridu/Delos提出面向数百至数千xPU的开放多机柜单层Scale-Up域架构，主张通过分离计算柜与网络柜、采用高Radix单层交换和开放标准实现跨柜连接；目前是架构提案，公开资料没有给出可核验的完整交换端口映射、链路数量、全域阻塞比、实际跳数、生产功耗和现场MTTR。</p>
+<p>提案方文章引用Turba Labs与Lawrence Berkeley National Laboratory在Hot Interconnects 2026的仿真：20T参数、2304专家的MoE工作负载运行于2304-xPU单域，假设每xPU 28.8Tbps；相较机架受限NVL144且跨柜Scale-Out为6.4Tbps的对照模型，仿真显示xPU利用率提高38%。这是仿真结果，不是2304颗xPU的实物部署，也不能据此推断数千xPU已经部署。</p>
 <h3>对128/512/1000+域的判断</h3>
 <p><strong>架构判断：</strong>本轮没有找到可验证的128、512或1000+ GPU单跳Scale-Up量产系统完整数据。应继续要求公开证据回答：交换Radix与端口速率、单卡注入/双向带宽、全域非阻塞条件、跨柜光电转换点、真实链路长度和跳数、All-to-All通信模式、故障域、重路由时间以及运维更换流程。仅凭“单域”或“单跳”宣传语不足以确定拓扑。</p>
 <p><strong>原始证据：</strong><a href="https://engineering.fb.com/2026/08/24/networking-traffic/mtia-300-meta-training-chip-built-in-nics/">Meta MTIA 300芯片内置NIC架构（2026-08-24）</a>；<a href="https://engineering.fb.com/2026/10/12/open-source/ocp-summit-2026-powering-ai-with-open-innovations-in-scale-up-scale-out-and-scale-across-networks/">Meta OCP 2026网络架构披露（2026-10-12）</a>；<a href="https://engineering.fb.com/2026/10/26/open-source/ocp-summit-2026-meta-networking-talks/">Meta会后演讲与资料索引（2026-10-26）</a>；<a href="https://eridu.ai/news/why-ai-needs-disaggregated-multi-rack-scale-up-architectures/">Eridu多机柜Scale-Up提案（2026-11-04）</a>；<a href="https://www.opencompute.org/events/ocp-summit/2026-ocp-global-summit/recorded-content/">OCP官方录播与PPT目录</a>。</p>
