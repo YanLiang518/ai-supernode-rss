@@ -66,16 +66,16 @@
 <p>当AI计算从数百kW机柜走向MW级计算Pod，继续在每个IT机柜旁堆叠独立电源转换设备会占用机房空间，并增加供电链路中的转换级数。Vertiv此次将800VDC方案扩展到机柜、计算Pod和数据大厅三个部署层级。</p>
 <h3>公开指标</h3>
 <ul>
-<li>PowerNexus MV SST：5MW、800VDC固态变压器，将中压交流转换为800VDC；厂商宣称最高98% AC-DC效率。</li>
-<li>厂商给出的单台参考能力为支持4.8MW SuperPod，不需要多台串接；设备采用室外液冷集装箱形态。</li>
-<li>配合外部储能和DC/DC接口，可提供故障穿越和AI负载功率平滑，并支持双向功率流。</li>
-<li>Pod级方案把电能转换、备援和分配集中在IT排前端，减少每个IT机柜旁独立Power Rack的需求；可与既有AC负载并存。</li>
+<li><strong>机柜级：</strong>PowerDirect 5000（±400/800VDC）Power Rack最高可配置800kW，输入480VAC，最多配置30个30kW热插拔电源模块，并带有设计保持时间至少50秒的电池备援。机柜内PowerDirect 3000为90kW、1U的800VDC转54VDC电源架，最高峰值效率98.5%，可支持180%脉冲功率、持续0.5ms。</li>
+<li><strong>计算Pod级：</strong>PowerDirect 9000为1.5MW、800VDC Power Center，将480VAC转换为800VDC并通过DC busway供给整排/Pod；可按60kW步进扩展，配置27个热插拔电源模块。EnergyCore Li5电池柜可直接接入DC母线，提供200kW连续备援、最高98%转换效率，最多6柜并联。</li>
+<li><strong>数据大厅级：</strong>PowerNexus MV SST为5MW、800VDC固态变压器，将中压交流直接转换为800VDC，单级转换，厂商宣称最高98% AC-DC效率；单台可支持4.8MW SuperPod参考架构，无需多台串接。</li>
+<li>5MW SST采用室外液冷集装箱形态；配合外部储能和DC/DC接口，可实现故障穿越、AI负载功率平滑和双向功率流。厂商称其可减少传统供电链中的2—3级中间转换。</li>
 </ul>
 <h3>技术边界</h3>
-<p>5MW是固态变压器额定能力，4.8MW是参考SuperPod容量，不是单柜IT功率。98%是厂商公布的最高效率指标，不等于全负载、全冗余路径的年度综合效率。Vertiv同时说明客户试点和技术验证正在进行，尚不能据此认定已完成大规模现场部署。</p>
+<p>800kW、1.5MW和5MW分别对应机柜级Power Rack、Pod级Power Center和数据大厅级SST，不能混作单柜IT功率。98.5%是90kW 800VDC转54VDC电源架的峰值效率，98%是5MW SST的厂商最高效率，均不代表全负载、全冗余供电链的年度综合效率。Vertiv说明客户试点、技术验证和协同开发仍在进行，尚不能据此认定已完成大规模现场部署。</p>
 <h3>硬件架构应对</h3>
-<p><strong>架构判断：</strong>800VDC方案应按“中压接入—SST—800V母线—Pod级隔离/保护—机柜转换—54V/负载点”完整核算，不能只比较母线电流。重点验证短路电流和保护选择性、故障隔离范围、储能并网、负载突变、AC/DC混合运行、转换效率曲线、备件策略以及维护期间的N+1能力。</p>
-<p><strong>原始证据：</strong><a href="https://www.vertiv.com/en-in/about/news-and-events/news-releases/2026/vertiv-advances-800-vdc-power-architectures-to-support-growing-ai-data-center-demands/">Vertiv 800 VDC portfolio announcement（2026-11-17）</a>。</p>
+<p><strong>架构判断：</strong>800VDC方案应按“中压接入—SST/Power Center—800V母线—Pod级隔离/保护—机柜DC/DC—54V/负载点”完整核算，不能只比较母线电流。重点验证短路电流和保护选择性、故障隔离范围、储能并网、负载突变、AC/DC混合运行、效率曲线、备件策略以及维护期间的N+1能力；尤其不能把单级转换效率直接当作从电网到GPU的系统效率。</p>
+<p><strong>原始证据：</strong><a href="https://www.vertiv.com/en-cn/about/news-and-events/news-releases/2026/vertiv-advances-800-vdc-power-architectures-to-support-growing-ai-data-center-demands/">Vertiv 800 VDC portfolio announcement（2026-11-17）</a>。</p>
 </section>
 
 <hr/>
@@ -85,8 +85,9 @@
 <p><strong>会议：</strong>OCP Global Summit 2026，2026-10-12至10-15。以下为会后录播、Meta官方工程文章和提案方资料的补扫，不属于11月18日新产品发布。</p>
 <h3>已经公开的系统架构</h3>
 <ul>
+<li><strong>MTIA 300计算侧：</strong>Meta此前公开MTIA 300在芯片封装内集成12个800Gbps Ethernet RDMA NIC，分布于两个网络Chiplet，总I/O带宽1.2TB/s，避免网络I/O穿越PCIe；厂商给出的单机架16节点Scale-Up带宽最高1TB/s，跨机架Scale-Out为200GB/s。该资料发表于2026-08-24，作为OCP 2026 Tahan架构的背景基线。</li>
 <li><strong>Meta Tahan：</strong>面向MTIA 300训练加速器的Ethernet Scale-Up交换机，基于Broadcom Tomahawk 5，交换容量51.2Tbps、64×800G；其中一半容量经背板提供Scale-Up连接。4台Tahan交换机以非阻塞拓扑连接16颗加速器，并复用Meta的RoCE传输和FBOSS网络软件。这是厂商公开的具体系统设计，不等于已披露完整量产规模、现场故障率或所有端口映射。</li>
-<li><strong>Meta下一代预览：</strong>公开预览72颗加速器/机架的Scale-Up设计，使用102.4T级交换硅。属于下一代设计预览，不应直接视为已规模交付产品。</li>
+<li><strong>Meta下一代预览：</strong>公开预览72颗加速器/机架的Scale-Up设计，使用102.4T级交换硅。属于下一代设计预览，不应直接视为已规模交付产品；OCP会后资料目录提供了Tahan和ESUN专题录播及PPT入口。</li>
 <li><strong>Meta IceCube：</strong>102.4Tbps、128×800G的液冷网络交换刀片，部署在IcePack网络机架，支持Broadcom Tomahawk 6C或NVIDIA Spectrum-6。该公开描述对应AI网络交换平台；不能把IceCube的128×800G规格直接等同于72加速器Scale-Up拓扑。</li>
 </ul>
 <h3>1000+ GPU与5000+ GPU的证据等级</h3>
@@ -94,7 +95,7 @@
 <p>提案方文章引用Turba Labs与Lawrence Berkeley National Laboratory在Hot Interconnects 2026的仿真：20T参数、2304专家的MoE工作负载运行于2304-xPU单域，假设每xPU 28.8Tbps；相较机架受限NVL144且跨柜Scale-Out为6.4Tbps的对照模型，仿真显示xPU利用率提高38%。这是仿真结果，不是2304颗或5000颗GPU的实物部署。</p>
 <h3>对128/512/1000+域的判断</h3>
 <p><strong>架构判断：</strong>本轮没有找到可验证的128、512或1000+ GPU单跳Scale-Up量产系统完整数据。应继续要求公开证据回答：交换Radix与端口速率、单卡注入/双向带宽、全域非阻塞条件、跨柜光电转换点、真实链路长度和跳数、All-to-All通信模式、故障域、重路由时间以及运维更换流程。仅凭“单域”或“单跳”宣传语不足以确定拓扑。</p>
-<p><strong>原始证据：</strong><a href="https://engineering.fb.com/2026/10/12/open-source/ocp-summit-2026-powering-ai-with-open-innovations-in-scale-up-scale-out-and-scale-across-networks/">Meta OCP 2026网络架构披露（2026-10-12）</a>；<a href="https://engineering.fb.com/2026/10/26/open-source/ocp-summit-2026-meta-networking-talks/">Meta会后演讲与资料索引（2026-10-26）</a>；<a href="https://eridu.ai/news/why-ai-needs-disaggregated-multi-rack-scale-up-architectures/">Eridu多机柜Scale-Up提案（2026-11-04）</a>；<a href="https://www.opencompute.org/events/ocp-summit/2026-ocp-global-summit/recorded-content/">OCP官方录播与PPT目录</a>。</p>
+<p><strong>原始证据：</strong><a href="https://engineering.fb.com/2026/08/24/networking-traffic/mtia-300-meta-training-chip-built-in-nics/">Meta MTIA 300芯片内置NIC架构（2026-08-24）</a>；<a href="https://engineering.fb.com/2026/10/12/open-source/ocp-summit-2026-powering-ai-with-open-innovations-in-scale-up-scale-out-and-scale-across-networks/">Meta OCP 2026网络架构披露（2026-10-12）</a>；<a href="https://engineering.fb.com/2026/10/26/open-source/ocp-summit-2026-meta-networking-talks/">Meta会后演讲与资料索引（2026-10-26）</a>；<a href="https://eridu.ai/news/why-ai-needs-disaggregated-multi-rack-scale-up-architectures/">Eridu多机柜Scale-Up提案（2026-11-04）</a>；<a href="https://www.opencompute.org/events/ocp-summit/2026-ocp-global-summit/recorded-content/">OCP官方录播与PPT目录</a>。</p>
 </section>
 
 <hr/>
@@ -112,6 +113,7 @@
 <h3>对FRU和MTTR最重要的条款</h3>
 <p>Open CPX 1.0第11.2节明确写明：CPX模块不预期支持热插入/热拔出；ELS/ELSFP按独立规范处理。因此，CPX光引擎具有标准化插座和可拆装结构，不代表它能在业务运行、模块带电的情况下直接热更换。外置激光源可独立管理，也不能推导出光引擎本体支持在线更换。</p>
 <p>这意味着公开标准目前能证明的是机械、电气、热和管理接口逐步标准化，不能证明量产现场的FRU时间、MTTR、失效率、备件覆盖、返修率或全生命周期成本。对系统设计而言，必须把业务迁移/停机、断电、冷板拆装、光纤清洁、重新训练链路和业务恢复时间纳入维护流程。</p>
+<p><strong>OCP现场可维护性信号：</strong>Meta的“Test Methodology for Multi-Accelerator Copper Scale-up Interconnect”演讲摘要指出，单机架存在数千条互连，即使单链路良率达到99.9%，仍可能留下约10条不良链路；盲插Cartridge又不具备逐链路现场维护能力。该数字是演讲摘要中的工程估算，不是NPO故障率，但说明高密度Scale-Up必须把统计测试覆盖、故障定位和模块级更换设计成系统能力。</p>
 <h3>224G/448G与NPO量产进度</h3>
 <p>OCP官方录播目录列出Samtec“224/448Gbps Copper and Optical Connectivity”专题；OIF在OCP 2026同期Workshop覆盖224Gbps和448Gbps电通道、CPO/NPO、外置激光及CMIS。Open CPX 1.0当前Host电接口上限仍是212.5Gbps/lane，不能把448G专题或路线图当作已完成的448G量产规范。</p>
 <p>另一个近期市场信号是ScaleFibre于11月11日宣布1.6T OSFP224可插拔产品上市，并为NPO开启Early Access计划。Early Access不等于大批量交付；公开资料没有给出NPO良率、部署数量、FRU/MTTR或LCC。</p>
