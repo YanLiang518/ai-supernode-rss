@@ -1,0 +1,164 @@
+<article lang="zh-CN">
+<header>
+<h1>AI算力架构前沿简报｜2026年11月18日</h1>
+<p><strong>观察窗口：</strong>北京时间11月17日05:00—11月18日05:00；必要时回溯7天至11月11日。OCP Global Summit 2026按要求进行会后专项补扫，明确作为历史会议资料，不冒充本期新动态。</p>
+<p><strong>本期判断：</strong>Agent推理开始要求运行时联合调整Prefill/Decode算力与KV状态；托管推理服务把KV命中率纳入请求路由；800VDC从机柜级向计算Pod和数据大厅级供电链扩展；Scale-Up从单机柜走向多机柜开放域，但5000+ GPU仍是架构提案而非量产实证；Open CPX给出可插拔CPO/NPO接口规范，同时明确光引擎本体不预期在线热插拔。</p>
+</header>
+
+<section>
+<h2>信号总览：五项值得改变设计假设的进展</h2>
+<ul>
+<li><strong>Agent自适应推理：</strong>11月12日公开的Evolving Infra报告，在最多256颗GB300上用Agent-aware调度动态调整P/D资源和KV管理；作者报告端到端延迟最高改善4.1倍、P95 TTFT最高改善14倍。属于研究系统的作者实验，不是独立第三方复现。</li>
+<li><strong>KV Cache路由产品化：</strong>AWS于11月16日为SageMaker AI推出KV-aware routing，按最长匹配前缀把请求路由到持有相应KV块的实例；无缓存或查询过慢时退回负载感知路由。官方功能发布，没有给出统一的性能提升百分比。</li>
+<li><strong>800VDC供电链：</strong>Vertiv于11月17日公布5MW、800VDC固态变压器及4.8MW SuperPod参考架构，宣称最高98% AC-DC效率；目前仍处于客户试点和技术验证阶段。</li>
+<li><strong>Scale-Up拓扑边界：</strong>Meta披露Tahan以51.2Tbps Tomahawk 5交换芯片连接16颗MTIA 300加速器；下一代72加速器/机架为预览。Eridu/Delos的5000+ GPU多机柜方案是提案，相关2304-xPU结果是仿真，不是实物部署。</li>
+<li><strong>NPO可维护性边界：</strong>Open CPX MSA 1.0定义6.4T/7.2T、最高212.5Gbps/lane的接口，但规范明确CPX模块不预期热插拔；外置激光源另按ELSFP规范管理。模块可插拔不等于在线可热更换。</li>
+</ul>
+<p><strong>证据分级：</strong>云服务功能和标准条文按正式发布/规范处理；Meta系统按厂商公开架构披露处理；Vertiv效率与功率按厂商指标处理；Evolving Infra按论文/作者实验处理；5000+ GPU及2304-xPU按提案/仿真处理。本文推导的设计建议均标为架构判断。</p>
+</section>
+
+<hr/>
+
+<section>
+<h2>01｜Agent推理：固定P/D比例开始不适合动态Agent工作流</h2>
+<p><strong>事件/发布日期：</strong>2026-11-12。<strong>来源：</strong>Evolving Infra技术报告及作者公开说明。</p>
+<h3>业务变化</h3>
+<p>Computer-use、Coding、Math等Agent任务的执行形态差异很大：Computer-use可能产生较长输入和较重Prefill；Math任务可能更偏Decode；多Agent fork会短时复制共享上下文，工具调用和上下文压缩又会改变后续KV的复用价值。固定Prefill/Decode拆分比例和单纯按最近使用时间淘汰KV，容易把仍会被子Agent复用的状态提前驱逐。</p>
+<h3>计算与数据特征</h3>
+<ul>
+<li>Evolving Infra把算力分配与KV Cache管理解耦：在线规划器按当前Agent工作负载调整P/D资源比例，分布式KV管理器读取Agent上下文管理信号，避免仅用队列深度或上下文长度作决策。</li>
+<li>作者在GLM-5.2、Kimi K2.6的Coding、Math和Computer-use任务上，最多使用256颗GB300 GPU进行实验；报告端到端请求延迟最高改善4.1倍、P95 TTFT最高改善14倍，相对比较对象为NVIDIA Dynamo。</li>
+<li>作者还报告对称节点可在Prefill和Decode角色间切换，平均切换时间约6.2秒，且共享KV池避免因节点切换而遗留或丢失可复用KV。</li>
+</ul>
+<h3>技术边界</h3>
+<p>以上是作者报告的特定模型、任务轨迹和集群规模下的最高值，不应直接作为生产集群SLA或任意模型的收益承诺。仍需核查调度开销、KV跨节点迁移流量、热点上下文、故障恢复和不同P/D切换频率下的尾延迟。</p>
+<h3>硬件架构应对</h3>
+<p><strong>架构判断：</strong>Agent推理平台不宜把P节点和D节点永久固化为两种不可互换的资源池。应把节点角色切换、共享KV元数据、GPU显存、主机内存、RDMA/以太网和CPU沙箱纳入统一调度；验证时同时记录TTFT、TPOT、P95/P99、KV命中率、跨节点迁移字节数和GPU有效忙碌时间，而不是只看平均Token吞吐。</p>
+<p><strong>原始证据：</strong><a href="https://www.alphaxiv.org/en/abs/2611.12304">Evolving Infra论文摘要与实验说明（2026-11-12）</a>；<a href="https://github.com/mit-han-lab/EvolvingInfra">作者公开代码仓库</a>。</p>
+</section>
+
+<hr/>
+
+<section>
+<h2>02｜KV Cache：从实例内缓存优化进入请求路由层</h2>
+<p><strong>发布日期：</strong>2026-11-16。<strong>来源：</strong>AWS SageMaker AI官方功能发布。</p>
+<h3>业务变化</h3>
+<p>长提示词、共享System Prompt、重复文档和多轮会话让同一前缀被反复计算。多实例部署中，如果请求被随机分配到没有对应KV块的实例，就会重新执行Prefill；高负载时实例还可能驱逐共享前缀，导致缓存收益不稳定。</p>
+<h3>计算与数据特征</h3>
+<ul>
+<li>SageMaker AI新增KV-aware routing，选择持有请求前缀最长匹配KV块的实例。</li>
+<li>vLLM容器上报缓存块创建与驱逐事件，路由器使用实时缓存视图；若查询过慢或无匹配，则回退到load-aware routing，避免为了缓存亲和性而阻塞请求。</li>
+<li>功能要求AWS vLLM Deep Learning Container 0.33.0或更高版本，且至少有两个实例或推理组件副本；支持GPU实例上的单模型端点和Inference Components，包括LoRA适配器。</li>
+</ul>
+<h3>技术边界</h3>
+<p>AWS没有在该功能公告中给出统一TTFT提升比例。缓存路由适用于长提示词、高负载和GPU显存紧张场景；短提示词、稳定共享前缀或中低负载仍可使用Prefix-aware routing。热点前缀可能造成少数实例过载，因此必须保留负载回退策略。</p>
+<h3>硬件架构应对</h3>
+<p><strong>架构判断：</strong>推理集群调度指标应从“队列长度+GPU利用率”扩展为“队列长度+KV命中率+缓存容量+迁移代价”。如果KV状态跨实例共享或迁移，网络带宽、NIC DMA、主机内存和PCIe路径会成为路由收益能否兑现的边界；需要测试缓存亲和与负载均衡之间的冲突。</p>
+<p><strong>原始证据：</strong><a href="https://aws.amazon.com/about-aws/whats-new/2026/11/sagemaker-kv-cache-routing/">Amazon SageMaker AI KV cache-aware routing（2026-11-16）</a>。</p>
+</section>
+
+<hr/>
+
+<section>
+<h2>03｜800VDC：供电转换边界从单柜向Pod和数据大厅移动</h2>
+<p><strong>发布日期：</strong>2026-11-17。<strong>来源：</strong>Vertiv官方新闻稿。</p>
+<h3>业务变化</h3>
+<p>当AI计算从数百kW机柜走向MW级计算Pod，继续在每个IT机柜旁堆叠独立电源转换设备会占用机房空间，并增加供电链路中的转换级数。Vertiv此次将800VDC方案扩展到机柜、计算Pod和数据大厅三个部署层级。</p>
+<h3>公开指标</h3>
+<ul>
+<li>PowerNexus MV SST：5MW、800VDC固态变压器，将中压交流转换为800VDC；厂商宣称最高98% AC-DC效率。</li>
+<li>厂商给出的单台参考能力为支持4.8MW SuperPod，不需要多台串接；设备采用室外液冷集装箱形态。</li>
+<li>配合外部储能和DC/DC接口，可提供故障穿越和AI负载功率平滑，并支持双向功率流。</li>
+<li>Pod级方案把电能转换、备援和分配集中在IT排前端，减少每个IT机柜旁独立Power Rack的需求；可与既有AC负载并存。</li>
+</ul>
+<h3>技术边界</h3>
+<p>5MW是固态变压器额定能力，4.8MW是参考SuperPod容量，不是单柜IT功率。98%是厂商公布的最高效率指标，不等于全负载、全冗余路径的年度综合效率。Vertiv同时说明客户试点和技术验证正在进行，尚不能据此认定已完成大规模现场部署。</p>
+<h3>硬件架构应对</h3>
+<p><strong>架构判断：</strong>800VDC方案应按“中压接入—SST—800V母线—Pod级隔离/保护—机柜转换—54V/负载点”完整核算，不能只比较母线电流。重点验证短路电流和保护选择性、故障隔离范围、储能并网、负载突变、AC/DC混合运行、转换效率曲线、备件策略以及维护期间的N+1能力。</p>
+<p><strong>原始证据：</strong><a href="https://www.vertiv.com/en-in/about/news-and-events/news-releases/2026/vertiv-advances-800-vdc-power-architectures-to-support-growing-ai-data-center-demands/">Vertiv 800 VDC portfolio announcement（2026-11-17）</a>。</p>
+</section>
+
+<hr/>
+
+<section>
+<h2>04｜Scale-Up：真实系统、机架预览和多机柜提案必须分层看待</h2>
+<p><strong>会议：</strong>OCP Global Summit 2026，2026-10-12至10-15。以下为会后录播、Meta官方工程文章和提案方资料的补扫，不属于11月18日新产品发布。</p>
+<h3>已经公开的系统架构</h3>
+<ul>
+<li><strong>Meta Tahan：</strong>面向MTIA 300训练加速器的Ethernet Scale-Up交换机，基于Broadcom Tomahawk 5，交换容量51.2Tbps、64×800G；其中一半容量经背板提供Scale-Up连接。4台Tahan交换机以非阻塞拓扑连接16颗加速器，并复用Meta的RoCE传输和FBOSS网络软件。这是厂商公开的具体系统设计，不等于已披露完整量产规模、现场故障率或所有端口映射。</li>
+<li><strong>Meta下一代预览：</strong>公开预览72颗加速器/机架的Scale-Up设计，使用102.4T级交换硅。属于下一代设计预览，不应直接视为已规模交付产品。</li>
+<li><strong>Meta IceCube：</strong>102.4Tbps、128×800G的液冷网络交换刀片，部署在IcePack网络机架，支持Broadcom Tomahawk 6C或NVIDIA Spectrum-6。该公开描述对应AI网络交换平台；不能把IceCube的128×800G规格直接等同于72加速器Scale-Up拓扑。</li>
+</ul>
+<h3>1000+ GPU与5000+ GPU的证据等级</h3>
+<p>Eridu/Delos在OCP提出“5000+ GPU多机柜单域”开放架构，主张通过分离计算柜与网络柜、采用高Radix单层交换和开放标准实现跨柜连接；目前是架构提案，公开资料没有给出可核验的完整交换端口映射、链路数量、全域阻塞比、实际跳数、生产功耗和现场MTTR。</p>
+<p>提案方文章引用Turba Labs与Lawrence Berkeley National Laboratory在Hot Interconnects 2026的仿真：20T参数、2304专家的MoE工作负载运行于2304-xPU单域，假设每xPU 28.8Tbps；相较机架受限NVL144且跨柜Scale-Out为6.4Tbps的对照模型，仿真显示xPU利用率提高38%。这是仿真结果，不是2304颗或5000颗GPU的实物部署。</p>
+<h3>对128/512/1000+域的判断</h3>
+<p><strong>架构判断：</strong>本轮没有找到可验证的128、512或1000+ GPU单跳Scale-Up量产系统完整数据。应继续要求公开证据回答：交换Radix与端口速率、单卡注入/双向带宽、全域非阻塞条件、跨柜光电转换点、真实链路长度和跳数、All-to-All通信模式、故障域、重路由时间以及运维更换流程。仅凭“单域”或“单跳”宣传语不足以确定拓扑。</p>
+<p><strong>原始证据：</strong><a href="https://engineering.fb.com/2026/10/12/open-source/ocp-summit-2026-powering-ai-with-open-innovations-in-scale-up-scale-out-and-scale-across-networks/">Meta OCP 2026网络架构披露（2026-10-12）</a>；<a href="https://engineering.fb.com/2026/10/26/open-source/ocp-summit-2026-meta-networking-talks/">Meta会后演讲与资料索引（2026-10-26）</a>；<a href="https://eridu.ai/news/why-ai-needs-disaggregated-multi-rack-scale-up-architectures/">Eridu多机柜Scale-Up提案（2026-11-04）</a>；<a href="https://www.opencompute.org/events/ocp-summit/2026-ocp-global-summit/recorded-content/">OCP官方录播与PPT目录</a>。</p>
+</section>
+
+<hr/>
+
+<section>
+<h2>05｜NPO/CPX：接口标准化前进，但在线维护边界必须重新定义</h2>
+<p><strong>标准日期：</strong>Open CPX MSA Specification 1.0于2026-09-16批准，2026-09-17正式公布。OCP 2026另有Samtec的224/448Gbps铜光互连、Molex近封装生态和OIF开放AI互连专题。</p>
+<h3>Open CPX 1.0量化边界</h3>
+<ul>
+<li>Type-1/Type-2接口分别定义6.4Tbps（32×212.5Gbps）和7.2Tbps（36×212.5Gbps）模块；面向Host ASIC的电接口最高212.5Gbps/lane。</li>
+<li>规范覆盖电、光、机械、热和软件/固件互操作，并通过CMIS管理CPX模块；外置激光源另有ELS/ELSFP管理接口。</li>
+<li>Type-1模块供电引脚支持的标称最大功率为115.65W，Type-2为122.22W。这是接口供电能力上限，不代表所有模块的实际功耗。</li>
+<li>系统冷却规范要求冷却液与模块盖板之间的等效换热系数至少11,000W/m²·K；测试条件为冷却液入口52°C、Host substrate 85°C。该测试冷板条件适用于40W及以下模块，更高功率模块需要更高换热能力。</li>
+</ul>
+<h3>对FRU和MTTR最重要的条款</h3>
+<p>Open CPX 1.0第11.2节明确写明：CPX模块不预期支持热插入/热拔出；ELS/ELSFP按独立规范处理。因此，CPX光引擎具有标准化插座和可拆装结构，不代表它能在业务运行、模块带电的情况下直接热更换。外置激光源可独立管理，也不能推导出光引擎本体支持在线更换。</p>
+<p>这意味着公开标准目前能证明的是机械、电气、热和管理接口逐步标准化，不能证明量产现场的FRU时间、MTTR、失效率、备件覆盖、返修率或全生命周期成本。对系统设计而言，必须把业务迁移/停机、断电、冷板拆装、光纤清洁、重新训练链路和业务恢复时间纳入维护流程。</p>
+<h3>224G/448G与NPO量产进度</h3>
+<p>OCP官方录播目录列出Samtec“224/448Gbps Copper and Optical Connectivity”专题；OIF在OCP 2026同期Workshop覆盖224Gbps和448Gbps电通道、CPO/NPO、外置激光及CMIS。Open CPX 1.0当前Host电接口上限仍是212.5Gbps/lane，不能把448G专题或路线图当作已完成的448G量产规范。</p>
+<p>另一个近期市场信号是ScaleFibre于11月11日宣布1.6T OSFP224可插拔产品上市，并为NPO开启Early Access计划。Early Access不等于大批量交付；公开资料没有给出NPO良率、部署数量、FRU/MTTR或LCC。</p>
+<p><strong>架构判断：</strong>NPO/CPO选型不能只比较pJ/bit和前面板密度。应把模块功率等级、冷板换热能力、ELS独立更换、CPX断电更换、光纤清洁和重连、备件周转及业务恢复时间放进同一张全生命周期模型。</p>
+<p><strong>原始证据：</strong><a href="https://www.opencpxmsa.org/wp-content/uploads/OpenCPX-Specification-v1.0.pdf">Open CPX MSA Specification 1.0（2026-09-16）</a>；<a href="https://www.opencpxmsa.org/announcements/">Open CPX MSA正式发布公告（2026-09-17）</a>；<a href="https://www.oiforum.com/meetings-events/oif-workshop-enabling-an-open-scalable-sustainable-ai-infrastructure/">OIF OCP Workshop（2026-10-13）</a>；<a href="https://www.opencompute.org/events/ocp-summit/2026-ocp-global-summit/recorded-content/">OCP 2026录播目录</a>；<a href="https://americas.scalefibre.com/en/press/2026/scalefibre-launches-ai-optical-transceivers-npo/">ScaleFibre NPO Early Access公告（2026-11-11）</a>。</p>
+</section>
+
+<hr/>
+
+<section>
+<h2>阿里磐久AL144/AL64/SNPO/ALink跟踪</h2>
+<p>本次没有找到过去7天内新的官方资料，足以更新AL144、AL64、SNPO或ALink的物理拓扑、端口映射、单卡光带宽、交换层级、量产规模或维护数据。OCP 2026中Meta、Microsoft、Alibaba共同推进的OSPA交换平台层标准化，属于交换机平台接口/管理生态进展，不能据此推断阿里AL144/AL64硬件架构发生变化。历史云栖资料继续保留作对照，不作为本期新动态。</p>
+<p><strong>来源：</strong><a href="https://engineering.fb.com/2026/10/26/open-source/ocp-summit-2026-meta-networking-talks/">Meta OCP 2026会后演讲索引及OSPA说明（2026-10-26）</a>。</p>
+</section>
+
+<hr/>
+
+<section>
+<h2>会议雷达</h2>
+<p><strong>过去30天与会后资料：</strong>SC26于11月15—20日在芝加哥举行，当前仍在会期；继续跟踪论文、专题会议、海报和现场演示。OCP Global Summit本身于10月12—15日举行，已超出过去30天窗口，本期仅按专项要求补扫官方录播和PPT。OCP官方录播目录已经列出224/448G、NPO、800VDC、1MW+机柜母线、铜Scale-Up验证和多机柜5000+ GPU等低曝光专题。</p>
+<ul>
+<li><strong>SC26：</strong>2026-11-15至11-20，当前进行中。重点看AI/HPC网络、存储、Agent工作流和系统软件论文。官网：<a href="https://sc26.supercomputing.org/program/">SC26技术议程</a>。</li>
+<li><strong>NVIDIA GTC Washington：</strong>2026-11-30至12-03；11月30日Workshop，12月1—3日会议与展览。关注Agent、AI Infrastructure、Open Models和HPC。官网：<a href="https://www.nvidia.com/gtc/dc/">GTC Washington</a>；<a href="https://www.nvidia.com/gtc/dc/session-catalog/">Session Catalog</a>。</li>
+<li><strong>DesignCon 2027：</strong>2027-02-02至02-04，Santa Clara；关注224G/448G SerDes、连接器、PCB材料、信号完整性和电源完整性。官网：<a href="https://www.designcon.com/plan-travel/useful-information/">DesignCon日期与场地</a>。</li>
+<li><strong>OCP Tech Day @ Digital Infrastructure World：</strong>2027-02-03至02-04，San Jose；官方主题包含1MW级开放机柜、Scale-Up网络、液冷和800VDC。官网：<a href="https://www.opencompute.org/events/ocp-tech-day/digital-infrastructure-world/">OCP Tech Day议程入口</a>。</li>
+<li><strong>OFC 2027：</strong>2027-03-07至03-11，超出未来90天窗口，作为下一阶段光互连重点会议预警。官网：<a href="https://www.ofcconference.org/">OFC 2027</a>。</li>
+</ul>
+<p>本轮未找到UALink、UEC或OIF在未来90天内已确认的公开大型会议日期；继续监控其标准工作组公告和互操作活动，不虚构会议时间。2027 OCP EMEA Summit已公布为4月6—8日，超出90天窗口。</p>
+</section>
+
+<hr/>
+
+<section>
+<h2>系统健康自检与告警</h2>
+<p>检查对象为GitHub仓库5个既有RSS文件及其最新归档链接；本次不修改其他RSS和自动化。</p>
+<ul>
+<li><strong>主简报feed.xml：</strong>可读取，RSS 2.0结构、GUID和历史条目检查通过；更新前最新条目为11月17日，共89期。主任务保持启用，11月17日报告已完成；本次为11月18日当期发布。</li>
+<li><strong>tech-alert-feed.xml：</strong>可读取，5条记录及GUID唯一，最新文章10月27日。对应条件预警任务当前已禁用；最近一次运行于11月10日完成，结果为没有发现达到触发门槛的新证据。禁用后没有继续扫描，不能把它解释为最近持续扫描且无变化。</li>
+<li><strong>competitor-cost-feed.xml：</strong>可读取，5条记录及GUID唯一，最新周报11月16日。对应自动化当前已禁用；最近一次运行11月16日完成且发布成功。当前周报未逾期，但若不恢复任务，下一周不会自动执行。</li>
+<li><strong>next-gen-architecture-feed.xml：</strong>可读取，3条记录及GUID唯一；11月14日HTML归档存在，但RSS首条仍是11月7日，11月14日条目排在11月7日和10月31日之后，且频道缺少lastBuildDate。对应自动化11月14日运行记录为完成并报告发布成功，RSS实际顺序与报告不一致，属于明确的同步异常。</li>
+<li><strong>ai-memory-feed.xml：</strong>可读取，4条记录及GUID唯一，最新文章11月13日；对应自动化保持启用，下一次计划运行11月20日。</li>
+</ul>
+<p><strong>告警：</strong>关键技术预警与竞品周报自动化目前处于禁用状态；下一代架构专题RSS存在条目排序和lastBuildDate异常。主简报本身未发现超过36小时未发布的情况。Follow客户端缓存/实际拉取状态无法从GitHub和任务状态读取，因此不对客户端延迟作判断。本次严格按只读规则，没有启用、停用或修改其他任务。</p>
+</section>
+
+<section>
+<h2>本期结论</h2>
+<p>Agent工作流使P/D比例与KV生命周期成为运行时变量；云服务已经把KV命中纳入请求路由；800VDC开始覆盖从机柜到MW级Pod的完整供电链。与此同时，OCP公开证据显示Scale-Up正在向开放多机柜域探索，但真正的128/512/1000+单跳实物拓扑仍缺少可核验数据。Open CPX标准化了NPO/CPO插座和管理接口，却没有承诺光引擎在线热插拔。下一轮最值得追踪的不是更大的峰值数字，而是KV迁移的P99代价、Scale-Up全域端口与跳数、NPO断电更换MTTR，以及800VDC保护与故障隔离的现场验证。</p>
+</section>
+</article>
