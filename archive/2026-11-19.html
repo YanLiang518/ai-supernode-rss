@@ -1,0 +1,144 @@
+<article lang="zh-CN">
+<header>
+<h1>AI算力架构前沿简报｜2026年11月19日</h1>
+<p><strong>观察窗口：</strong>北京时间2026-11-18 05:00—2026-11-19 05:00；对近7天回溯补充AWS推理产品化信息，并对2026 OCP Global Summit做会后专项补扫。</p>
+<p><strong>本期判断：</strong>推理系统正在从“单池GPU+静态路由”转向KV状态感知、Prefill/Decode解耦和异构算力协同；与此同时，SC26的低延迟Collective研究说明，长上下文Decode的瓶颈可能是微秒级同步，而不是链路峰值带宽。OCP材料则显示，Scale-Up规模、224G/448G电接口和NPO维护能力必须严格区分“标准/预览/仿真/量产”。</p>
+<p><strong>证据口径：</strong>“实测”仍需区分论文实验、厂商自测和现场生产数据；“目标/预览”不等于已部署；架构推演单独标注。</p>
+</header>
+<section>
+<h2>一、本期四项最值得关注的架构变化</h2>
+<h3>1. AWS把KV命中率和Prefill/Decode角色纳入托管推理调度</h3>
+<p><strong>发布日期：2026-11-17｜证据等级：正式产品能力＋厂商基准测试</strong></p>
+<p><strong>业务变化：</strong>Agent、多轮对话和长文档问答带来大量共享前缀与重复上下文。只按GPU利用率、队列长度或请求数做负载均衡，会把可复用KV状态丢在错误的实例上。</p>
+<p><strong>计算/数据特征：</strong>AWS SageMaker KV-aware routing接收vLLM的KV创建/驱逐事件，按最长匹配前缀选择实例，并结合worker负载；路由索引保存单向截断哈希，不保存原始Prompt或KV张量。未命中或查询过慢时可回退到负载感知路由。该能力至少需要两个实例，短Prompt查询开销为数毫秒，长Prompt开销更高。</p>
+<p>AWS披露的内部测试使用7台p5.48xlarge、20/100个模拟用户、最长64K输入、30分钟多轮聊天/文档问答：相较随机路由，P50 TTFT最高降低97%，吞吐最高提高234%，KV命中率从3%—48%提高到80%—93%。这是AWS厂商测试，不是独立第三方复现。</p>
+<p>同日AWS还把NVIDIA Dynamo集成到SageMaker HyperPod。Qwen3-235B-A22B-FP8测试使用2台p5en.48xlarge、共16颗H200，输入4K/输出200 Token；在P90 TTFT&lt;1秒、用户中位生成速度至少50 Token/s的筛选条件下，P/D解耦的最高吞吐为207 output Token/s/GPU，聚合式为101，报告值为2.05倍，但两组对应并发分别为80和32，不能当作同并发严格对照。另一项Qwen3.5-397B测试在高前缀复用、并发32下跨两台机器保留单机99.1%的吞吐，即126.4 output Token/s/GPU。</p>
+<p><strong>技术边界：</strong>HyperPod的Prefill池和Decode池都加载完整模型权重，KV Cache通过EFA在两池间传输；这意味着解耦会增加模型权重副本与跨节点KV流量。性能还依赖EFA实际路径、拓扑、并发和前缀复用率，不能把单一实例规格上的数据外推到任意Pod。</p>
+<p><strong>硬件架构应对：</strong>推理节点应把KV Cache容量/命中率、HBM与主机内存、EFA/RDMA带宽和P99迁移时延纳入资源模型；Scale-Out网络需为KV搬运与Collective分别做流量隔离。评估P/D解耦时，必须同时核算模型权重双份驻留、KV迁移字节数、网络过订阅和故障恢复时间。</p>
+<p>原始证据：<a href="https://aws.amazon.com/blogs/machine-learning/amazon-sagemaker-ai-real-time-endpoints-now-support-kv-cache-aware-routing/">AWS KV-aware routing（2026-11-17）</a>；<a href="https://aws.amazon.com/blogs/machine-learning/managed-nvidia-dynamo-on-amazon-sagemaker-hyperpod-inference/">AWS托管NVIDIA Dynamo（2026-11-17）</a>。</p>
+
+<h3>2. Cerebras公布GPU Prefill＋Wafer-Scale Decode生产部署</h3>
+<p><strong>发布日期：2026-11-17；底层共享端点测量日：2026-11-14｜证据等级：厂商披露的生产测量</strong></p>
+<p><strong>业务变化：</strong>Agent应用追求低首Token延迟和高速连续生成，但Prefill与Decode的资源特征不同：Prefill偏计算密集，Decode更受模型权重读取和内存带宽约束。</p>
+<p><strong>计算/数据特征：</strong>Cerebras披露在Inference Cloud生产环境中，由AMD Instinct GPU处理Prefill，Cerebras CS-3执行Decode；针对共享GPT-OSS-120B端点，厂商报告相较CS-3聚合式配置，每MW吞吐提高5倍，Token生成速度没有下降。其KV Portal通过RDMA在Prefill与Decode引擎间传输中间状态/KV Cache，配套框架负责请求路由、Replica容量和健康管理。</p>
+<p><strong>技术边界：</strong>5倍数据来自Cerebras内部生产测量，公开材料没有给出两侧设备数量、RDMA链路带宽/过订阅、KV传输时延分布、端到端P99、模型权重驻留方式和成本明细；因此不能把5倍当成所有模型、所有网络和所有机柜的通用增益。厂商提出2027年底扩展至数百MW属于部署目标，不是当前已上线容量。</p>
+<p><strong>硬件架构应对：</strong>异构P/D池将成为可选架构：Prefill侧可按算力/$扩容，Decode侧按低延迟与内存带宽扩容。系统设计要先验证跨厂商KV格式兼容、RDMA数据路径、模型版本一致性、双池排队和故障切换，再比较GPU-only与异构池的每MW有效Token成本。</p>
+<p>原始证据：<a href="https://www.cerebras.ai/blog/cerebras-launches-disaggregated-inference">Cerebras Disaggregated Inference（2026-11-17）</a>。</p>
+
+<h3>3. SC26论文：长上下文Decode中的Collective可能受微秒级同步支配</h3>
+<p><strong>论文发布日期：2026-07-17；SC26报告：2026-11-18 11:37—12:00（美国中部时间），即北京时间11月19日01:37—02:00｜证据等级：论文实验，SC26现场报告</strong></p>
+<p><strong>业务变化：</strong>长上下文会扩大KV Cache占用并压低可用Batch；小Batch、Tensor Parallel Decode中，小消息AllReduce反复处于逐Token关键路径，瓶颈可能由带宽转向同步延迟。</p>
+<p><strong>计算/数据特征：</strong>论文在4颗GB200上将小消息AllReduce平均延迟从NCCL Ring的11.0微秒降至2.37微秒；Llama-3.1-70B推理的Inter-Token Latency降低8.7%。作者称微基准结果距离硬件Speed-of-Light下界不超过7%。方法包括无全局Barrier同步、对称内存、GPU侧发起通信和Multicast。</p>
+<p><strong>技术边界：</strong>该研究明确限定在同一NVLink Scale-Up域，不覆盖Scale-Out通信。LL128 Atomic路径依赖NVLink缓存行级原子加法，支持范围受单精度/半精度及加法操作限制，浮点原子顺序不确定，不能直接等同于任意Collective的确定性替代。</p>
+<p><strong>硬件架构应对：</strong>评估128/512 GPU Scale-Up时，除双向带宽和全域非阻塞外，还应增加小消息Collective的端到端时延、Barrier开销、GPU发起通信能力和Multicast效率测试。该论文只验证4颗GB200，不能据此宣称512 GPU域已有同等收益。</p>
+<p>原始证据：<a href="https://arxiv.org/abs/2607.16100">论文原文（2026-07-17）</a>；<a href="https://sc26.conference-program.com/">SC26官方会议议程</a>。</p>
+
+<h3>4. SC26报告RailX：100K级芯片互联属于可重构Scale-Out，不是单一Scale-Up域</h3>
+<p><strong>论文发布日期：2025-07-25；SC26报告：2026-11-18 13:52—14:15（美国中部时间），即北京时间11月19日03:52—04:15｜证据等级：论文架构提案与仿真/成本模型</strong></p>
+<p><strong>业务变化：</strong>超大规模训练需要在AllReduce、All-to-All和不同并行策略之间切换，传统Clos的交换层级和光模块数量可能推高成本。</p>
+<p><strong>计算/数据特征：</strong>RailX提出节点内直连、节点间电路交换（OCS），把节点与光交换机按二维物理结构组织，并用Hamiltonian Decomposition把多个Rail Ring组织成All-to-All。论文称可连接超过100K芯片，互联直径为2—4个节点间跳数；相对Fat-Tree，每单位注入/AllReduce带宽成本低于10%，每单位Bisection/All-to-All带宽成本低于50%；论文模型中连接200K芯片、1.8TB/s带宽约需13亿美元。</p>
+<p><strong>技术边界：</strong>上述数字是作者提出的架构、仿真和成本模型，不是已部署100K GPU集群的实测。RailX解决的是大规模Scale-Out/可重构互联，不应与128/512/1000+ GPU单一Scale-Up域混为一谈；OCS重构时延、业务空闲窗口、光路故障恢复和多作业并发仍需单独验证。</p>
+<p><strong>硬件架构应对：</strong>对超大Pod应分别定义Scale-Up域内低延迟互联与Scale-Out域间可重构网络，明确Collective跨域比例、OCS重构窗口、故障绕行和作业调度策略。不能只用“可连接多少芯片”作为架构指标。</p>
+<p>原始证据：<a href="https://arxiv.org/abs/2507.18889">RailX论文原文（2025-07-25）</a>；<a href="https://sc26.conference-program.com/">SC26官方会议议程</a>。</p>
+</section>
+
+<section>
+<h2>二、2026 OCP Global Summit会后专项补扫</h2>
+<p>本节是按要求进行的会后资料补扫，不将10月会期包装成11月最新动态。OCP官方Recorded Content已列出Alibaba/Meta/Oracle/Microsoft/Ciena等NPO议题、224/448G互连、5000+ GPU多机柜Scale-Up提案，以及800VDC供电与保护议题。</p>
+<h3>1. Scale-Up规模：目前可核验的产品、预览和提案必须分层</h3>
+<ul>
+<li><strong>已披露系统：</strong>Meta Tahan采用51.2Tbps Broadcom Tomahawk 5，64×800G；4台Tahan以非阻塞方式连接16颗MTIA 300，标称每颗加速器6.4Tbps Scale-Up带宽，并复用Lossless RoCE、FBOSS和IPv6路由。这是16加速器级的公开系统，不是128/512 GPU域。</li>
+<li><strong>下一代预览：</strong>Meta预览72加速器/机架方案，8台基于102.4Tbps Tomahawk 6C的216×400G交换刀片互联72颗加速器；未来版本计划采用ESUN数据面。72是预览架构，不应等同于已量产部署。</li>
+<li><strong>1024 XPU：</strong>OCP/Broadcom OCI相关演讲材料出现1024-XPU Scale-Up架构图，属于架构概念/路线讨论；目前未找到公开的整域负载、端口映射、过订阅、跳数、故障域和量产部署证据。</li>
+<li><strong>5000+ GPU：</strong>OCP官方目录列出“An Open Architecture for Multi-rack Scale-up Domain of 5000+ GPUs”演讲。仅凭题名不能证明5000颗GPU处于单一非阻塞Scale-Up域；本轮可访问的目录未披露足够的拓扑与量化测试数据。</li>
+<li><strong>容易混淆的100K芯片：</strong>RailX是OCS辅助的超大规模Scale-Out方案，不是100K芯片单一Scale-Up域。</li>
+</ul>
+<p>Meta同时披露OSPA v1.0已提交OCP，由Meta、Microsoft和Alibaba共同牵头，标准化交换机平台层的电源管理/时序、传感器与环境控制、硬件Inventory、带外接口、固件维护和诊断。它不定义数据面拓扑，但对多供应商平台导入、维护和故障定位具有直接价值。ESUN 1.0已发布，Meta称ESUN 1.1正在推进交换机Profile和Inter-packet Gap优化。</p>
+<p>证据：<a href="https://engineering.fb.com/2026/10/12/open-source/ocp-summit-2026-powering-ai-with-open-innovations-in-scale-up-scale-out-and-scale-across-networks/">Meta OCP 2026官方技术总结（2026-10-12）</a>；<a href="https://www.opencompute.org/events/ocp-summit/2026-ocp-global-summit/recorded-content/">OCP 2026官方Recorded Content</a>。</p>
+
+<h3>2. NPO/CPX：可拆卸不等于在线热插拔FRU</h3>
+<p>Open CPX MSA Specification 1.0于2026-09-16批准，定义6.4Tbps（32×212.5Gbps）和7.2Tbps（36×212.5Gbps）Socket/Module，支持近封装/共封装铜或光介质，Host侧最高212.5Gbps/lane，并复用CMIS管理接口。</p>
+<ul>
+<li>Type-1模块标称最大供电能力115.65W，Type-2为122.22W；这是规范支持的供电上限，不代表所有模块的实际功耗。</li>
+<li>规范明确写明CPX模块“不预期支持热插拔/热拔出”；ELS/ELSFP由单独规范管理。</li>
+<li>模块插拔工具由模块厂商定义，工具不得侵入模块间隙；因此需要评估专用工具、冷板拆装、断电顺序、光纤清洁和重新训练链路。</li>
+<li>热测试边界包括52°C冷却液入口、Host substrate 85°C；对不超过40W模块，测试冷板换热系数为11,000W/m²·K，功率更高的模块需要更高换热能力。</li>
+</ul>
+<p><strong>结论：</strong>Socketed/Removable只能证明机械上可拆卸，不能据此宣称在线FRU。公开资料仍缺少批量出货量、直通率、现场更换步骤、MTTR、备件策略、系统停机损失和全生命周期成本（LCC）。MSA成员数量或规范批准也不等于量产。</p>
+<p>证据：<a href="https://www.opencpxmsa.org/wp-content/uploads/OpenCPX-Specification-v1.0.pdf">Open CPX Specification 1.0（2026-09-16）</a>；<a href="https://www.opencompute.org/events/ocp-summit/2026-ocp-global-summit/recorded-content/">OCP 2026官方Recorded Content</a>。</p>
+
+<h3>3. 224G/448G：224G已有产品化路径，448G仍受通道带宽与调制制约</h3>
+<p>Samtec在OCP 2026的“A Pathway to 224/448 Gbps Copper and Optical Connectivity”演讲中表示：其224G线缆产品组合包含约15mm×15mm封装内64对差分线方案；32AWG线缆在224G下报告约14dB插损；下一代OpenCPX/TwinX 1米铜缆PoC在448G PAM4下报告约35dB端到端损耗，在PAM6、83GHz下约25dB。以上为厂商演讲/样机数据，不是OIF/IEEE最终标准或大规模量产结果。</p>
+<p>OIF的CEI-448G-VSR与CEI-448G-LR项目仍在推进：前者面向芯片到模块，后者面向至少两个连接器的高损耗背板。OIF 448G框架指出，448G PAM4的Nyquist频率约112GHz，而当前代表性通道带宽约90GHz；PAM6约87—89GHz，可能更接近现有通道能力，但会引入SNR、FEC和与光侧PAM4调制对齐的问题。结论不是“448G PAM4已经可量产”，而是连接器、封装、PCB和调制方式共同决定下一代通道预算。</p>
+<p><strong>架构含义：</strong>224G代际的M7/M8材料、连接器、压接/CPC、Twinax和Retimer选择不能简单线性外推到448G；需要按VSR/LR、PAM4/PAM6、LPO/LRO/NPO分别建立通道预算和功耗边界。</p>
+<p>证据：<a href="https://www.oiforum.com/wp-content/uploads/OIF-FD-CEI-448G-01.0.pdf">OIF CEI-448G Framework</a>；<a href="https://www.oiforum.com/oif-q1-meeting-launches-projects-to-advance-secure-module-management-and-new-448g-electrical-interface-work/">OIF CEI-448G-VSR/LR项目说明（2026-03-03）</a>；<a href="https://jp.voicetube.com/videos/222636">Samtec OCP 2026演讲转录（第三方字幕转录，厂商自述）</a>。</p>
+
+<h3>4. 800VDC/高功率：讨论重点已从母线电压转向系统保护与可运维性</h3>
+<p>OCP 2026官方议程列出±400V/800V板级供电要求、600kW 800VDC Sidecar设计、端到端800VDC系统性能要求、2线/3线接地、短路故障分析和DC Arc Flash等议题。这说明800VDC不只是把54V母线升压，还需要统一中压/整流、母线、机柜DC/DC、保护选择性、接地、弧光和维护隔离策略。</p>
+<p>本轮可访问的OCP公开目录能够确认议题和设计方向，但没有足够的现场数据证明600kW Sidecar或1MW机柜已完成大规模生产部署，也没有可比的故障率、保护动作时间和现场MTTR数据。</p>
+<p>证据：<a href="https://www.opencompute.org/events/ocp-summit/2026-ocp-global-summit/recorded-content/">OCP 2026官方Recorded Content</a>。</p>
+
+<h3>5. NPO生命周期成本：当前最关键的公开证据缺口</h3>
+<p>OCP 2026已有Alibaba“Rethinking AI Scale-up with optics: from pluggable to (n)PO”、Meta“Beyond Pluggables”、Oracle/Microsoft/Ciena等NPO生态与部署演讲，以及光链路可靠性议题。但公开目录和当前可读材料仍不足以形成可横向比较的NPO量产良率、FRU更换时间、冷板拆装时间、光纤清洁复测时间、链路重训时间、备件成本和LCC数据。</p>
+<p>后续应优先追问：模块是否可在不拆GPU/冷板的情况下更换；是否需要整机断电；故障定位到模块/光纤/ELS的平均时间；更换后是否需要整域重新训练；现场MTTR的统计样本和分位数；与可插拔光模块、DAC/AEC相比的五年维护成本。</p>
+</section>
+
+<section>
+<h2>三、会议雷达</h2>
+<ul>
+<li><strong>SC26（11月15—20日，正在进行）：</strong>“Every Microsecond Matters”与RailX已在北京时间11月19日凌晨完成报告；“Ordered Chaos: Towards Adaptive Multipath Load Balancing with Precise, Fast Loss Detection”预计北京时间11月19日06:37—07:00报告。该论文（2026-10-30）在仿真/原型评估中报告尾部FCT最高约3倍改善、最多99%的超时恢复被消除、通信/训练性能最高约35%提升，并有DPU原型；这些是论文评估结果，不是大规模生产网络数据。另有“Memory-Centric HPC: CXL, Tiering, and Shared Memory”安排在北京时间11月20日00:30—02:00，重点跟踪CXL内存分层、共享内存和AI/HPC工作负载。</li>
+<li><strong>NVIDIA GTC Washington（11月30日—12月3日）：</strong>进入会前跟踪，重点看AI Factory、Agent推理、Rubin平台、网络与存储会话；不以产品发布新闻替代技术演讲和原始资料。</li>
+<li><strong>DesignCon 2027（2月2—4日）：</strong>纳入高速互连、SI/PI、连接器、224G/448G通道预算跟踪；2027具体议程仍需继续核验。</li>
+<li><strong>OCP Tech Day @ Digital Infrastructure World（2月3—4日）：</strong>官方议题指向1MW级机架、多加速器、Scale-Up网络、液冷和800VDC，列为下一轮重点会前准备。</li>
+<li><strong>窗口外预警：</strong>OFC 2027（3月7—11日）和OCP EMEA 2027（4月）超出未来90天窗口，提前登记，不作为本期90天内会议。</li>
+</ul>
+<p>对SC26继续执行会中/会后跟踪：补齐演讲PPT、论文、录播和标准更新；特别关注低曝光的GPU Collective、RDMA丢包恢复、CXL内存分层和OCS重构边界。</p>
+<p>证据：<a href="https://sc26.conference-program.com/">SC26官方议程</a>；<a href="https://arxiv.org/abs/2610.41707">Ordered Chaos论文（2026-10-30）</a>；<a href="https://www.nvidia.com/gtc/dc/">NVIDIA GTC Washington</a>；<a href="https://www.designcon.com/">DesignCon</a>；<a href="https://www.opencompute.org/events/">OCP官方活动日历</a>。</p>
+</section>
+
+<section>
+<h2>四、阿里AL144/AL64/SNPO/ALink跟踪</h2>
+<p>本轮未检出足以更新AL144、AL64、SNPO或ALink物理拓扑、端口映射、量产状态、FRU/MTTR和成本边界的新增官方公开证据。OCP 2026中Alibaba参与的NPO/光Scale-Up演讲及OSPA合作应继续跟踪，但不能把既有云栖会期或会议回顾包装成11月18—19日的新发布。</p>
+</section>
+
+<section>
+<h2>五、RSS与自动化健康自检</h2>
+<p><strong>本轮主简报：</strong>写入main分支feed.xml及archive/2026-11-19.html；保留最近90期，同日GUID为ai-supernode-brief-2026-11-19。发布后重新读取Blob和归档，核对条目数、GUID唯一性、CDATA全文和归档链接。</p>
+<ul>
+<li><strong>feed.xml：</strong>发布前90条，GUID唯一；本期更新后保持90条，最旧期按90期规则移出。</li>
+<li><strong>tech-alert-feed.xml：</strong>5条，最新2026-10-27，最新归档存在。对应条件预警任务目前已禁用，最近一次运行记录为2026-11-10；因此不能把“没有新条目”解释为任务持续扫描后无变化。</li>
+<li><strong>competitor-cost-feed.xml：</strong>5条，最新2026-11-16，归档存在。周报任务目前已禁用；最近一次运行记录为2026-11-16。按周一发布周期，本周尚未超过“周期+36小时”，但下周不会自动运行。</li>
+<li><strong>next-gen-architecture-feed.xml：</strong>3条，2026-11-14归档存在，但RSS条目顺序异常：首条pubDate为11月7日，第三条才是11月14日。任务仍启用，最近一次运行记录为11月14日，下一次计划11月21日；本轮只报告，不修改。</li>
+<li><strong>ai-memory-feed.xml：</strong>4条，最新2026-11-13，最新归档存在，任务仍启用，下一次计划11月20日。另发现较早的2026-09-25条目链接指向ai-memory-feed.xml而非对应归档，且对应日期归档未找到；本轮不修改历史内容。</li>
+</ul>
+<p>五个RSS文件均能通过GitHub API/Blob读取，XML标签结构、CDATA配对和GUID检查通过；各自最新文章归档均存在。AI Memory较早的9月25日历史链接异常如上。raw.githubusercontent网页抓取在本轮返回工具侧DisabledError，不能据此判定订阅地址对用户不可达；Follow客户端缓存/延迟无法直接读取。主日报上一期为11月18日，未达到36小时超期阈值。当前主任务运行状态在核查时显示进行中；未修改任何其他自动化任务。</p>
+<p><strong>系统告警：</strong>关键技术预警任务已禁用；竞品成本周报任务已禁用（本周尚未逾期）；下一代架构RSS条目顺序异常；AI Memory存在一条历史归档链接错误。Follow缓存状态无法验证。</p>
+</section>
+
+<section>
+<h2>六、本期架构结论</h2>
+<p>推理侧，KV-aware routing与P/D解耦正在把KV状态、RDMA网络和调度器推到系统一等位置；硬件侧，Decode长上下文的关键路径可能受微秒级Collective同步支配。网络侧，RailX说明超大规模Scale-Out可探索OCS，但不能与单一Scale-Up域混称。OCP侧，Meta已公开16加速器Tahan系统和72加速器/机架预览；1024/5000+规模仍需区分概念、提案与部署。NPO/448G/800VDC的标准和样机进展明确，但量产良率、在线维护、MTTR和LCC仍是公开证据短板。</p>
+</section>
+
+<section>
+<h2>六、来源索引</h2>
+<ul>
+<li><a href="https://aws.amazon.com/blogs/machine-learning/amazon-sagemaker-ai-real-time-endpoints-now-support-kv-cache-aware-routing/">AWS KV-aware routing</a> — 2026-11-17，产品功能与厂商基准。</li>
+<li><a href="https://aws.amazon.com/blogs/machine-learning/managed-nvidia-dynamo-on-amazon-sagemaker-hyperpod-inference/">AWS Managed NVIDIA Dynamo on HyperPod</a> — 2026-11-17，P/D解耦、EFA和H200测试。</li>
+<li><a href="https://www.cerebras.ai/blog/cerebras-launches-disaggregated-inference">Cerebras Disaggregated Inference</a> — 2026-11-17，生产测量口径为2026-11-14共享端点。</li>
+<li><a href="https://arxiv.org/abs/2607.16100">Every Microsecond Matters</a> — 2026-07-17论文，SC26于2026-11-18报告。</li>
+<li><a href="https://arxiv.org/abs/2507.18889">RailX</a> — 2025-07-25论文，SC26于2026-11-18报告。</li>
+<li><a href="https://arxiv.org/abs/2610.41707">Ordered Chaos</a> — 2026-10-30论文，SC26会中跟踪。</li>
+<li><a href="https://engineering.fb.com/2026/10/12/open-source/ocp-summit-2026-powering-ai-with-open-innovations-in-scale-up-scale-out-and-scale-across-networks/">Meta OCP 2026官方技术总结</a> — 2026-10-12，Tahan、72加速器预览、ESUN、OSPA。</li>
+<li><a href="https://www.opencompute.org/events/ocp-summit/2026-ocp-global-summit/recorded-content/">OCP 2026 Recorded Content</a> — 会后录播、PPT和专题目录。</li>
+<li><a href="https://www.opencpxmsa.org/wp-content/uploads/OpenCPX-Specification-v1.0.pdf">Open CPX Specification 1.0</a> — 2026-09-16，212.5G/lane、6.4/7.2T、功耗、热和插拔边界。</li>
+<li><a href="https://www.oiforum.com/wp-content/uploads/OIF-FD-CEI-448G-01.0.pdf">OIF CEI-448G Framework</a> — 448G调制与通道带宽框架。</li>
+<li><a href="https://www.oiforum.com/oif-q1-meeting-launches-projects-to-advance-secure-module-management-and-new-448g-electrical-interface-work/">OIF CEI-448G-VSR/LR项目</a> — 2026-03-03，项目范围与目标。</li>
+<li><a href="https://jp.voicetube.com/videos/222636">Samtec OCP 2026 224/448G演讲转录</a> — 2026-10-22，第三方字幕转录的厂商演示数据。</li>
+<li><a href="https://sc26.conference-program.com/">SC26官方会议议程</a> — 2026-11-15至20，会中报告安排。</li>
+<li><a href="https://www.nvidia.com/gtc/dc/">NVIDIA GTC Washington</a> — 2026-11-30至12-03。</li>
+<li><a href="https://www.designcon.com/">DesignCon</a> — 2027-02-02至04。</li>
+<li><a href="https://www.opencompute.org/events/">OCP官方活动日历</a> — 包含2027 OCP Tech Day等后续活动。</li>
+</ul>
+</section>
+</article>
