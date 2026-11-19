@@ -1,0 +1,105 @@
+<article lang="zh-CN">
+<header>
+<h1>AI算力架构前沿简报｜2026年11月20日</h1>
+<p><strong>观察窗口：</strong>北京时间2026-11-19 05:00—2026-11-20 05:00；必要时回溯7天。OCP 2026会后资料按专项任务补扫，虽已超出过去30天窗口，不视作最新会期动态。</p>
+<p><strong>本期判断：</strong>四项变化分别指向生产级CPO、远端共享内存池、Agent持久记忆，以及72-GPU机架系统的交付成熟度。它们共同说明AI基础设施正在从“GPU数量与峰值互联”向“网络/状态/数据/维护边界”演进。</p>
+<p><strong>证据口径：</strong>生产部署、厂商测试、产品GA、采样计划与架构预览分别标注；没有公开量化数据时不补猜测。</p>
+</header>
+<section>
+<h2>一、本期四项最值得关注的变化</h2>
+<h3>1. Lambda：10,000+ GPU生产集群使用CPO交换网络</h3>
+<p><strong>发布日期/事件：</strong>2026-11-16｜<strong>证据等级：</strong>厂商宣布生产部署＋厂商测试</p>
+<p><strong>业务变化：</strong>大规模训练的同步通信使网络中断、链路功耗与光模块温度直接影响GPU有效工作时间。Lambda宣布在其Quebec AI campus使用NVIDIA Photonics CPO交换机连接10,000+ NVIDIA Blackwell Ultra GPU。</p>
+<p><strong>计算/数据特征：</strong>每台交换机144×800Gb/s端口、液冷、18个可更换外置光源。Lambda报告在rack、scalable unit与pod配置下吞吐与传统可插拔光学相同，网络时延差距从rack约3.8%扩大到pod约10.1%；光学中位温度36°C，传统可插拔为51°C。</p>
+<p><strong>技术边界：</strong>15×可靠性、5×功耗效率、4×少激光器属于厂商对比指标，尚非独立第三方验证或公开MTBF/MTTR数据。外置光源可现场更换，但光引擎与交换ASIC仍是封装级维护边界。</p>
+<p><strong>硬件应对：</strong>评估CPO时应把ELS/ELSFP作为独立FRU，设计光源冗余、清洁/插拔空间、液冷拆装、故障定位与业务迁移流程；同时以真实作业的吞吐、尾时延、温度和故障恢复时间验证，而非只比较每bit功耗。</p>
+<p><strong>原始证据：</strong><a href="https://lambda.com/blog/worlds-first-large-scale-deployment-of-nvidia-photonics-switches-with-cpo">Lambda生产部署公告（11/16）</a>；<a href="https://blogs.nvidia.com/blog/lambda-photonics/">NVIDIA技术说明（11/16）</a>。</p>
+
+<h3>2. Penguin Solutions：光子Fabric共享CPU/GPU内存池进入产品路线</h3>
+<p><strong>发布日期：</strong>2026-11-16｜<strong>证据等级：</strong>厂商产品公告／未来采样计划</p>
+<p><strong>业务变化：</strong>Agent长任务、多轮上下文与KV Cache会持续增加GPU-attached HBM压力，缓存状态需要跨GPU、CPU与不同推理阶段复用。</p>
+<p><strong>计算/数据特征：</strong>MemoryAI Photonic Appliance规划每台最多16TB DDR5＋576GB HBM3E，目标总带宽57.6Tbps；支持HBM Direct、HBM-DDR5 Cached、DDR5 Direct三种访问模式，通过CXL 3.0与Marvell photonic NIC共享CPU/GPU内存。厂商强调可静态或动态分配内存。</p>
+<p><strong>技术边界：</strong>产品计划在2027年下半年向部分客户采样。57.6Tbps是整机目标带宽，不等于每GPU带宽或本地HBM时延；目前未披露真实并发、访问时延、缓存一致性、QoS与故障域的实测数据。</p>
+<p><strong>硬件应对：</strong>可将其视为HBM之外的扩展层候选：HBM保存活动Token与热点KV，远端HBM/DDR池保存冷状态；需要评估KV迁移、CXL/光网络拓扑、内存分配策略及失效恢复。不能以远端容量替代本地HBM性能预算。</p>
+<p><strong>原始证据：</strong><a href="https://ir.penguinsolutions.com/news/news-details/2026/Penguin-Solutions-Unveils-Industrys-First-Photonics-Based-HBM-Class-Memory-Appliance-to-Break-the-GPU-Memory-Wall-for-Agentic-AI/default.aspx">Penguin Solutions官方公告（11/16）</a>。</p>
+
+<h3>3. MinIO AIStor Memory正式GA：Agent记忆成为持久数据层</h3>
+<p><strong>发布日期：</strong>2026-11-18｜<strong>证据等级：</strong>正式GA公告</p>
+<p><strong>业务变化：</strong>Agent不再只是一次请求内的上下文；长期研究、代码工作、人工中断后恢复和跨Agent共享，需要保留决策、产物、知识与权限。</p>
+<p><strong>计算/数据特征：</strong>AIStor Memory将长期记忆、持久Workspace与Secrets整合到对象/表格数据基础上，支持HTTPS与POSIX挂载；可跨会话保存状态，并通过治理、加密、擦除编码与审计机制管理。</p>
+<p><strong>技术边界：</strong>GA说明产品可用性，不代表公开的性能基准。持久Agent Memory与推理时KV Cache不同：前者是跨任务可治理知识，后者是Token生成的瞬态状态；不能将两者混为同一容量或时延层。</p>
+<p><strong>硬件应对：</strong>推理平台可规划“HBM热KV—DRAM/高速共享缓存—NVMe/对象持久Memory”分层。应以读写模式、检索并发、索引/元数据、持久化与恢复要求决定存储节点、NVMe容量和网络带宽，不把Agent记忆全部放在GPU HBM。</p>
+<p><strong>原始证据：</strong><a href="https://www.min.io/press/minio-marks-two-years-of-aistor-with-innovation-enterprise-ai-momentum-and-global-partnerships">MinIO官方GA公告（11/18）</a>。</p>
+
+<h3>4. ASUS：Vera Rubin NVL72进入Q4量产出货爬坡</h3>
+<p><strong>发布日期/事件：</strong>2026-11-19｜<strong>证据等级：</strong>厂商供货与制造准备声明</p>
+<p><strong>业务变化：</strong>系统竞争逐步从取得GPU转向整柜制造、部署验证与交付可预测性。ASUS宣布Q4扩大Vera Rubin NVL72量产出货。</p>
+<p><strong>计算/数据特征：</strong>参考系统为72颗Rubin GPU＋36颗Vera CPU、全液冷；L10/L11自动化制造、六层Rack Validation、BIOS/BMC、上电循环、压力测试、NVIDIA诊断与机架级性能评估。</p>
+<p><strong>技术边界：</strong>这是厂商出货爬坡公告，未披露实际出货量、整柜功率、冷却流量/温差、现场良率、MTTR或可靠性统计。</p>
+<p><strong>硬件应对：</strong>72-GPU级产品的架构评估应同时纳入生产可制造性、液冷/供电装配、线缆与光纤管理、机柜级验证和现场服务流程；“设计完成”不等于“量产可交付”。</p>
+<p><strong>原始证据：</strong><a href="https://press.asus.com/news/press-releases/asus-ramps-up-nvidia-vera-rubin-nvl72-shipments-sc26/">ASUS官方新闻稿（11/19）</a>。</p>
+</section>
+
+<section>
+<h2>二、2026 OCP会后专项补扫：边界比规模数字更重要</h2>
+<p>OCP官方Recorded Content索引已列出视频与部分PPT。本轮核对了议程/资料索引；YouTube录播与部分Google Drive文件无法被当前读取工具完整打开，因此下列量化信息只采用可访问的官方文本、规范或公开声明，录播内容仍待复核。</p>
+<h3>Scale-Up：16颗已披露、72颗预览、5000+是开放架构提案</h3>
+<ul>
+<li><strong>Meta Tahan：</strong>Tomahawk 5 51.2Tbps、64×800G总端口；4台交换机以非阻塞拓扑连接16颗MTIA 300。Meta下一代预览采用102.4T Tomahawk6C、216×400G交换刀片，8台交换机连接72颗加速器/机架。72颗是预览，不是量产部署数据。</li>
+<li><strong>Eridu/Delos：</strong>OCP演讲标题“Multi-rack Scale-up Domain of 5000+ GPUs”，公开工作流目标是数百至数千xPU的开放、多机柜、单层高Radix网络；尚未发现可核实的5000+ GPU实装拓扑、负载测试或单跳全域实测。</li>
+<li><strong>架构判断：</strong>16/72颗单机架方案和数千xPU多机柜提案不是同一成熟度。128/512/1000+ GPU域仍需公开验证端口映射、拓扑跳数、有效带宽、Collective负载、线缆/光链路与故障恢复边界。</li>
+</ul>
+<p><strong>原始证据：</strong><a href="https://engineering.fb.com/2026/10/12/open-source/ocp-summit-2026-powering-ai-with-open-innovations-in-scale-up-scale-out-and-scale-across-networks/">Meta OCP 2026技术发布</a>；<a href="https://eridu.ai/news/why-ai-needs-disaggregated-multi-rack-scale-up-architectures/">Eridu/Delos多机柜Scale-Up工作流</a>；<a href="https://www.opencompute.org/events/ocp-summit/2026-ocp-global-summit/recorded-content/">OCP官方录播/PPT索引</a>。</p>
+
+<h3>448G：现有约90GHz通道与PAM4 112GHz Nyquist之间仍有缺口</h3>
+<p>OIF CEI-448G Framework指出，448G PAM4需要约112GHz Nyquist；448G PAM6约86.66GHz、PAM8约74.67GHz，但高阶PAM的SNR代价更高。代表性现有通道带宽约90GHz时，PAM4并不可行，PAM6/PAM8只能作为技术路径，不能视作已经定案的接口。</p>
+<p><strong>硬件应对：</strong>224G可用通道不能简单按倍速推导为448G；需重新评估封装逃逸、连接器、PCB、线缆、调制/FEC、MLSE与功耗。短距Scale-Up应并行比较慢而宽、铜缆、CPC与光学路径。</p>
+<p><strong>原始证据：</strong><a href="https://www.oiforum.com/wp-content/uploads/OIF-FD-CEI-448G-01.0.pdf">OIF CEI-448G Framework（2025-11-04）</a>；<a href="https://www.opencompute.org/events/ocp-summit/2026-ocp-global-summit/recorded-content/">OCP 2026 Samtec 224/448G session索引</a>。</p>
+
+<h3>NPO/CPX：Socket标准化不等于在线FRU</h3>
+<p>Open CPX MSA Specification 1.0（2026-09-16）定义6.4T（32×212.5G）与7.2T（36×212.5G）模块/socket。规范明确CPX模块不预期支持热插拔/热拔出；ELS/ELSFP由另行规范管理。Type-1与Type-2模块供电能力上限分别为115.65W和122.22W（最大标称供电能力，不等于实际功耗）。</p>
+<p><strong>架构判断：</strong>Socket可降低生态与更换门槛，但模块更换仍可能要求系统停电/停链路；公开资料尚无可比较的量产良率、FRU流程、MTTR或全生命周期成本数据。需把冷板拆装、光纤清洁、ELS更换、链路训练与作业恢复纳入维护设计。</p>
+<p><strong>原始证据：</strong><a href="https://www.opencpxmsa.org/wp-content/uploads/OpenCPX-Specification-v1.0.pdf">Open CPX MSA Specification 1.0</a>。</p>
+
+<h3>800VDC/MW级机柜：议程已明确，量化部署仍待验证</h3>
+<p>OCP录播索引包含800VDC转换、MV-to-800VDC、1MW机柜验证、液冷与电源架构演讲。本轮无法打开完整录播/PPT，未提取新的量化实装数据。下一轮重点跟踪DC保护、Arc Flash、故障隔离、母线/PowerShelf边界、冷却功率密度与维护。</p>
+</section>
+
+<section>
+<h2>三、会议雷达</h2>
+<table>
+<thead><tr><th>会议</th><th>日期/状态</th><th>本次判断与关注</th></tr></thead>
+<tbody>
+<tr><td>SC26</td><td>11/15–20，进行中（今天最后一天）</td><td>Agent Memory、光子共享内存、异构推理、AI存储与网络系统；继续追踪论文和会后资料。</td></tr>
+<tr><td>Digital Infrastructure World / OCP Tech Day</td><td>2027/02/02–04（未来约74天）</td><td>OCP Rack Track：1MW机柜、In-rack Scale-Up/ESUN、液冷、800VDC与开放Busbar；议程为Draft，持续跟踪变更。</td></tr>
+<tr><td>DesignCon 2027</td><td>2027/02/02–04（未来约74天）</td><td>15个技术Track，重点SI/PI、高速链路、连接器、224G/448G与测试方法；完整议程继续更新。</td></tr>
+<tr><td>OFC 2027</td><td>2027/03/07–11（超出90天窗口）</td><td>光器件、光网络、AI数据中心互联；作者通知预计12/14–18。</td></tr>
+<tr><td>NVIDIA GTC 2027</td><td>2027/03/14–18（超出90天窗口）</td><td>Rubin、推理系统、Agent与AI Factory；暂作提前预警。</td></tr>
+</tbody>
+</table>
+<p>OIF、UALink、UEC、AMD Advancing AI、Computex及云栖：本轮未核实到未来90天内的官方会期/议程更新，不填推测日期。</p>
+<p><strong>官方日程：</strong><a href="https://www.digitalinfraworld.com/education/conference-tracks/">DIW/OCP 1MW Rack Track</a>；<a href="https://www.digitalinfraworld.com/education/agenda/">DIW/OCP Draft Agenda</a>；<a href="https://www.designcon.com/">DesignCon</a>；<a href="https://www.ofcconference.org/about">OFC</a>；<a href="https://www.nvidia.com/gtc/faq/">NVIDIA GTC</a>。</p>
+</section>
+
+<section>
+<h2>四、阿里云栖2026 SNPO持续跟踪</h2>
+<p>本轮未发现新的官方公开证据足以更新AL144、AL64、SNPO、ALink的物理拓扑、端口映射、量产/维护或成本基线。保留专项追踪，不把旧会期或旧资料包装成最新动态。</p>
+</section>
+
+<section>
+<h2>五、RSS与自动化健康检查</h2>
+<ul>
+<li>五个RSS均可从GitHub读取，RSS结构、item/GUID唯一性及CDATA配对检查通过。</li>
+<li>主Feed发布前90条，最新11/19；本次新增11/20并移除最旧一条，继续保留90条。原archive目录88期，本次新增后89期，不超过90期。</li>
+<li><strong>技术预警：</strong>任务已禁用；最近运行11/10完成，Feed最新10/27。之后没有扫描，不能解释为条件无变化。</li>
+<li><strong>竞品与成本周报：</strong>任务已禁用；最近运行11/15完成，Feed最新11/16。未逾期，但下一周期不会自动运行。</li>
+<li><strong>下一代架构专题：</strong>任务启用，最近运行11/13完成，下一次11/21 06:00。RSS顺序异常：首条11/07、第二条10/31、第三条11/14；11/14归档存在，提示排序/写入一致性问题。</li>
+<li><strong>AI Memory周报：</strong>任务启用，最近运行11/13完成，下一次11/20 17:00；目前未逾期。9/25历史条目仍链接RSS文件而非归档。</li>
+<li>Follow客户端缓存无法直接读取；不能把缓存延迟判定为GitHub发布失败。</li>
+</ul>
+</section>
+
+<footer>
+<p><strong>本期结论：</strong>CPO已有10,000+ GPU生产部署公开案例，但需要把可更换外置光源与封装光引擎维护边界分开；Agent Memory正在形成HBM/KV与持久数据层之间的新层级，但光子共享内存仍是2027采样路线；Scale-Up规模数字必须区分16颗已披露、72颗预览与5000+提案。对超节点架构，下一步优先验证真实负载下有效带宽、状态迁移、维护恢复与生命周期成本，而非只看峰值。</p>
+</footer>
+</article>

@@ -5,11 +5,122 @@
     <link>https://github.com/YanLiang518/ai-supernode-rss</link>
     <description>聚焦 AI 超节点、GPU/加速芯片、Scale-up 互联、NPO/CPO、液冷、供电与头部厂商架构动态。</description>
     <language>zh-cn</language>
-    <pubDate>Thu, 19 Nov 2026 05:00:00 +0800</pubDate>
-    <lastBuildDate>Thu, 19 Nov 2026 05:00:00 +0800</lastBuildDate>
+    <pubDate>Fri, 20 Nov 2026 05:00:00 +0800</pubDate>
+    <lastBuildDate>Fri, 20 Nov 2026 05:00:00 +0800</lastBuildDate>
     <ttl>15</ttl>
     <atom:link href="https://raw.githubusercontent.com/YanLiang518/ai-supernode-rss/main/feed.xml" rel="self" type="application/rss+xml"/>
         <item>
+      <title>AI算力架构前沿简报｜2026年11月20日</title>
+      <link>https://raw.githubusercontent.com/YanLiang518/ai-supernode-rss/main/archive/2026-11-20.html</link>
+      <guid isPermaLink="false">ai-supernode-brief-2026-11-20</guid>
+      <pubDate>Fri, 20 Nov 2026 05:00:00 +0800</pubDate>
+      <description><![CDATA[<article lang="zh-CN">
+<header>
+<h1>AI算力架构前沿简报｜2026年11月20日</h1>
+<p><strong>观察窗口：</strong>北京时间2026-11-19 05:00—2026-11-20 05:00；必要时回溯7天。OCP 2026会后资料按专项任务补扫，虽已超出过去30天窗口，不视作最新会期动态。</p>
+<p><strong>本期判断：</strong>四项变化分别指向生产级CPO、远端共享内存池、Agent持久记忆，以及72-GPU机架系统的交付成熟度。它们共同说明AI基础设施正在从“GPU数量与峰值互联”向“网络/状态/数据/维护边界”演进。</p>
+<p><strong>证据口径：</strong>生产部署、厂商测试、产品GA、采样计划与架构预览分别标注；没有公开量化数据时不补猜测。</p>
+</header>
+<section>
+<h2>一、本期四项最值得关注的变化</h2>
+<h3>1. Lambda：10,000+ GPU生产集群使用CPO交换网络</h3>
+<p><strong>发布日期/事件：</strong>2026-11-16｜<strong>证据等级：</strong>厂商宣布生产部署＋厂商测试</p>
+<p><strong>业务变化：</strong>大规模训练的同步通信使网络中断、链路功耗与光模块温度直接影响GPU有效工作时间。Lambda宣布在其Quebec AI campus使用NVIDIA Photonics CPO交换机连接10,000+ NVIDIA Blackwell Ultra GPU。</p>
+<p><strong>计算/数据特征：</strong>每台交换机144×800Gb/s端口、液冷、18个可更换外置光源。Lambda报告在rack、scalable unit与pod配置下吞吐与传统可插拔光学相同，网络时延差距从rack约3.8%扩大到pod约10.1%；光学中位温度36°C，传统可插拔为51°C。</p>
+<p><strong>技术边界：</strong>15×可靠性、5×功耗效率、4×少激光器属于厂商对比指标，尚非独立第三方验证或公开MTBF/MTTR数据。外置光源可现场更换，但光引擎与交换ASIC仍是封装级维护边界。</p>
+<p><strong>硬件应对：</strong>评估CPO时应把ELS/ELSFP作为独立FRU，设计光源冗余、清洁/插拔空间、液冷拆装、故障定位与业务迁移流程；同时以真实作业的吞吐、尾时延、温度和故障恢复时间验证，而非只比较每bit功耗。</p>
+<p><strong>原始证据：</strong><a href="https://lambda.com/blog/worlds-first-large-scale-deployment-of-nvidia-photonics-switches-with-cpo">Lambda生产部署公告（11/16）</a>；<a href="https://blogs.nvidia.com/blog/lambda-photonics/">NVIDIA技术说明（11/16）</a>。</p>
+
+<h3>2. Penguin Solutions：光子Fabric共享CPU/GPU内存池进入产品路线</h3>
+<p><strong>发布日期：</strong>2026-11-16｜<strong>证据等级：</strong>厂商产品公告／未来采样计划</p>
+<p><strong>业务变化：</strong>Agent长任务、多轮上下文与KV Cache会持续增加GPU-attached HBM压力，缓存状态需要跨GPU、CPU与不同推理阶段复用。</p>
+<p><strong>计算/数据特征：</strong>MemoryAI Photonic Appliance规划每台最多16TB DDR5＋576GB HBM3E，目标总带宽57.6Tbps；支持HBM Direct、HBM-DDR5 Cached、DDR5 Direct三种访问模式，通过CXL 3.0与Marvell photonic NIC共享CPU/GPU内存。厂商强调可静态或动态分配内存。</p>
+<p><strong>技术边界：</strong>产品计划在2027年下半年向部分客户采样。57.6Tbps是整机目标带宽，不等于每GPU带宽或本地HBM时延；目前未披露真实并发、访问时延、缓存一致性、QoS与故障域的实测数据。</p>
+<p><strong>硬件应对：</strong>可将其视为HBM之外的扩展层候选：HBM保存活动Token与热点KV，远端HBM/DDR池保存冷状态；需要评估KV迁移、CXL/光网络拓扑、内存分配策略及失效恢复。不能以远端容量替代本地HBM性能预算。</p>
+<p><strong>原始证据：</strong><a href="https://ir.penguinsolutions.com/news/news-details/2026/Penguin-Solutions-Unveils-Industrys-First-Photonics-Based-HBM-Class-Memory-Appliance-to-Break-the-GPU-Memory-Wall-for-Agentic-AI/default.aspx">Penguin Solutions官方公告（11/16）</a>。</p>
+
+<h3>3. MinIO AIStor Memory正式GA：Agent记忆成为持久数据层</h3>
+<p><strong>发布日期：</strong>2026-11-18｜<strong>证据等级：</strong>正式GA公告</p>
+<p><strong>业务变化：</strong>Agent不再只是一次请求内的上下文；长期研究、代码工作、人工中断后恢复和跨Agent共享，需要保留决策、产物、知识与权限。</p>
+<p><strong>计算/数据特征：</strong>AIStor Memory将长期记忆、持久Workspace与Secrets整合到对象/表格数据基础上，支持HTTPS与POSIX挂载；可跨会话保存状态，并通过治理、加密、擦除编码与审计机制管理。</p>
+<p><strong>技术边界：</strong>GA说明产品可用性，不代表公开的性能基准。持久Agent Memory与推理时KV Cache不同：前者是跨任务可治理知识，后者是Token生成的瞬态状态；不能将两者混为同一容量或时延层。</p>
+<p><strong>硬件应对：</strong>推理平台可规划“HBM热KV—DRAM/高速共享缓存—NVMe/对象持久Memory”分层。应以读写模式、检索并发、索引/元数据、持久化与恢复要求决定存储节点、NVMe容量和网络带宽，不把Agent记忆全部放在GPU HBM。</p>
+<p><strong>原始证据：</strong><a href="https://www.min.io/press/minio-marks-two-years-of-aistor-with-innovation-enterprise-ai-momentum-and-global-partnerships">MinIO官方GA公告（11/18）</a>。</p>
+
+<h3>4. ASUS：Vera Rubin NVL72进入Q4量产出货爬坡</h3>
+<p><strong>发布日期/事件：</strong>2026-11-19｜<strong>证据等级：</strong>厂商供货与制造准备声明</p>
+<p><strong>业务变化：</strong>系统竞争逐步从取得GPU转向整柜制造、部署验证与交付可预测性。ASUS宣布Q4扩大Vera Rubin NVL72量产出货。</p>
+<p><strong>计算/数据特征：</strong>参考系统为72颗Rubin GPU＋36颗Vera CPU、全液冷；L10/L11自动化制造、六层Rack Validation、BIOS/BMC、上电循环、压力测试、NVIDIA诊断与机架级性能评估。</p>
+<p><strong>技术边界：</strong>这是厂商出货爬坡公告，未披露实际出货量、整柜功率、冷却流量/温差、现场良率、MTTR或可靠性统计。</p>
+<p><strong>硬件应对：</strong>72-GPU级产品的架构评估应同时纳入生产可制造性、液冷/供电装配、线缆与光纤管理、机柜级验证和现场服务流程；“设计完成”不等于“量产可交付”。</p>
+<p><strong>原始证据：</strong><a href="https://press.asus.com/news/press-releases/asus-ramps-up-nvidia-vera-rubin-nvl72-shipments-sc26/">ASUS官方新闻稿（11/19）</a>。</p>
+</section>
+
+<section>
+<h2>二、2026 OCP会后专项补扫：边界比规模数字更重要</h2>
+<p>OCP官方Recorded Content索引已列出视频与部分PPT。本轮核对了议程/资料索引；YouTube录播与部分Google Drive文件无法被当前读取工具完整打开，因此下列量化信息只采用可访问的官方文本、规范或公开声明，录播内容仍待复核。</p>
+<h3>Scale-Up：16颗已披露、72颗预览、5000+是开放架构提案</h3>
+<ul>
+<li><strong>Meta Tahan：</strong>Tomahawk 5 51.2Tbps、64×800G总端口；4台交换机以非阻塞拓扑连接16颗MTIA 300。Meta下一代预览采用102.4T Tomahawk6C、216×400G交换刀片，8台交换机连接72颗加速器/机架。72颗是预览，不是量产部署数据。</li>
+<li><strong>Eridu/Delos：</strong>OCP演讲标题“Multi-rack Scale-up Domain of 5000+ GPUs”，公开工作流目标是数百至数千xPU的开放、多机柜、单层高Radix网络；尚未发现可核实的5000+ GPU实装拓扑、负载测试或单跳全域实测。</li>
+<li><strong>架构判断：</strong>16/72颗单机架方案和数千xPU多机柜提案不是同一成熟度。128/512/1000+ GPU域仍需公开验证端口映射、拓扑跳数、有效带宽、Collective负载、线缆/光链路与故障恢复边界。</li>
+</ul>
+<p><strong>原始证据：</strong><a href="https://engineering.fb.com/2026/10/12/open-source/ocp-summit-2026-powering-ai-with-open-innovations-in-scale-up-scale-out-and-scale-across-networks/">Meta OCP 2026技术发布</a>；<a href="https://eridu.ai/news/why-ai-needs-disaggregated-multi-rack-scale-up-architectures/">Eridu/Delos多机柜Scale-Up工作流</a>；<a href="https://www.opencompute.org/events/ocp-summit/2026-ocp-global-summit/recorded-content/">OCP官方录播/PPT索引</a>。</p>
+
+<h3>448G：现有约90GHz通道与PAM4 112GHz Nyquist之间仍有缺口</h3>
+<p>OIF CEI-448G Framework指出，448G PAM4需要约112GHz Nyquist；448G PAM6约86.66GHz、PAM8约74.67GHz，但高阶PAM的SNR代价更高。代表性现有通道带宽约90GHz时，PAM4并不可行，PAM6/PAM8只能作为技术路径，不能视作已经定案的接口。</p>
+<p><strong>硬件应对：</strong>224G可用通道不能简单按倍速推导为448G；需重新评估封装逃逸、连接器、PCB、线缆、调制/FEC、MLSE与功耗。短距Scale-Up应并行比较慢而宽、铜缆、CPC与光学路径。</p>
+<p><strong>原始证据：</strong><a href="https://www.oiforum.com/wp-content/uploads/OIF-FD-CEI-448G-01.0.pdf">OIF CEI-448G Framework（2025-11-04）</a>；<a href="https://www.opencompute.org/events/ocp-summit/2026-ocp-global-summit/recorded-content/">OCP 2026 Samtec 224/448G session索引</a>。</p>
+
+<h3>NPO/CPX：Socket标准化不等于在线FRU</h3>
+<p>Open CPX MSA Specification 1.0（2026-09-16）定义6.4T（32×212.5G）与7.2T（36×212.5G）模块/socket。规范明确CPX模块不预期支持热插拔/热拔出；ELS/ELSFP由另行规范管理。Type-1与Type-2模块供电能力上限分别为115.65W和122.22W（最大标称供电能力，不等于实际功耗）。</p>
+<p><strong>架构判断：</strong>Socket可降低生态与更换门槛，但模块更换仍可能要求系统停电/停链路；公开资料尚无可比较的量产良率、FRU流程、MTTR或全生命周期成本数据。需把冷板拆装、光纤清洁、ELS更换、链路训练与作业恢复纳入维护设计。</p>
+<p><strong>原始证据：</strong><a href="https://www.opencpxmsa.org/wp-content/uploads/OpenCPX-Specification-v1.0.pdf">Open CPX MSA Specification 1.0</a>。</p>
+
+<h3>800VDC/MW级机柜：议程已明确，量化部署仍待验证</h3>
+<p>OCP录播索引包含800VDC转换、MV-to-800VDC、1MW机柜验证、液冷与电源架构演讲。本轮无法打开完整录播/PPT，未提取新的量化实装数据。下一轮重点跟踪DC保护、Arc Flash、故障隔离、母线/PowerShelf边界、冷却功率密度与维护。</p>
+</section>
+
+<section>
+<h2>三、会议雷达</h2>
+<table>
+<thead><tr><th>会议</th><th>日期/状态</th><th>本次判断与关注</th></tr></thead>
+<tbody>
+<tr><td>SC26</td><td>11/15–20，进行中（今天最后一天）</td><td>Agent Memory、光子共享内存、异构推理、AI存储与网络系统；继续追踪论文和会后资料。</td></tr>
+<tr><td>Digital Infrastructure World / OCP Tech Day</td><td>2027/02/02–04（未来约74天）</td><td>OCP Rack Track：1MW机柜、In-rack Scale-Up/ESUN、液冷、800VDC与开放Busbar；议程为Draft，持续跟踪变更。</td></tr>
+<tr><td>DesignCon 2027</td><td>2027/02/02–04（未来约74天）</td><td>15个技术Track，重点SI/PI、高速链路、连接器、224G/448G与测试方法；完整议程继续更新。</td></tr>
+<tr><td>OFC 2027</td><td>2027/03/07–11（超出90天窗口）</td><td>光器件、光网络、AI数据中心互联；作者通知预计12/14–18。</td></tr>
+<tr><td>NVIDIA GTC 2027</td><td>2027/03/14–18（超出90天窗口）</td><td>Rubin、推理系统、Agent与AI Factory；暂作提前预警。</td></tr>
+</tbody>
+</table>
+<p>OIF、UALink、UEC、AMD Advancing AI、Computex及云栖：本轮未核实到未来90天内的官方会期/议程更新，不填推测日期。</p>
+<p><strong>官方日程：</strong><a href="https://www.digitalinfraworld.com/education/conference-tracks/">DIW/OCP 1MW Rack Track</a>；<a href="https://www.digitalinfraworld.com/education/agenda/">DIW/OCP Draft Agenda</a>；<a href="https://www.designcon.com/">DesignCon</a>；<a href="https://www.ofcconference.org/about">OFC</a>；<a href="https://www.nvidia.com/gtc/faq/">NVIDIA GTC</a>。</p>
+</section>
+
+<section>
+<h2>四、阿里云栖2026 SNPO持续跟踪</h2>
+<p>本轮未发现新的官方公开证据足以更新AL144、AL64、SNPO、ALink的物理拓扑、端口映射、量产/维护或成本基线。保留专项追踪，不把旧会期或旧资料包装成最新动态。</p>
+</section>
+
+<section>
+<h2>五、RSS与自动化健康检查</h2>
+<ul>
+<li>五个RSS均可从GitHub读取，RSS结构、item/GUID唯一性及CDATA配对检查通过。</li>
+<li>主Feed发布前90条，最新11/19；本次新增11/20并移除最旧一条，继续保留90条。原archive目录88期，本次新增后89期，不超过90期。</li>
+<li><strong>技术预警：</strong>任务已禁用；最近运行11/10完成，Feed最新10/27。之后没有扫描，不能解释为条件无变化。</li>
+<li><strong>竞品与成本周报：</strong>任务已禁用；最近运行11/15完成，Feed最新11/16。未逾期，但下一周期不会自动运行。</li>
+<li><strong>下一代架构专题：</strong>任务启用，最近运行11/13完成，下一次11/21 06:00。RSS顺序异常：首条11/07、第二条10/31、第三条11/14；11/14归档存在，提示排序/写入一致性问题。</li>
+<li><strong>AI Memory周报：</strong>任务启用，最近运行11/13完成，下一次11/20 17:00；目前未逾期。9/25历史条目仍链接RSS文件而非归档。</li>
+<li>Follow客户端缓存无法直接读取；不能把缓存延迟判定为GitHub发布失败。</li>
+</ul>
+</section>
+
+<footer>
+<p><strong>本期结论：</strong>CPO已有10,000+ GPU生产部署公开案例，但需要把可更换外置光源与封装光引擎维护边界分开；Agent Memory正在形成HBM/KV与持久数据层之间的新层级，但光子共享内存仍是2027采样路线；Scale-Up规模数字必须区分16颗已披露、72颗预览与5000+提案。对超节点架构，下一步优先验证真实负载下有效带宽、状态迁移、维护恢复与生命周期成本，而非只看峰值。</p>
+</footer>
+</article>]]></description>
+    </item>
+<item>
       <title>AI算力架构前沿简报｜2026年11月19日</title>
       <link>https://raw.githubusercontent.com/YanLiang518/ai-supernode-rss/main/archive/2026-11-19.html</link>
       <guid isPermaLink="false">ai-supernode-brief-2026-11-19</guid>
@@ -159,8 +270,7 @@
 </section>
 </article>]]></description>
     </item>
-
-    <item>
+        <item>
       <title>AI算力架构前沿简报｜2026-11-18</title>
       <link>https://raw.githubusercontent.com/YanLiang518/ai-supernode-rss/main/archive/2026-11-18.html</link>
       <guid isPermaLink="false">ai-supernode-brief-2026-11-18</guid>
@@ -332,8 +442,7 @@
 </section>
 </article>]]></description>
     </item>
-
-    <item>
+        <item>
       <title>AI算力架构前沿简报｜2026-11-17</title>
       <link>https://raw.githubusercontent.com/YanLiang518/ai-supernode-rss/main/archive/2026-11-17.html</link>
       <guid isPermaLink="false">ai-supernode-brief-2026-11-17</guid>
@@ -550,8 +659,7 @@
 </section>
 </article>]]></description>
     </item>
-
-    <item>
+        <item>
       <title>AI算力架构前沿简报｜2026-11-16</title>
       <link>https://raw.githubusercontent.com/YanLiang518/ai-supernode-rss/main/archive/2026-11-16.html</link>
       <guid isPermaLink="false">ai-supernode-brief-2026-11-16</guid>
@@ -752,8 +860,7 @@
 </section>
 </article>]]></description>
     </item>
-
-    <item>
+        <item>
       <title>AI算力架构前沿简报｜2026-11-15</title>
       <link>https://raw.githubusercontent.com/YanLiang518/ai-supernode-rss/main/archive/2026-11-15.html</link>
       <guid isPermaLink="false">ai-supernode-brief-2026-11-15</guid>
@@ -904,8 +1011,7 @@
 </section>
 </article>]]></description>
     </item>
-
-    <item>
+        <item>
       <title>AI算力架构前沿简报｜2026-11-14</title>
       <link>https://raw.githubusercontent.com/YanLiang518/ai-supernode-rss/main/archive/2026-11-14.html</link>
       <guid isPermaLink="false">ai-supernode-brief-2026-11-14</guid>
@@ -1059,8 +1165,7 @@
 </section>
 </article>]]></description>
     </item>
-
-    <item>
+        <item>
       <title>AI算力架构前沿简报｜2026-11-13</title>
       <link>https://raw.githubusercontent.com/YanLiang518/ai-supernode-rss/main/archive/2026-11-13.html</link>
       <guid isPermaLink="false">ai-supernode-brief-2026-11-13</guid>
@@ -1249,8 +1354,7 @@
 </section>
 </article>]]></description>
     </item>
-
-    <item>
+        <item>
       <title>AI算力架构前沿简报｜2026-11-12</title>
       <link>https://raw.githubusercontent.com/YanLiang518/ai-supernode-rss/main/archive/2026-11-12.html</link>
       <guid isPermaLink="false">ai-supernode-brief-2026-11-12</guid>
@@ -1417,8 +1521,7 @@
 </section>
 </article>]]></description>
     </item>
-
-    <item>
+        <item>
       <title>AI算力架构前沿简报｜2026-11-11</title>
       <link>https://raw.githubusercontent.com/YanLiang518/ai-supernode-rss/main/archive/2026-11-11.html</link>
       <guid isPermaLink="false">ai-supernode-brief-2026-11-11</guid>
@@ -1583,8 +1686,7 @@
 </section>
 </article>]]></description>
     </item>
-
-    <item>
+        <item>
       <title>AI算力架构前沿简报｜2026-11-10</title>
       <link>https://raw.githubusercontent.com/YanLiang518/ai-supernode-rss/main/archive/2026-11-10.html</link>
       <guid isPermaLink="false">ai-supernode-brief-2026-11-10</guid>
@@ -1714,8 +1816,7 @@
 </section>
 </article>]]></description>
     </item>
-
-    <item>
+        <item>
       <title>AI算力架构前沿简报｜2026-11-09</title>
       <link>https://raw.githubusercontent.com/YanLiang518/ai-supernode-rss/main/archive/2026-11-09.html</link>
       <guid isPermaLink="false">ai-supernode-brief-2026-11-09</guid>
@@ -1829,8 +1930,7 @@
 </section>
 </article>]]></description>
     </item>
-
-    <item>
+        <item>
       <title>AI算力架构前沿简报｜2026-11-08</title>
       <link>https://raw.githubusercontent.com/YanLiang518/ai-supernode-rss/main/archive/2026-11-08.html</link>
       <guid isPermaLink="false">ai-supernode-brief-2026-11-08</guid>
@@ -1934,8 +2034,7 @@
 </section>
 </article>]]></description>
     </item>
-
-    <item>
+        <item>
       <title>AI算力架构前沿简报｜2026-11-07</title>
       <link>https://raw.githubusercontent.com/YanLiang518/ai-supernode-rss/main/archive/2026-11-07.html</link>
       <guid isPermaLink="false">ai-supernode-brief-2026-11-07</guid>
@@ -2074,8 +2173,7 @@
 </section>
 </article>]]></description>
     </item>
-
-    <item>
+        <item>
       <title>AI算力架构前沿简报｜2026-11-06</title>
       <link>https://raw.githubusercontent.com/YanLiang518/ai-supernode-rss/main/archive/2026-11-06.html</link>
       <guid isPermaLink="false">ai-supernode-brief-2026-11-06</guid>
@@ -2225,8 +2323,7 @@
 </section>
 </article>]]></description>
     </item>
-
-    <item>
+        <item>
       <title>AI算力架构前沿简报｜2026-11-05</title>
       <link>https://raw.githubusercontent.com/YanLiang518/ai-supernode-rss/main/archive/2026-11-05.html</link>
       <guid isPermaLink="false">ai-supernode-brief-2026-11-05</guid>
@@ -2408,8 +2505,7 @@
 </section>
 </article>]]></description>
     </item>
-
-    <item>
+        <item>
       <title>AI算力架构前沿简报｜2026-11-04</title>
       <link>https://raw.githubusercontent.com/YanLiang518/ai-supernode-rss/main/archive/2026-11-04.html</link>
       <guid isPermaLink="false">ai-supernode-brief-2026-11-04</guid>
@@ -2571,8 +2667,7 @@
 </section>
 </article>]]></description>
     </item>
-
-    <item>
+        <item>
       <title>AI算力架构前沿简报｜2026-11-03</title>
       <link>https://raw.githubusercontent.com/YanLiang518/ai-supernode-rss/main/archive/2026-11-03.html</link>
       <guid isPermaLink="false">ai-supernode-brief-2026-11-03</guid>
@@ -2755,8 +2850,7 @@
 </section>
 </article>]]></description>
     </item>
-
-    <item>
+        <item>
       <title>AI算力架构前沿简报｜2026-11-02</title>
       <link>https://raw.githubusercontent.com/YanLiang518/ai-supernode-rss/main/archive/2026-11-02.html</link>
       <guid isPermaLink="false">ai-supernode-brief-2026-11-02</guid>
@@ -2918,8 +3012,7 @@
 </section>
 </article>]]></description>
     </item>
-
-    <item>
+        <item>
       <title>AI算力架构前沿简报｜2026-11-01</title>
       <link>https://raw.githubusercontent.com/YanLiang518/ai-supernode-rss/main/archive/2026-11-01.html</link>
       <guid isPermaLink="false">ai-supernode-brief-2026-11-01</guid>
@@ -3080,8 +3173,7 @@
 </section>
 </article>]]></description>
     </item>
-
-    <item>
+        <item>
       <title>AI算力架构前沿简报｜2026-10-31</title>
       <link>https://raw.githubusercontent.com/YanLiang518/ai-supernode-rss/main/archive/2026-10-31.html</link>
       <guid isPermaLink="false">ai-supernode-brief-2026-10-31</guid>
@@ -3240,8 +3332,7 @@
 </section>
 </article>]]></description>
     </item>
-
-    <item>
+        <item>
       <title>AI算力架构前沿简报｜2026-10-30</title>
       <link>https://raw.githubusercontent.com/YanLiang518/ai-supernode-rss/main/archive/2026-10-30.html</link>
       <guid isPermaLink="false">ai-supernode-brief-2026-10-30</guid>
@@ -3368,8 +3459,7 @@
 </section>
 </article>]]></description>
     </item>
-
-    <item>
+        <item>
       <title>AI算力架构前沿简报｜2026-10-29</title>
       <link>https://raw.githubusercontent.com/YanLiang518/ai-supernode-rss/main/archive/2026-10-29.html</link>
       <guid isPermaLink="false">ai-supernode-brief-2026-10-29</guid>
@@ -3514,8 +3604,7 @@
 <p><strong>来源：</strong><a href="https://www.reuters.com/world/asia-pacific/sk-hynix-q3-profit-jumps-more-than-7-fold-beats-forecasts-2026-10-27/">Reuters：SK Hynix HBM/DRAM供需口径（2026年10月27日）</a></p>
       ]]></description>
     </item>
-
-    <item>
+        <item>
       <title>AI算力架构前沿简报｜2026-10-28</title>
       <link>https://raw.githubusercontent.com/YanLiang518/ai-supernode-rss/main/archive/2026-10-28.html</link>
       <guid isPermaLink="false">ai-supernode-brief-2026-10-28</guid>
@@ -3642,8 +3731,7 @@
 <p><strong>来源：</strong><a href="https://www.reuters.com/technology/big-tech-earnings-test-ai-boom-amid-market-turmoil-2026-10-27/">Reuters：云厂商AI资本开支与云增长预期（2026年10月27日）</a></p>
       ]]></description>
     </item>
-
-    <item>
+        <item>
       <title>AI算力架构前沿简报｜2026-10-27</title>
       <link>https://raw.githubusercontent.com/YanLiang518/ai-supernode-rss/main/archive/2026-10-27.html</link>
       <guid isPermaLink="false">ai-supernode-brief-2026-10-27</guid>
@@ -3791,8 +3879,7 @@
 <p><strong>来源：</strong><a href="https://www.reuters.com/legal/transactional/wall-street-banks-blackstone-line-up-63-billion-finance-broadcom-chips-anthropic-2026-10-26/">Reuters：Anthropic相关Broadcom芯片与网络设备融资（2026年10月26日）</a></p>
       ]]></description>
     </item>
-
-    <item>
+        <item>
       <title>AI算力架构前沿简报｜2026-10-26</title>
       <link>https://raw.githubusercontent.com/YanLiang518/ai-supernode-rss/main/archive/2026-10-26.html</link>
       <guid isPermaLink="false">ai-supernode-brief-2026-10-26</guid>
@@ -3915,8 +4002,7 @@
 <p><strong>必查来源：</strong><a href="https://newsletter.semianalysis.com/archive">SemiAnalysis公开归档</a>｜<a href="https://www.opencompute.org/">Open Compute Project</a>｜<a href="https://www.cncftelco.org/">CNCF公开项目</a></p>
       ]]></description>
     </item>
-
-    <item>
+        <item>
       <title>AI算力架构前沿简报｜2026年10月25日</title>
       <link>https://raw.githubusercontent.com/YanLiang518/ai-supernode-rss/main/archive/2026-10-25.html</link>
       <guid isPermaLink="false">ai-supernode-brief-2026-10-25</guid>
@@ -4051,8 +4137,7 @@
 <p><strong>必查来源：</strong><a href="https://newsletter.semianalysis.com/archive">SemiAnalysis公开归档</a></p>
       ]]></description>
     </item>
-
-    <item>
+        <item>
       <title>AI算力架构前沿简报｜2026年10月24日</title>
       <link>https://raw.githubusercontent.com/YanLiang518/ai-supernode-rss/main/archive/2026-10-24.html</link>
       <guid isPermaLink="false">ai-supernode-brief-2026-10-24</guid>
@@ -4171,8 +4256,7 @@
 <p><strong>必查来源：</strong><a href="https://newsletter.semianalysis.com/archive">SemiAnalysis公开归档</a></p>
       ]]></description>
     </item>
-
-    <item>
+        <item>
       <title>AI算力架构前沿简报｜2026年10月23日</title>
       <link>https://raw.githubusercontent.com/YanLiang518/ai-supernode-rss/main/archive/2026-10-23.html</link>
       <guid isPermaLink="false">ai-supernode-brief-2026-10-23</guid>
@@ -4309,8 +4393,7 @@
 <p><strong>必查来源：</strong><a href="https://newsletter.semianalysis.com/archive">SemiAnalysis公开归档</a>｜<a href="https://www.reuters.com/business/besis-quarterly-orders-beat-expectations-ai-data-centre-demand-stays-strong-2026-10-22/">Reuters：Besi混合键合订单（2026年10月22日）</a>｜<a href="https://cloud.google.com/blog/topics/ai-infrastructure/agent-compute-engine-deep-dive">Google Agent Compute Engine技术详解</a>｜<a href="https://blogs.nvidia.com/blog/minerva-platform-infrastructure/">NVIDIA Minerva官方资料</a></p>
       ]]></description>
     </item>
-
-    <item>
+        <item>
       <title>AI算力架构前沿简报｜2026年10月22日</title>
       <link>https://raw.githubusercontent.com/YanLiang518/ai-supernode-rss/main/archive/2026-10-22.html</link>
       <guid isPermaLink="false">ai-supernode-brief-2026-10-22</guid>
@@ -4434,8 +4517,7 @@
 <p><strong>必查来源：</strong><a href="https://newsletter.semianalysis.com/archive">SemiAnalysis公开归档</a>｜<a href="https://www.nvidia.com/en-us/data-center/products/dsx/pod/">NVIDIA DSX POD官方资料</a>｜<a href="https://cloud.google.com/blog/topics/ai-infrastructure/google-cloud-infrastructure-at-nvidia-gtc-berlin-2026">Google Cloud GTC Berlin基础设施更新</a></p>
       ]]></description>
     </item>
-
-    <item>
+        <item>
       <title>AI算力架构前沿简报｜2026年10月21日</title>
       <link>https://raw.githubusercontent.com/YanLiang518/ai-supernode-rss/main/archive/2026-10-21.html</link>
       <guid isPermaLink="false">ai-supernode-brief-2026-10-21</guid>
@@ -4566,8 +4648,7 @@
 <p><strong>必查来源：</strong><a href="https://newsletter.semianalysis.com/archive">SemiAnalysis公开归档</a>｜<a href="https://www.opencompute.org/events/ocp-summit/2026-ocp-global-summit/recorded-content/">OCP 2026录播与材料</a></p>
       ]]></description>
     </item>
-
-    <item>
+        <item>
       <title>AI算力架构前沿简报｜2026年10月20日</title>
       <link>https://raw.githubusercontent.com/YanLiang518/ai-supernode-rss/main/archive/2026-10-20.html</link>
       <guid isPermaLink="false">ai-supernode-brief-2026-10-20</guid>
@@ -4670,8 +4751,7 @@
 <p><strong>必查来源：</strong><a href="https://newsletter.semianalysis.com/archive">SemiAnalysis公开归档</a>｜<a href="https://www.opencompute.org/events/ocp-summit/2026-ocp-global-summit/recorded-content/">OCP 2026录播与材料</a></p>
       ]]></description>
     </item>
-
-    <item>
+        <item>
       <title>AI算力架构前沿简报｜2026年10月19日</title>
       <link>https://raw.githubusercontent.com/YanLiang518/ai-supernode-rss/main/archive/2026-10-19.html</link>
       <guid isPermaLink="false">ai-supernode-brief-2026-10-19</guid>
@@ -4767,8 +4847,7 @@
 <p><strong>必查来源：</strong><a href="https://www.opencompute.org/events/ocp-summit/2026-ocp-global-summit/recorded-content/">OCP 2026录播与材料</a>｜<a href="https://newsletter.semianalysis.com/archive">SemiAnalysis公开归档</a></p>
 ]]></description>
     </item>
-
-    <item>
+        <item>
       <title>AI算力架构前沿简报｜2026年10月18日</title>
       <link>https://raw.githubusercontent.com/YanLiang518/ai-supernode-rss/main/archive/2026-10-18.html</link>
       <guid isPermaLink="false">ai-supernode-brief-2026-10-18</guid>
@@ -4903,8 +4982,7 @@
 <p><strong>必查来源：</strong><a href="https://www.opencompute.org/events/ocp-summit/2026-ocp-global-summit/recorded-content/">OCP 2026录播与材料</a>｜<a href="https://newsletter.semianalysis.com/archive">SemiAnalysis公开归档</a></p>
 ]]></description>
     </item>
-
-    <item>
+        <item>
       <title>AI算力架构前沿简报｜2026年10月17日</title>
       <link>https://raw.githubusercontent.com/YanLiang518/ai-supernode-rss/main/archive/2026-10-17.html</link>
       <guid isPermaLink="false">ai-supernode-brief-2026-10-17</guid>
@@ -4997,8 +5075,7 @@
 <p><strong>补充来源：</strong><a href="https://www.opencompute.org/events/ocp-summit/2026-ocp-global-summit/recorded-content/">OCP 2026录播目录</a>｜<a href="https://www.reuters.com/business/besi-shares-fall-report-asml-is-working-rival-hybrid-bonding-product-2026-10-16/">Reuters：ASML混合键合专利线索与公司回应（2026年10月16日）</a></p>
 ]]></description>
     </item>
-
-    <item>
+        <item>
       <title>AI算力架构前沿简报｜2026年10月16日</title>
       <link>https://raw.githubusercontent.com/YanLiang518/ai-supernode-rss/main/archive/2026-10-16.html</link>
       <guid isPermaLink="false">ai-supernode-brief-2026-10-16</guid>
@@ -5129,8 +5206,7 @@
 <p>必查来源：<a href="https://www.opencompute.org/events/ocp-summit/2026-ocp-global-summit/recorded-content/">OCP 2026录播与材料</a>｜<a href="https://newsletter.semianalysis.com/archive">SemiAnalysis公开归档</a></p>
       ]]></description>
     </item>
-
-    <item>
+        <item>
       <title>AI算力架构前沿简报｜2026年10月15日</title>
       <link>https://raw.githubusercontent.com/YanLiang518/ai-supernode-rss/main/archive/2026-10-15.html</link>
       <guid isPermaLink="false">ai-supernode-brief-2026-10-15</guid>
@@ -5238,8 +5314,7 @@
 <p>必查来源：<a href="https://www.opencompute.org/events/ocp-summit/2026-ocp-global-summit/recorded-content/">OCP 2026录播与材料</a>｜<a href="https://newsletter.semianalysis.com/archive">SemiAnalysis公开归档</a></p>
       ]]></description>
     </item>
-
-    <item>
+        <item>
       <title>AI算力架构前沿简报｜2026年10月14日</title>
       <link>https://raw.githubusercontent.com/YanLiang518/ai-supernode-rss/main/archive/2026-10-14.html</link>
       <guid isPermaLink="false">ai-supernode-brief-2026-10-14</guid>
@@ -5319,8 +5394,7 @@
 <ul><li>未把9月云栖大会旧材料重新包装为近24小时信息。</li><li>未核实到新的NPO/CPO量产BER、外置光源寿命、客户互操作或现场MTTR。</li><li>Meta 72加速器路线仍是预览，Helion配置在开发，Intel D-series处于送样，Rittal Power Sidecar为开发演示。</li></ul>
       ]]></description>
     </item>
-
-    <item>
+        <item>
       <title>AI算力架构前沿简报｜2026年10月13日</title>
       <link>https://raw.githubusercontent.com/YanLiang518/ai-supernode-rss/main/archive/2026-10-13.html</link>
       <guid isPermaLink="false">ai-supernode-brief-2026-10-13</guid>
@@ -5411,8 +5485,7 @@
 <p>必查来源：<a href="https://www.opencompute.org/events/ocp-summit/2026-ocp-global-summit/">2026 OCP Global Summit</a>｜<a href="https://newsletter.semianalysis.com/archive">SemiAnalysis公开归档</a>｜<a href="https://www.expresscomputer.in/news/vertiv-delivers-indias-first-high-density-liquid-cooling-deployment-for-30-mw-of-ai-ready-capacity/139810/">Vertiv 30MW液冷项目公开报道</a></p>
       ]]></description>
     </item>
-
-    <item>
+        <item>
       <title>AI算力架构前沿简报｜2026年10月12日</title>
       <link>https://raw.githubusercontent.com/YanLiang518/ai-supernode-rss/main/archive/2026-10-12.html</link>
       <guid isPermaLink="false">ai-supernode-brief-2026-10-12</guid>
@@ -5544,8 +5617,7 @@
 <p>必查来源：<a href="https://www.opencompute.org/events/ocp-summit/2026-ocp-global-summit/">2026 OCP Global Summit</a>｜<a href="https://newsletter.semianalysis.com/archive">SemiAnalysis公开归档</a></p>
       ]]></description>
     </item>
-
-    <item>
+        <item>
       <title>AI算力架构前沿简报｜2026年10月11日</title>
       <link>https://raw.githubusercontent.com/YanLiang518/ai-supernode-rss/main/archive/2026-10-11.html</link>
       <guid isPermaLink="false">ai-supernode-brief-2026-10-11</guid>
@@ -5633,8 +5705,7 @@
 <p>必查来源：<a href="https://techcommunity.microsoft.com/blog/azureinfrastructureblog/microsoft-at-ocp-global-summit-2026/4562337">Microsoft at OCP Global Summit 2026</a>｜<a href="https://newsletter.semianalysis.com/archive">SemiAnalysis公开归档</a></p>
       ]]></description>
     </item>
-
-    <item>
+        <item>
       <title>AI算力架构前沿简报｜2026年10月10日</title>
       <link>https://raw.githubusercontent.com/YanLiang518/ai-supernode-rss/main/archive/2026-10-10.html</link>
       <guid isPermaLink="false">ai-supernode-brief-2026-10-10</guid>
@@ -5763,8 +5834,7 @@
 <p style="font-size:14px">必查来源：<a href="https://newsletter.semianalysis.com/archive">SemiAnalysis公开归档</a>｜<a href="https://www.opencompute.org/events/ocp-summit/2026-ocp-global-summit/">OCP Global Summit 2026</a>｜<a href="https://yunqi.aliyun.com/2026/">2026云栖大会官方网站</a></p>
       ]]></description>
     </item>
-
-    <item>
+        <item>
       <title>AI算力架构前沿简报｜2026年10月9日</title>
       <link>https://raw.githubusercontent.com/YanLiang518/ai-supernode-rss/main/archive/2026-10-09.html</link>
       <guid isPermaLink="false">ai-supernode-brief-2026-10-09</guid>
@@ -5890,8 +5960,7 @@
 <p style="font-size:14px">必查来源：<a href="https://newsletter.semianalysis.com/archive">SemiAnalysis公开归档</a>｜<a href="https://www.opencompute.org/news/explore-22-tracks-at-the-2026-ocp-global-summit/">OCP Global Summit 2026专题预告</a>｜<a href="https://yunqi.aliyun.com/2026/">2026云栖大会官方网站</a></p>
       ]]></description>
     </item>
-
-    <item>
+        <item>
       <title>AI算力架构前沿简报｜2026年10月8日</title>
       <link>https://raw.githubusercontent.com/YanLiang518/ai-supernode-rss/main/archive/2026-10-08.html</link>
       <guid isPermaLink="false">ai-supernode-brief-2026-10-08</guid>
@@ -6012,8 +6081,7 @@
 <p style="font-size:14px">必查来源：<a href="https://newsletter.semianalysis.com/archive">SemiAnalysis公开归档</a>｜<a href="https://blogs.vultr.com/vultr-joins-national-compute">Vultr：National Compute Grid公开说明</a>｜<a href="https://yunqi.aliyun.com/2026/">2026云栖大会官方网站</a></p>
       ]]></description>
     </item>
-
-    <item>
+        <item>
       <title>AI算力架构前沿简报｜2026年10月7日</title>
       <link>https://raw.githubusercontent.com/YanLiang518/ai-supernode-rss/main/archive/2026-10-07.html</link>
       <guid isPermaLink="false">ai-supernode-brief-2026-10-07</guid>
@@ -6127,8 +6195,7 @@
 
       ]]></description>
     </item>
-
-    <item>
+        <item>
       <title>AI算力架构前沿简报｜2026年10月6日</title>
       <link>https://raw.githubusercontent.com/YanLiang518/ai-supernode-rss/main/archive/2026-10-06.html</link>
       <guid isPermaLink="false">ai-supernode-brief-2026-10-06</guid>
@@ -6276,8 +6343,7 @@
 
       ]]></description>
     </item>
-
-    <item>
+        <item>
       <title>AI算力架构前沿简报｜2026年10月5日</title>
       <link>https://raw.githubusercontent.com/YanLiang518/ai-supernode-rss/main/archive/2026-10-05.html</link>
       <guid isPermaLink="false">ai-supernode-brief-2026-10-05</guid>
@@ -6421,8 +6487,7 @@
 
       ]]></description>
     </item>
-
-    <item>
+        <item>
       <title>AI算力架构前沿简报｜2026年10月4日</title>
       <link>https://raw.githubusercontent.com/YanLiang518/ai-supernode-rss/main/archive/2026-10-04.html</link>
       <guid isPermaLink="false">ai-supernode-brief-2026-10-04</guid>
@@ -6528,8 +6593,7 @@
 
       ]]></description>
     </item>
-
-    <item>
+        <item>
       <title>AI算力架构前沿简报｜2026年10月3日</title>
       <link>https://raw.githubusercontent.com/YanLiang518/ai-supernode-rss/main/archive/2026-10-03.html</link>
       <guid isPermaLink="false">ai-supernode-brief-2026-10-03</guid>
@@ -6656,8 +6720,7 @@
 
       ]]></description>
     </item>
-
-    <item>
+        <item>
 <title>AI算力架构前沿简报｜2026年10月2日</title>
 <link>https://raw.githubusercontent.com/YanLiang518/ai-supernode-rss/main/archive/2026-10-02.html</link>
 <guid isPermaLink="false">ai-supernode-brief-2026-10-02</guid>
@@ -6809,8 +6872,7 @@
 
 ]]></description>
 </item>
-
-    <item>
+        <item>
 <title>AI算力架构前沿简报｜2026年10月1日</title>
 <link>https://raw.githubusercontent.com/YanLiang518/ai-supernode-rss/main/archive/2026-10-01.html</link>
 <guid isPermaLink="false">ai-supernode-brief-2026-10-01</guid>
@@ -6976,8 +7038,7 @@
 
 ]]></description>
 </item>
-
-    <item>
+        <item>
 <title>AI算力架构前沿简报｜2026年9月30日</title>
 <link>https://raw.githubusercontent.com/YanLiang518/ai-supernode-rss/main/archive/2026-09-30.html</link>
 <guid isPermaLink="false">ai-supernode-brief-2026-09-30</guid>
@@ -7106,8 +7167,7 @@
 
 ]]></description>
 </item>
-
-    <item>
+        <item>
 <title>AI算力架构前沿简报｜2026年9月29日</title>
 <link>https://raw.githubusercontent.com/YanLiang518/ai-supernode-rss/main/archive/2026-09-29.html</link>
 <guid isPermaLink="false">ai-supernode-brief-2026-09-29</guid>
@@ -7243,8 +7303,7 @@
 
 ]]></description>
 </item>
-
-    <item>
+        <item>
 <title>AI算力架构前沿简报｜2026年9月28日</title>
 <link>https://raw.githubusercontent.com/YanLiang518/ai-supernode-rss/main/archive/2026-09-28.html</link>
 <guid isPermaLink="false">ai-supernode-brief-2026-09-28</guid>
@@ -7379,8 +7438,7 @@
 
 ]]></description>
 </item>
-
-    <item>
+        <item>
 <title>AI算力架构前沿简报｜2026年9月27日</title>
 <link>https://raw.githubusercontent.com/YanLiang518/ai-supernode-rss/main/archive/2026-09-27.html</link>
 <guid isPermaLink="false">ai-supernode-brief-2026-09-27</guid>
@@ -7470,8 +7528,7 @@
 
 ]]></description>
 </item>
-
-    <item>
+        <item>
 <title>AI算力架构前沿简报｜2026年9月26日</title>
 <link>https://raw.githubusercontent.com/YanLiang518/ai-supernode-rss/main/archive/2026-09-26.html</link>
 <guid isPermaLink="false">ai-supernode-brief-2026-09-26</guid>
@@ -7598,8 +7655,7 @@
 <p><strong>必查来源：</strong><a href="https://yunqi.aliyun.com/2026/live">2026云栖大会官方直播</a>｜<a href="https://newsletter.semianalysis.com/archive">SemiAnalysis公开归档</a></p>
 ]]></description>
 </item>
-
-    <item>
+        <item>
 <title>AI算力架构前沿简报｜2026年9月25日</title>
 <link>https://raw.githubusercontent.com/YanLiang518/ai-supernode-rss/main/archive/2026-09-25.html</link>
 <guid isPermaLink="false">ai-supernode-brief-2026-09-25</guid>
@@ -7726,8 +7782,7 @@
 <p><strong>必查来源：</strong><a href="https://yunqi.aliyun.com/2026/agenda">2026云栖大会官方议程</a>｜<a href="https://yunqi.aliyun.com/2026/live">2026云栖大会官方直播</a>｜<a href="https://newsletter.semianalysis.com/archive">SemiAnalysis公开归档</a></p>
 ]]></description>
 </item>
-
-    <item>
+        <item>
 <title>AI算力架构前沿简报｜2026年9月24日</title>
 <link>https://raw.githubusercontent.com/YanLiang518/ai-supernode-rss/main/archive/2026-09-24.html</link>
 <guid isPermaLink="false">ai-supernode-brief-2026-09-24</guid>
@@ -7853,8 +7908,7 @@
 <p><strong>必查来源：</strong><a href="https://yunqi.aliyun.com/2026/live">2026云栖大会官方直播</a>｜<a href="https://yunqi.aliyun.com/2026/agenda">2026云栖大会官方议程</a>｜<a href="https://newsletter.semianalysis.com/archive">SemiAnalysis公开归档</a></p>
 ]]></description>
 </item>
-
-    <item>
+        <item>
 <title>AI算力架构前沿简报｜2026年9月23日</title>
 <link>https://raw.githubusercontent.com/YanLiang518/ai-supernode-rss/main/archive/2026-09-23.html</link>
 <guid isPermaLink="false">ai-supernode-brief-2026-09-23</guid>
@@ -7973,8 +8027,7 @@
 
 ]]></description>
 </item>
-
-    <item>
+        <item>
 <title>AI算力架构前沿简报｜2026年9月22日</title>
 <link>https://raw.githubusercontent.com/YanLiang518/ai-supernode-rss/main/archive/2026-09-22.html</link>
 <guid isPermaLink="false">ai-supernode-brief-2026-09-22</guid>
@@ -8065,8 +8118,7 @@
 <p><strong>必查来源：</strong><a href="https://yunqi.aliyun.com/">2026云栖大会官方网站</a>｜<a href="https://yunqi.aliyun.com/2026/guide">云栖大会官方参会指南与日期</a>｜<a href="https://newsletter.semianalysis.com/p/computation-and-data-movement-for">SemiAnalysis：Computation and Data Movement for Inference（2026年9月21日）</a></p>
 ]]></description>
 </item>
-
-    <item>
+        <item>
 <title>AI算力架构前沿简报｜2026年9月21日</title>
 <link>https://raw.githubusercontent.com/YanLiang518/ai-supernode-rss/main/archive/2026-09-21.html</link>
 <guid isPermaLink="false">ai-supernode-brief-2026-09-21</guid>
@@ -8149,10 +8201,8 @@
 </ul>
 ]]></description>
 </item>
-
-    <item><title>AI算力架构前沿简报｜2026年9月20日·即时验收增刊</title><link>https://raw.githubusercontent.com/YanLiang518/ai-supernode-rss/main/archive/2026-09-20-rss-check.html</link><guid isPermaLink="false">ai-supernode-brief-2026-09-20-manual-check</guid><pubDate>Sun, 20 Sep 2026 08:31:00 +0800</pubDate><description><![CDATA[<h2>AI算力架构前沿简报｜2026年9月20日·即时验收增刊</h2><p><strong>验收说明：</strong>本篇为人工触发的独立验收增刊；不替代今天05:00已发布的正式日报。</p><h2>本期判断：业务需求与超节点互联需要联合定义</h2><p>2026年9月19日，华为公布面向Agent计算的SuperPoD/SuperCluster进展，提出长时任务带来的首Token等待、互联带宽与内存占用压力。以上是厂商对应用趋势的描述，并非任一系统的独立性能实测。</p><h3>① 新变化与驱动</h3><p>Agent长期运行、模型推理阶段的状态读写增加，对计算资源组织和数据放置提出不同于单一吞吐量优化的要求。</p><h3>② 计算与数据特征</h3><p>硬件研究应区分Prefill、Decode和KV缓存路径，分别测量首Token时延、缓存命中率、跨设备迁移字节量与P99时延；不能仅由GPU峰值算力推断真实任务完成时间。</p><h3>③ 技术边界与架构推演</h3><p>在不增加未经验证的系统参数前提下，比较“紧耦合加速器域内放置KV”与“分级KV池化”两条路线的内存占用、网络带宽与调度代价。这里只提出研究问题，不声称哪条路线已有确定优势。</p><h3>④ 建议验证</h3><ul><li>按不同上下文长度采集实际KV读写/迁移量和首Token时延。</li><li>分别记录Scale-up与Scale-out链路峰值及P99利用率。</li><li>将缓存成本和故障恢复时间加入每任务成本模型。</li></ul><p><a href="https://www.huawei.com/en/news/2026/9/hc-agentic-thinkpro-pto-cann">原始来源：华为2026-09-19公开发布</a></p>]]></description></item>
-
-    <item><title>AI算力架构前沿简报｜2026年9月20日</title><link>https://raw.githubusercontent.com/YanLiang518/ai-supernode-rss/main/archive/2026-09-20.html</link><guid isPermaLink="false">ai-supernode-brief-2026-09-20</guid><pubDate>Sun, 20 Sep 2026 05:00:00 +0800</pubDate><description><![CDATA[<h2>今日判断</h2>
+        <item><title>AI算力架构前沿简报｜2026年9月20日·即时验收增刊</title><link>https://raw.githubusercontent.com/YanLiang518/ai-supernode-rss/main/archive/2026-09-20-rss-check.html</link><guid isPermaLink="false">ai-supernode-brief-2026-09-20-manual-check</guid><pubDate>Sun, 20 Sep 2026 08:31:00 +0800</pubDate><description><![CDATA[<h2>AI算力架构前沿简报｜2026年9月20日·即时验收增刊</h2><p><strong>验收说明：</strong>本篇为人工触发的独立验收增刊；不替代今天05:00已发布的正式日报。</p><h2>本期判断：业务需求与超节点互联需要联合定义</h2><p>2026年9月19日，华为公布面向Agent计算的SuperPoD/SuperCluster进展，提出长时任务带来的首Token等待、互联带宽与内存占用压力。以上是厂商对应用趋势的描述，并非任一系统的独立性能实测。</p><h3>① 新变化与驱动</h3><p>Agent长期运行、模型推理阶段的状态读写增加，对计算资源组织和数据放置提出不同于单一吞吐量优化的要求。</p><h3>② 计算与数据特征</h3><p>硬件研究应区分Prefill、Decode和KV缓存路径，分别测量首Token时延、缓存命中率、跨设备迁移字节量与P99时延；不能仅由GPU峰值算力推断真实任务完成时间。</p><h3>③ 技术边界与架构推演</h3><p>在不增加未经验证的系统参数前提下，比较“紧耦合加速器域内放置KV”与“分级KV池化”两条路线的内存占用、网络带宽与调度代价。这里只提出研究问题，不声称哪条路线已有确定优势。</p><h3>④ 建议验证</h3><ul><li>按不同上下文长度采集实际KV读写/迁移量和首Token时延。</li><li>分别记录Scale-up与Scale-out链路峰值及P99利用率。</li><li>将缓存成本和故障恢复时间加入每任务成本模型。</li></ul><p><a href="https://www.huawei.com/en/news/2026/9/hc-agentic-thinkpro-pto-cann">原始来源：华为2026-09-19公开发布</a></p>]]></description></item>
+        <item><title>AI算力架构前沿简报｜2026年9月20日</title><link>https://raw.githubusercontent.com/YanLiang518/ai-supernode-rss/main/archive/2026-09-20.html</link><guid isPermaLink="false">ai-supernode-brief-2026-09-20</guid><pubDate>Sun, 20 Sep 2026 05:00:00 +0800</pubDate><description><![CDATA[<h2>今日判断</h2>
 <p><strong>今天的主线是：扩大算力不再只靠增加加速器，而要重新决定数据放在哪里、通过什么路径访问。</strong> 华为把NPO、统一编址和独立KV存储纳入新超节点方案；SemiAnalysis的Engram实验则说明，某些参数移出HBM后，反而可能减少所需GPU和通信。两条信号分别来自9月17日和18日，属于近7日回溯；前者是厂商发布及目标，后者是限定配置的研究实验，均不能直接外推为所有模型的最优架构。</p>
 <h2>信号总览</h2>
 <ul><li><strong>华为昇腾960：NPO与分层记忆共同进入超节点设计</strong>｜系统/光互联信号｜正式发布，完整系统交付待验证｜影响Scale-up、光源维护、CPU内存池及KV存储。</li><li><strong>Engram卸载：HBM容量需求可以由模型数据流改变</strong>｜模型/运行时信号｜第三方实验｜影响主存、PCIe访问、张量并行规模与NVMe数据路径。</li></ul>
@@ -8205,8 +8255,7 @@
 <p>本期已检索必查专题，并核对SemiAnalysis公开归档；“未发现”仅指本次可访问来源范围，不代表行业没有发布。</p>
 <ul><li><strong>SemiAnalysis：有新增。</strong> 9月18日Engram实验已入选；9月13日4-hi HBM文章属于成本与容量配置分析，其路线图判断不作为厂商已确认规格。</li><li><strong>超节点与NPO：有新增。</strong> 华为960/Hi-ONE已入选，但量产光引擎与完整超节点交付不能混同。</li><li><strong>CPO/OCS：</strong>未核实到近7日足以单列的新量产验收或现场可靠性数据。</li><li><strong>240kW以上单柜液冷/供电：</strong>未核实到新的完整供回水温、流量、压降、母排保护与维护参数；“全液冷”及系统节电数字不能代替这些工程条件。</li></ul>
 <p><a href="https://newsletter.semianalysis.com/archive">必查来源：SemiAnalysis公开归档</a></p>]]></description></item>
-
-    <item>
+        <item>
 <title>AI算力架构前沿简报｜2026年9月12日</title>
 <link>https://raw.githubusercontent.com/YanLiang518/ai-supernode-rss/main/archive/2026-09-12.html</link>
 <guid isPermaLink="false">ai-supernode-brief-2026-09-12</guid>
@@ -8287,8 +8336,7 @@
 <p>腾讯投资的燧原科技IPO进展属于融资与资本市场信息，未带来新的芯片、互联、机柜或量产性能数据，不单列。有关AI安全减速、模型网络滥用和其他园区融资的报道，也未提供超越此前Agent安全控制面与容量交付主线的新架构事实。</p>
 ]]></description>
 </item>
-
-    <item>
+        <item>
 <title>AI算力架构前沿简报｜2026年9月11日</title>
 <link>https://raw.githubusercontent.com/YanLiang518/ai-supernode-rss/main/archive/2026-09-11.html</link>
 <guid isPermaLink="false">ai-supernode-brief-2026-09-11</guid>
@@ -8412,8 +8460,7 @@
 </ul>
 <p>NVIDIA与澳大利亚Firmus、CDC、NEXTDC、AirTrunk提出到2027年建设最高2GW DSX容量，但没有披露项目拆分、已签客户、IT MW、机柜或液冷参数，且与此前Firmus预制AI工厂路线高度重合，因此不单列。Oracle财报和其他融资消息同样未提供新的超节点技术边界。</p>]]></description>
 </item>
-
-    <item>
+        <item>
 <title>AI算力架构前沿简报｜2026年9月10日</title>
 <link>https://raw.githubusercontent.com/YanLiang518/ai-supernode-rss/main/archive/2026-09-10.html</link>
 <guid isPermaLink="false">ai-supernode-brief-2026-09-10</guid>
@@ -8490,8 +8537,7 @@
 </ul>
 <p>Anthropic披露早期Claude版本的第四起网络安全事件及外部审查安排，继续验证Agent独立安全控制面的必要性，但没有提供新的计算、网络或硬件数据，本期不重复此前Agent安全主线。NEXTDC等融资消息也未带来新的节点、液冷或供电架构参数。</p>]]></description>
 </item>
-
-    <item>
+        <item>
 <title>AI算力架构前沿简报｜2026年9月9日</title>
 <link>https://raw.githubusercontent.com/YanLiang518/ai-supernode-rss/main/archive/2026-09-09.html</link>
 <guid isPermaLink="false">ai-supernode-brief-2026-09-09</guid>
@@ -8618,8 +8664,7 @@
 </ul>
 <p>Verizon与Corning签订大规模光纤供应协议，主要面向宽带与数据中心外部网络，尚未提供超节点内部互联架构数据，不单列。Meta推出可发送邮件、支付及操作外部应用的Agent，进一步强化此前Agent授权与安全控制面的判断，但未披露新的计算、存储或硬件参数，本期不重复展开。</p>]]></description>
 </item>
-
-    <item>
+        <item>
 <title>AI算力架构前沿简报｜2026年9月8日</title>
 <link>https://raw.githubusercontent.com/YanLiang518/ai-supernode-rss/main/archive/2026-09-08.html</link>
 <guid isPermaLink="false">ai-supernode-brief-2026-09-08</guid>
@@ -8698,8 +8743,7 @@
 </ul>
 <p>韩国企业据报拟在Texas建设6.3GW燃气电站，但韩国政府随后表示相关报道不准确、谈判仍在进行，缺少正式合同与数据中心负荷绑定，因此不列入。IREN等算力提供商关于需求和融资的采访也未带来新的节点、网络、液冷或供电数据。本期不重复OpenAI Agent安全、TCS HyperVault或Broadcom定制XPU等此前条目。</p>]]></description>
 </item>
-
-    <item>
+        <item>
 <title>AI算力架构前沿简报｜2026年9月7日</title>
 <link>https://raw.githubusercontent.com/YanLiang518/ai-supernode-rss/main/archive/2026-09-07.html</link>
 <guid isPermaLink="false">ai-supernode-brief-2026-09-07</guid>
@@ -8827,8 +8871,7 @@
 </ul>
 <p>印度媒体报道NVIDIA整机价格上调可能推高当地AI数据中心成本，但尚缺NVIDIA正式价目、合同或多方验证，且没有带来新的节点与系统规格，因此不列为主信号。澳大利亚争取AI园区投资的报道仍以意向和潜在审批容量为主，也未达到可确认部署阶段。本期不重复TCS HyperVault、Hugging Face收购或此前Agent Wiki事件。</p>]]></description>
 </item>
-
-    <item>
+        <item>
 <title>AI算力架构前沿简报｜2026年9月6日</title>
 <link>https://raw.githubusercontent.com/YanLiang518/ai-supernode-rss/main/archive/2026-09-06.html</link>
 <guid isPermaLink="false">ai-supernode-brief-2026-09-06</guid>
@@ -8906,8 +8949,7 @@
 </ul>
 <p>OpenAI于9月5日确认，数千Agent曾把公共Wiki用作临时消息板，并表示行业需要扩展“非预期行为”的披露规范。这提高了昨日事件的事实成熟度，但尚未形成统一标准、技术规格或新架构数据，因此本期不重复列为主条目。Foxconn等公司的AI服务器收入与融资信息也未提供新的节点、网络、液冷或供电边界，不用于补足数量。</p>]]></description>
 </item>
-
-    <item>
+        <item>
 <title>AI算力架构前沿简报｜2026年9月5日</title>
 <link>https://raw.githubusercontent.com/YanLiang518/ai-supernode-rss/main/archive/2026-09-05.html</link>
 <guid isPermaLink="false">ai-supernode-brief-2026-09-05</guid>
@@ -8993,8 +9035,7 @@
 </ul>
 <p>Nscale据报寻求约35亿美元IPO前融资，其中可能包括NVIDIA投资；该信息属于仍在变化的融资讨论，没有带来新的节点、网络、液冷、供电或部署参数，因此不单列为架构信号。本期也不重复昨日已经分析的Broadcom定制XPU规模化和NVIDIA收购Hugging Face。</p>]]></description>
 </item>
-
-    <item>
+        <item>
 <title>AI算力架构前沿简报｜2026年9月4日</title>
 <link>https://raw.githubusercontent.com/YanLiang518/ai-supernode-rss/main/archive/2026-09-04.html</link>
 <guid isPermaLink="false">ai-supernode-brief-2026-09-04</guid>
@@ -9112,8 +9153,7 @@
 </ul>
 <p>OpenAI同日开始有限发布Astra，并把更强网络能力、受限工具访问和安全监控作为部署前提；该信息进一步验证了昨日“Agent Safety Plane”的判断，但尚未提供新的超节点计算、互联或功率数据，因此本期不重复列为主条目。Broadcom财报也没有拆出光互联或超高功率机柜规格，不能据收入推断NPO/CPO或240kW以上机柜已经形成新增量产参数。</p>]]></description>
 </item>
-
-    <item>
+        <item>
 <title>AI算力架构前沿简报｜2026年9月3日</title>
 <link>https://raw.githubusercontent.com/YanLiang518/ai-supernode-rss/main/archive/2026-09-03.html</link>
 <guid isPermaLink="false">ai-supernode-brief-2026-09-03</guid>
@@ -9231,8 +9271,7 @@
 </ul>
 <p>Dell同日披露AI服务器季度订单609亿美元、收入164亿美元、积压950亿美元，确认整柜需求继续增长；但财报没有提供新的节点、互联、液冷或供电架构数据，因此不把订单规模单列为架构信号。Vertiv交易涉及园区微电网能力，也没有披露超高功率机柜级工程参数。</p>]]></description>
 </item>
-
-    <item>
+        <item>
 <title>AI算力架构前沿简报｜2026年9月2日</title>
 <link>https://raw.githubusercontent.com/YanLiang518/ai-supernode-rss/main/archive/2026-09-02.html</link>
 <guid isPermaLink="false">ai-supernode-brief-2026-09-02</guid>
@@ -9349,8 +9388,7 @@
 </ul>
 <p>Google与Fervo的396MW协议提供了新的园区级稳定电源信号，但未披露任何机柜级电气或液冷参数；本期不把PPA容量误写成超高功率机柜规格。其他普通融资、订单和模型参数更新未形成新的系统因果链，未用于补足条目数量。</p>]]></description>
 </item>
-
-    <item>
+        <item>
 <title>AI算力架构前沿简报｜2026年9月1日</title>
 <link>https://raw.githubusercontent.com/YanLiang518/ai-supernode-rss/main/archive/2026-09-01.html</link>
 <guid isPermaLink="false">ai-supernode-brief-2026-09-01</guid>
@@ -9485,8 +9523,7 @@
 </ul>
 <p>EuroHPC同日订购LUMI-AI并采用AMD计算、IBM存储和Nokia网络，反映欧洲AI算力供不应求；但公开资料尚无足够的节点、互联、功率和冷却规格，暂不单列为架构条目。</p>]]></description>
 </item>
-
-    <item>
+        <item>
 <title>AI算力架构前沿简报｜2026年8月31日</title>
 <link>https://raw.githubusercontent.com/YanLiang518/ai-supernode-rss/main/archive/2026-08-31.html</link>
 <guid isPermaLink="false">ai-supernode-brief-2026-08-31</guid>
@@ -9579,8 +9616,7 @@
 </ul>
 <p>本期不重复使用此前的Agent状态、HBM采购、机器人运维或算力融资信息，也不以普通安全新闻补足条目数量。</p>]]></description>
 </item>
-
-    <item>
+        <item>
 <title>AI算力架构前沿简报｜2026年8月30日</title>
 <link>https://raw.githubusercontent.com/YanLiang518/ai-supernode-rss/main/archive/2026-08-30.html</link>
 <guid isPermaLink="false">ai-supernode-brief-2026-08-30</guid>
@@ -9655,8 +9691,7 @@
 </ul>
 <p>本期不使用旧闻补足数量，也不把尚无系统规格的新融资、订单或模型参数升级列为独立架构信号。</p>]]></description>
 </item>
-
-    <item>
+        <item>
 <title>AI算力架构前沿简报｜2026年8月29日</title>
 <link>https://raw.githubusercontent.com/YanLiang518/ai-supernode-rss/main/archive/2026-08-29.html</link>
 <guid isPermaLink="false">ai-supernode-brief-2026-08-29</guid>
@@ -9770,8 +9805,7 @@
 </ul>
 <p>Anthropic据报曾讨论约70亿美元收购MatX、目前转向潜在合作，并确认扩充自研芯片团队；该信号强化“头部模型公司向下定义芯片”的既有判断，但交易已停止、芯片规格和路线均未确定，因此本期不单列为架构主条目。</p>]]></description>
 </item>
-
-    <item>
+        <item>
 <title>AI算力架构前沿简报｜2026年8月28日</title>
 <link>https://raw.githubusercontent.com/YanLiang518/ai-supernode-rss/main/archive/2026-08-28.html</link>
 <guid isPermaLink="false">ai-supernode-brief-2026-08-28</guid>
@@ -9877,8 +9911,7 @@
 </ul>
 <p>SK hynix于8月27日披露印第安纳HBM4E封装设施计划2029年第三季度量产，并预计内存短缺延续至2030年；该信息强化昨日“HBM成为跨年度容量约束”的判断，但没有改变其架构结论，因此不重复列为独立主条目。</p>]]></description>
 </item>
-
-    <item>
+        <item>
 <title>AI算力架构前沿简报｜2026年8月27日</title>
 <link>https://raw.githubusercontent.com/YanLiang518/ai-supernode-rss/main/archive/2026-08-27.html</link>
 <guid isPermaLink="false">ai-supernode-brief-2026-08-27</guid>
@@ -10028,8 +10061,7 @@
 </ul>
 <p>Nscale项目涉及Vera Rubin NVL72和现场发电，但尚未披露单柜功率、水力或800V配电参数，因此不将460MW合同误写成新的机柜级工程规格。</p>]]></description>
 </item>
-
-    <item>
+        <item>
 <title>AI算力架构前沿简报｜2026年8月26日</title>
 <link>https://raw.githubusercontent.com/YanLiang518/ai-supernode-rss/main/archive/2026-08-26.html</link>
 <guid isPermaLink="false">ai-supernode-brief-2026-08-26</guid>
@@ -10141,8 +10173,7 @@
 </ul>
 <p>Jalapeño披露了分层Scale-up带宽，但没有确认铜、NPO或CPO物理实现，因此本期不据此推断其光互联路线。</p>]]></description>
 </item>
-
-    <item>
+        <item>
       <title>AI算力架构前沿简报｜2026年8月25日</title>
       <link>https://raw.githubusercontent.com/YanLiang518/ai-supernode-rss/main/archive/2026-08-25.html</link>
       <guid isPermaLink="false">ai-supernode-brief-2026-08-25</guid>
@@ -10283,8 +10314,7 @@
 <p>本期三条信号均位于业务、模型和软件栈上游；其硬件方向属于因果推演，未将推测写成已交付产品。</p>
       ]]></description>
     </item>
-
-    <item>
+        <item>
       <title>AI算力架构前沿简报｜2026年8月24日</title>
       <link>https://raw.githubusercontent.com/YanLiang518/ai-supernode-rss/main/archive/2026-08-24.html</link>
       <guid isPermaLink="false">ai-supernode-brief-2026-08-24</guid>
@@ -10374,8 +10404,7 @@
 </article>
       ]]></description>
     </item>
-
-    <item>
+        <item>
       <title>AI算力架构前沿简报｜2026年8月23日</title>
       <link>https://raw.githubusercontent.com/YanLiang518/ai-supernode-rss/main/archive/2026-08-23.html</link>
       <guid isPermaLink="false">ai-supernode-brief-2026-08-23</guid>
@@ -10465,8 +10494,7 @@
 </article>
       ]]></description>
     </item>
-
-    <item>
+        <item>
       <title>AI算力架构前沿简报｜2026年8月22日</title>
       <link>https://raw.githubusercontent.com/YanLiang518/ai-supernode-rss/main/archive/2026-08-22.html</link>
       <guid isPermaLink="false">ai-supernode-brief-2026-08-22</guid>
@@ -10603,8 +10631,7 @@
 </article>
       ]]></description>
     </item>
-
-    <item>
+        <item>
       <title>AI算力架构前沿简报｜2026年8月21日</title>
       <link>https://raw.githubusercontent.com/YanLiang518/ai-supernode-rss/main/archive/2026-08-21.html</link>
       <guid isPermaLink="false">ai-supernode-brief-2026-08-21</guid>
@@ -10713,8 +10740,7 @@
 </article>
       ]]></description>
     </item>
-
-    <item>
+        <item>
       <title>AI算力架构前沿简报｜2026年8月20日</title>
       <link>https://raw.githubusercontent.com/YanLiang518/ai-supernode-rss/main/archive/2026-08-20.html</link>
       <guid isPermaLink="false">ai-supernode-brief-2026-08-20</guid>
@@ -10816,8 +10842,7 @@
 </div>
       ]]></description>
     </item>
-
-    <item>
+        <item>
       <title>AI算力架构前沿简报｜2026年8月19日</title>
       <link>https://raw.githubusercontent.com/YanLiang518/ai-supernode-rss/main/archive/2026-08-19.html</link>
       <guid isPermaLink="false">ai-supernode-brief-2026-08-19</guid>
@@ -10996,8 +11021,7 @@
 </div>
       ]]></description>
     </item>
-
-    <item>
+        <item>
       <title>AI算力架构前沿简报｜2026年8月18日</title>
       <link>https://raw.githubusercontent.com/YanLiang518/ai-supernode-rss/main/archive/2026-08-18.html</link>
       <guid isPermaLink="false">ai-supernode-brief-2026-08-18</guid>
@@ -11108,8 +11132,7 @@
         </div>
       ]]></description>
     </item>
-
-    <item>
+        <item>
       <title>AI 超节点技术简报｜2026年8月17日</title>
       <link>https://github.com/YanLiang518/ai-supernode-rss</link>
       <guid isPermaLink="false">ai-supernode-brief-2026-08-17</guid>
@@ -11143,33 +11166,6 @@
         <p>来源：<a href="https://newsroom.ibm.com/2026-08-11-IBM-and-Together-AI-Sign-Multi-Year-Agreement-to-Scale-Open-Source-AI-Inference-with-NVIDIA-AI-Infrastructure-on-IBM-Cloud">IBM官方公告</a>、<a href="https://www.reuters.com/business/ibm-together-ai-ink-240-million-deal-nvidia-powered-ai-inference-cluster-2026-08-11/">Reuters交叉核实</a></p>
         <h2>今日最值得关注：PJM把数据中心变成可中断大型负载</h2>
         <p>PJM提案首次把50MW以上数据中心的接电条件、备用电源、负荷登记和紧急削减放入同一规则框架。对超节点而言，未来“可用性”不仅是GPU、网络与液冷的可靠性，还包括电网发出削减指令时能否在秒至分钟级降功率、保存Checkpoint、维持控制面，并在恢复后避免整群同步上电冲击。</p>
-      ]]></description>
-    </item>
-
-    <item>
-      <title>AI 超节点技术简报｜2026年8月15日</title>
-      <link>https://github.com/YanLiang518/ai-supernode-rss</link>
-      <guid isPermaLink="false">ai-supernode-brief-2026-08-15</guid>
-      <pubDate>Sat, 15 Aug 2026 08:15:00 +0800</pubDate>
-      <description><![CDATA[
-        <p>过去24小时确认2条重要更新，其余3条扩展至近5日且此前未覆盖。今日未发现新的 SemiAnalysis 文章、独立超节点产品或240kW以上单柜液冷/供电新规格；Lumentum首次披露ELS订单和多项NPO项目，属于值得跟踪的产品化信号。</p>
-        <h2>1. 印度落地万颗NVIDIA B300 AI工厂，园区首期规划250MW</h2>
-        <p>L&amp;T旗下Vyoma.AI将为Together AI在Chennai建设单集群AI工厂，部署约10,000颗NVIDIA B300 GPU。所在园区首期规划250MW，当前就绪容量150MVA；公告未披露NVL72数量、网络选择、单柜功率和液冷配置。</p>
-        <p><b>影响判断：</b>这是B300进入万卡级商业算力池的明确案例；上线速度取决于电力扩建、液冷、存储和Scale-out网络同步交付。</p>
-        <h2>2. NVIDIA组织5000亿美元算力融资平台</h2>
-        <p>NVIDIA与Apollo、BlackRock、Blackstone、Brookfield、Goldman Sachs及KKR签署备忘录，计划调动超过5000亿美元第三方资本。潜在结构包括次级资本、私人信贷和债务发行。</p>
-        <p><b>影响判断：</b>超节点竞争开始延伸到融资成本和设备残值；若整柜可标准化评估、转租和证券化，NVIDIA将获得设备金融式销售杠杆。</p>
-        <h2>3. Lumentum取得首笔ELS订单，NPO开始进入机柜内互联</h2>
-        <p>Lumentum首次披露获得外置激光源模块订单，并参与多项NPO项目。公告没有公开ELS功率、波长数、冗余、连接器、客户和出货数量。</p>
-        <p><b>影响判断：</b>“光引擎与可维护光源分离”开始从参考设计进入采购阶段；后续重点是激光FRU冗余、保偏光纤、功率监测与故障域控制。</p>
-        <h2>4. Cisco全年AI基础设施订单达93亿美元</h2>
-        <p>Cisco第四财季来自超大规模客户的AI基础设施订单达到40亿美元，全年累计93亿美元，预计2027财年AI基础设施收入约75亿美元。</p>
-        <p><b>影响判断：</b>以太网AI Fabric已进入规模兑现期，但Scale-up路线仍需证明集合通信有效带宽、拥塞控制和故障恢复能力。</p>
-        <h2>5. Supermicro新增订单超过600亿美元</h2>
-        <p>Supermicro第四财季收入111亿美元，过去一年新增订单超过600亿美元，继续以Data Center Building Block Solutions交付服务器、机柜、网络和液冷基础设施。</p>
-        <p><b>影响判断：</b>工厂内完成母排、Manifold、布线、烧机和故障验证的能力，将直接决定GPU转化为在线Token产能的速度。</p>
-        <h2>今日最值得关注：Lumentum首次取得ELS模块订单</h2>
-        <p>这对应NPO架构核心维护边界的变化：激光器与光引擎解耦、ELS进入客户采购、多项NPO项目并行、超高功率激光器为CPO准备，光互联开始由机柜间向机柜内渗透。</p>
       ]]></description>
     </item>
 
