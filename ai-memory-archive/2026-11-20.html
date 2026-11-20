@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>AI Memory 周报｜2026-11-20</title>
+</head>
+<body>
+<article>
+<h1>AI Memory 周报｜2026-11-20</h1>
+<p>本周沉淀4条长期架构认知；来源均为公开资料，厂商测试、论文实验与规范边界分别标注。</p>
+<section>
+<h2>1. Agent KV状态应按上下文分支与实际驻留状态管理，不能仅按最近访问时间</h2>
+<p>Agent请求的Prefill/Decode比例随任务组合和时间变化；上下文会fork、sub-agent及compact，KV复用关系取决于仍有效的分支和前缀，而非简单LRU/最近访问。应将计算角色分配与KV状态管理解耦，基于上下文生命周期/引用、实际缓存块、负载和传输成本联合调度；跨会话持久Agent Memory与短生命周期推理KV应分开建模。</p>
+<p><strong>适用条件：</strong>长上下文、多轮/多Agent fork、共享前缀、KV频繁驱逐、动态Prefill/Decode分池。</p>
+<p><strong>证据：</strong>论文实验与正式产品功能；性能数字限于论文和厂商测试条件，不作为通用收益保证。</p>
+<p>公开来源：<a href="https://arxiv.org/abs/2611.12304">Evolving Infra（2026-11-09）</a>；<a href="https://aws.amazon.com/about-aws/whats-new/2026/11/sagemaker-kv-cache-routing/">AWS KV-aware routing（2026-11-16）</a>；<a href="https://docs.min.io/aimem/">AIStor Memory文档</a>。</p>
+</section>
+<section>
+<h2>2. 448G电接口不能从224G简单倍速外推；通道、连接器、封装、调制与FEC必须联合设计</h2>
+<p>OIF CEI-448G框架指出相关通道带宽约90GHz，而448G PAM4需要112GHz Nyquist；更高阶PAM可降低Nyquist但带来信噪比、互操作和光接口调制匹配代价。应联合验证connector/package/PCB/cable、损耗、串扰、skew、调制、FEC/BER、功耗与reach。</p>
+<p><strong>适用条件：</strong>448G/lane电互联、ASIC到光引擎/模块、板内/板间/线缆连接及连接器/封装选择。</p>
+<p><strong>证据：</strong>物理关系为A级；OIF框架是技术讨论与开发方向，不是量产互通规范或产品验证。</p>
+<p>公开来源：<a href="https://www.oiforum.com/wp-content/uploads/OIF-FD-CEI-448G-01.0.pdf">OIF Next Generation CEI-448G Framework（2025-11-04）</a>。</p>
+</section>
+<section>
+<h2>3. CPO评价需由单模块指标扩展至真实网络规模、作业性能与可维护FRU</h2>
+<p>Lambda于2026-11-16报告其部署以CPO交换网络连接10,000+ Blackwell Ultra GPU；144×800G交换机采用液冷及18个可移除外置光源。厂商报告在rack至pod范围吞吐相同、延迟差异从rack 3.8%扩大到pod 10.1%，光学中位温度36°C vs 51°C。该报告属于厂商基准，可靠性提升数字未获独立验证。</p>
+<p><strong>适用条件：</strong>CPO交换网络及与可插拔光学比较的rack、scalable-unit、pod/cluster级评估。</p>
+<p><strong>证据：</strong>B级，正式公告与厂商基准；测试方法、独立复现及MTBI样本未充分披露。</p>
+<p>公开来源：<a href="https://lambda.com/blog/worlds-first-large-scale-deployment-of-nvidia-photonics-switches-with-cpo">Lambda官方部署公告（2026-11-16）</a>；<a href="https://blogs.nvidia.com/blog/lambda-photonics/">NVIDIA官方回顾</a>。</p>
+</section>
+<section>
+<h2>4. CPX光引擎“可拆卸/插座化”不等于现场在线热插拔FRU</h2>
+<p>Open CPX Specification 1.0明确CPX模块预期不支持hot plug/unplug，ELS/ELSFP由专门规范处理。机械socket与现场可更换、带业务在线更换是不同能力；须明确主机电源/激光关闭、冗余切换、数据路径隔离、污染/对准、插拔程序和MTTR。</p>
+<p><strong>适用条件：</strong>NPO/CPO光引擎、CPX socket、ELSFP及机柜级FRU/在线维护定义。</p>
+<p><strong>证据：</strong>A级，MSA规范条文；具体主机/模块实现仍须验证。</p>
+<p>公开来源：<a href="https://www.opencpxmsa.org/wp-content/uploads/OpenCPX-Specification-v1.0.pdf">Open CPX Specification 1.0，Section 11.2.2</a>。</p>
+</section>
+<p>私人Notion已更新。</p>
+</article>
+</body>
+</html>
