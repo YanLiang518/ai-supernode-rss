@@ -1,0 +1,76 @@
+<article lang="zh-CN">
+<header><h1>AI算力架构前沿简报｜2026年11月21日</h1>
+<p><strong>观察窗口：</strong>北京时间2026-11-20 05:00—2026-11-21 05:00；必要时回溯7天。OCP 2026会后资料属于专项补扫，不当作最新会期动态。</p>
+<p><strong>本期判断：</strong>推理系统正从单机GPU缓存转向跨GPU共享KV状态与按Prefill/Decode/检索分工的异构池；1M上下文、巨型MoE和高速互联继续推动内存层级、机柜电源、液冷与维护边界重构。</p>
+<p><strong>证据口径：</strong>产品发布、厂商测试、现场Demo、厂商目标、标准/预览设计分别标注；不把厂商测试视为独立复测，不补猜未公开成本和量产指标。</p></header>
+<section><h2>一、本期4项最值得关注的变化</h2>
+<h3>1. Qwen4-Max：1M上下文与2.4T MoE背后的“活跃计算/总权重”分离</h3>
+<p><strong>发布日期：</strong>11/16｜<strong>证据等级：</strong>模型/API发布＋厂商Benchmark</p>
+<p><strong>业务变化：</strong>面向长任务、图像/视频理解、工具调用与复杂Agent工作流；上下文可达1M Token。Model Studio文档列出thinking模式最大输出262,144 Token、最大输入983,616 Token。</p>
+<p><strong>计算/数据特征：</strong>Qwen披露2.4T backbone、71B/token激活参数，另有328B N-gram embedding；结合Gated DeltaNet、Qwen Sparse Attention与Gated Residual。Work360厂商评测52.69（Qwen3.8-Max为47.74），High/Xhigh推理强度下约少35%/24% Token，平均任务成本下降58%。</p>
+<p><strong>技术边界：</strong>效率与成本数据来自Qwen自有评测。71B激活参数不代表只需存放71B权重：2.4T backbone及额外Embedding仍影响权重存储、分片和内存容量。官方Model Studio暂不支持自行部署或微调该模型；1M上下文也不等于全部Token驻留HBM。</p>
+<p><strong>硬件应对：</strong>MoE权重容量、专家路由、Embedding查找与长上下文KV/状态分开预算；评估HBM/DRAM/NVMe分层、KV命中、专家权重搬运、跨GPU通信和Prefill/Decode比例，不能仅以71B active估算显存。</p>
+<p><strong>原始证据：</strong><a href="https://qwen.ai/blog/qwen4-max">Qwen官方发布</a>；<a href="https://www.alibabacloud.com/help/en/model-studio/qwen4-max">Model Studio规格</a>；<a href="https://www.alibabacloud.com/blog/alibaba-cloud-brings-qwen4-max-to-the-enterprise-a-new-ai-colleague-that-plans-builds-and-delivers-finished-work_603786">Work360厂商评测</a>。</p>
+<h3>2. Distributed KV Cache从软件插件走向共享L2缓存层</h3>
+<p><strong>发布日期：</strong>ElastiCache 11/18；Valkey 9.2 11/19｜<strong>证据等级：</strong>GA产品＋厂商基准＋客户结果</p>
+<p><strong>业务变化：</strong>长对话、代码Agent和共享文档会反复处理相同前缀；AWS引用Coding Agent traces中超过95%的Prompt Token是此前处理过的Prefix。单服务器L0/L1缓存无法覆盖跨服务器路由、回访与重启。</p>
+<p><strong>计算/数据特征：</strong>ElastiCache for Valkey新增共享L2 KV Cache，DRAM承载热KV、NVMe保存冷状态；同AZ RDMA/EFA接入GPU服务器，支持vLLM、SGLang、TensorRT-LLM及LMCache。缓存节点最高约220Gbps；8MB GET P50/P99 477/950µs，1GB GET P50/P99 41.7/42.1ms。</p>
+<p><strong>测试与边界：</strong>AWS使用2–6台P6服务器、每台8 GPU、5个250B—1.6T模型，在本地L0约150GB、L1约205GB基础上加入共享缓存节点。共享文档Q&A在p90 TTFT&lt;5s、TPOT&lt;50ms SLO下2×RPS、输出Token成本−40%；Coding Agent最高1.98×吞吐，AI Assistant 1.61×（p90 TTFT 30s SLO）。跨8模型命中TTFT改善55%—93%，Cache cutover低于10K Token。Multiverse报告同GPU请求量+50%、常态Median TTFT−23%、峰值−95%。均为AWS/客户测试，收益依赖复用率、命中率、缓存节点成本和工作负载。</p>
+<p><strong>硬件应对：</strong>规划L0 GPU HBM热KV、L1 Host DRAM/本地NVMe、L2分布式DRAM＋NVMe。GPU节点需要RDMA、缓存/推理故障域设计、QoS、淘汰策略、隐私隔离和失效恢复。共享缓存降低重复Prefill，不消除Decode逐Token计算和HBM带宽需求；L2也引入网络延迟与成本。</p>
+<p><strong>配套底座：</strong>Valkey 9.2加入Path Hash、forkless snapshot、LZ4/Zstd复制压缩与大Sorted Set B+Tree。官方PR基准中3M keys复制流LZ4压缩减少52%带宽、吞吐开销&lt;1%；大Sorted Set内存开销减少36%—43%。</p>
+<p><strong>原始证据：</strong><a href="https://aws.amazon.com/blogs/database/announcing-distributed-kv-caching-for-self-hosted-llms-with-amazon-elasticache/">AWS架构与Benchmark</a>；<a href="https://valkey.io/blog/valkey-9-2-release/">Valkey 9.2官方发布</a>；<a href="https://www.hpcwire.com/aiwire/2026/11/20/valkey-9-2-lowers-cost-of-ai-workloads-on-existing-infrastructure-alongside-new-distributed-kv-caching-capability/">11/20消息</a>。</p>
+<h3>3. SC26：Intel D270 Prefill＋SambaNova SN50 Decode异构推理Demo</h3>
+<p><strong>事件日期：</strong>11/15—20｜<strong>证据等级：</strong>现场演示与厂商架构说明</p>
+<p><strong>业务变化：</strong>Prefill计算密集、并行处理Prompt并构建KV；Decode逐Token生成、受内存带宽/状态访问限制。两阶段需求不同，单一加速器池可能无法按流量比例扩容。</p>
+<p><strong>计算/数据特征：</strong>四张Intel D270（350W/card、160GB LPDDR5X、1.5TB/s、PCIe 5.0、空冷）负责GLM-5.3 Prefill，SambaRack SN50负责Decode。SN50每Rack 16 RDUs、典型推理功耗约20kW；16 Rack可组成最多256 RDU Scale Unit。D270 OCP参考机架另有80 GPU、208PF FP4、12—38TB内存及120TB/s聚合带宽，不能与SC26四卡Demo混为一谈。</p>
+<p><strong>技术边界：</strong>现场证明两平台可协同，但未公布完整系统Throughput、TTFT、TPOT、成本/Token或KV跨池传输量。KV通过NIXL、UCX/RDMA、RoCEv2 Ethernet转移，Dynamo负责路由，vLLM分别服务Prefill/Decode；网络与Prefix Cache局部性可能成为瓶颈。</p>
+<p><strong>硬件应对：</strong>按Prompt/Output长度、KV搬运量与命中率配置Prefill/Decode池，预留RoCE/RDMA与KV迁移带宽；联合优化分池比例、Cache locality、拥塞与冷启动，不能把“异构分离”本身当性能保证。</p>
+<p><strong>原始证据：</strong><a href="https://sambanova.ai/blog/the-air-cooled-token-factory-intel-gpu-d-series-sambarack-sn50">SambaNova官方演示与架构</a>；<a href="https://www.intel.com/content/www/us/en/newsroom/news/data-center/why-intel-gpu-d270-belongs-in-the-hpc-conversation.html">Intel D270规格与厂商测试</a>。</p>
+<h3>4. Dnotitia VDPU：Agent/RAG检索尝试独立Vector ASIC</h3>
+<p><strong>事件/发布日期：</strong>SC26现场Demo，11/19｜<strong>证据等级：</strong>厂商演示</p>
+<p><strong>业务变化：</strong>Agent检索文档、图像、视频与历史互动，Vector Search消耗CPU并与应用调度竞争；GPU生成与检索可能采用不同计算资源。</p>
+<p><strong>数据特征：</strong>Dnotitia展示VDPU ASIC对约260万视频帧进行自然语言语义搜索；公司称相较CPU-only检索可减少90%以上Host CPU利用率，目标多VDPU卡服务器达到双Socket CPU约10×搜索性能。</p>
+<p><strong>技术边界：</strong>未给完整数据集/向量维度、Recall、QPS、P50/P99、功耗、卡数或独立复测。10×为目标，90% CPU下降为厂商对比声明；现场Demo不等于生产验证。</p>
+<p><strong>硬件应对：</strong>跟踪“CPU控制/Agent编排＋GPU模型计算＋Vector ASIC检索＋NVMe/对象存储”分层节点；设计前须以真实RAG负载评估准确率、并发、索引更新、数据移动、功耗与端到端延迟。</p>
+<p><strong>原始证据：</strong><a href="https://www.prnewswire.com/news-releases/dnotitia-presents-first-live-demonstration-of-its-vdpu-vector-search-asic-at-sc26-302945556.html">Dnotitia新闻稿</a>；<a href="https://www.hpcwire.com/aiwire/2026/11/19/dnotitia-presents-first-live-demonstration-of-its-vdpu-vector-search-asic-at-sc26/">HPCwire报道</a>。</p></section>
+<section><h2>二、OCP 2026会后专项补扫：Scale-Up、NPO、448G与MW级供电/冷却</h2>
+<p>核对OCP官方Recorded Content及Meta、Samtec、Delta、Open CPX公开原始材料。部分Google Drive录播/PPT无法通过当前读取方式完整下载，以下只用可访问的官方文章、标准和公开量测，不补猜未取得的数据。</p>
+<h3>Scale-Up规模：已披露16、预览72；512/1000+域没有可核实实装数据</h3>
+<ul><li><strong>Meta Tahan：</strong>51.2Tbps Tomahawk 5（64×800G），4台交换机非阻塞连接16颗MTIA 300；每加速器6.4Tbps Scale-Up带宽（Meta披露）。</li><li><strong>下一代预览：</strong>102.4T Tomahawk6C、216×400G交换Blade，8台交换机连接72颗加速器/机架；属于Preview，不是量产或现场负载验证。</li><li><strong>Scale-Out FPF：</strong>每GPU 8条独立100G链路接入8个网络Plane，3-tier→2-tier Clos、NIC-level packet spraying；与Scale-Up域分开。</li><li><strong>5000+ GPU多机柜：</strong>开放架构提案，未找到可验证实装拓扑、跳数、负载与故障恢复数据。</li></ul>
+<p><strong>判断：</strong>16/72 GPU是单机架Scale-Up设计披露，5000+是多机柜提案；128/512/1000+域仍缺公开有效带宽、Collective、端到端时延、故障隔离和MTTR。不要用Scale-Out数量替代Scale-Up域规模。</p>
+<p><strong>证据：</strong><a href="https://engineering.fb.com/2026/10/12/open-source/ocp-summit-2026-powering-ai-with-open-innovations-in-scale-up-scale-out-and-scale-across-networks/">Meta OCP 2026架构</a>；<a href="https://engineering.fb.com/2026/10/26/open-source/ocp-summit-2026-meta-networking-talks/">Meta会后演讲与Slides索引</a>；<a href="https://www.opencompute.org/events/ocp-summit/2026-ocp-global-summit/recorded-content/">OCP官方Recorded Content</a>。</p>
+<h3>224G/448G铜互联：CPC PoC证明短距铜可继续延伸，但不是量产通道结论</h3>
+<ul><li><strong>224G CPC：</strong>Samtec/Broadcom 200G SerDes三路PRBS31通过CPC、250mm Twinax及1m DAC测试链路，报告BER约1e-9至1e-11；共1.5m被动铜缆组合，非完整服务器链路验证。</li><li><strong>448G Prototype：</strong>1m Twinax、连接器两侧各13mm PCB，VNA测量至125GHz；PAM6频段约27dB损耗，PAM4 112GHz约35—37dB。供应商PoC，尚非量产规格。</li><li><strong>边界：</strong>连接器共振、封装/PCB逃逸、SNR、FEC/MLSE、测试重复性与功耗需联合验证；448G PAM4 Nyquist约112GHz，PAM6/PAM8虽降低频率但SNR要求更苛刻。</li></ul>
+<p><strong>应对：</strong>GPU/交换机板内与Tray间优先验证短距铜CPC/Twinax、背板/Cartridge；跨柜或更长链路仍需评估光。224G PoC不能按倍速推导448G成熟度。</p>
+<p><strong>证据：</strong><a href="https://blog.samtec.com/post/224-gbps-co-packaged-copper-with-broadcom-serdes/">Samtec 224G CPC Demo</a>；<a href="https://blog.samtec.com/post/448-gbps-next-gen-cable-solution-live-at-ocp-2026/">Samtec 448G OCP Prototype</a>；<a href="https://www.oiforum.com/wp-content/uploads/OIF-FD-CEI-448G-01.0.pdf">OIF CEI-448G Framework</a>。</p>
+<h3>NPO/CPX：Socket化改善生态与拆装，但规范不承诺在线热插拔</h3>
+<p>Open CPX MSA 1.0定义6.4T（32×212.5G）和7.2T（36×212.5G）模块/socket。Type-1与Type-2最大标称供电能力分别115.65W与122.22W；模块需冷板与机械支撑，规范明确CPX模块<strong>不预期支持hot plug/unplug</strong>，ELS/ELSFP由独立规范管理。</p>
+<p><strong>判断：</strong>Socket不等于FRU/在线更换。公开资料仍缺量产良率、现场步骤、MTTR、冷板拆装、污染/插损、光源冗余与LCC。需预留停链路/停机窗口、工具、冷板/光纤维护与故障定位；ELS/ELSFP与CPX光引擎分别定义维护边界。</p>
+<p><strong>证据：</strong><a href="https://www.opencpxmsa.org/wp-content/uploads/OpenCPX-Specification-v1.0.pdf">Open CPX Specification 1.0（2026-09-16）</a>。</p>
+<h3>800VDC/MW级电源与液冷：产品规格已出现，部署实证仍待补</h3>
+<p>Delta在OCP 2026披露：800VDC In-Row Power Rack最高660kW、备份480kW；另有800kW In-Row方案（无BBU）；2.5MW L2L CDU；三台3+0热插拔泵，组合流量最高3850LPM、压力60psi；IPS最高98%效率为厂商规格。未见完整现场部署、长期可靠性与故障隔离数据。</p>
+<p><strong>应对：</strong>MW级机柜需把DC保护、Arc Flash、短路选择性、母线/PowerShelf故障隔离、液冷泵冗余、泄漏检测与维护流程作为系统验证项，不能仅按功率密度或CDU额定容量定架构。</p>
+<p><strong>证据：</strong><a href="https://www.delta-americas.com/en-US/news/40272">Delta官方OCP公告（10/15）</a>；<a href="https://www.opencompute.org/events/ocp-summit/2026-ocp-global-summit/recorded-content/">OCP录播/PPT索引</a>。</p>
+<p><strong>低曝光会后资料候选：</strong>Meta 102.4T交换Blade、51.2T CPO验证；Open NPO ecosystem/ELS；224G AEC与448G CPC；Open CPX维护/工具；800VDC fault protection、1MW rack busbar；冷板与hose/coolant aging。官方资料页已有视频/Slides链接，但部分Google Drive文件本轮无法完整读取，后续继续追原始录播和PPT。</p></section>
+<section><h2>三、会议雷达：未来90天与过去30天</h2>
+<table><thead><tr><th>会议</th><th>时间/状态</th><th>重点跟踪</th></tr></thead><tbody>
+<tr><td>SC26</td><td>11/15—20，刚结束</td><td>会后：Agent检索ASIC、异构Prefill/Decode、KV Cache、论文与录播补查。</td></tr>
+<tr><td>AWS re:Invent 2026</td><td>11/30—12/04（9天后）</td><td>Agent、Inference/KV、数据、网络与AI基础设施；官方2,200+ sessions、90+ launch sessions，跟keynotes和原始架构发布。</td></tr>
+<tr><td>Datacloud Asia 2026</td><td>12/01—03，新加坡（10天后）</td><td>12/02 Data Centre Design & Engineering；12/03 Energy Summit；APAC time-to-power、机柜密度、冷却、电力与网络。</td></tr>
+<tr><td>DIW＋OCP Tech Day 2027</td><td>02/02—04，San Jose（约73天）</td><td>OCP Rack：1MW rack、ESUN/Scale-Up、800VDC、液冷、busbar；Cluster 1M GPU、Data Center 1GW、Energy 10GW。议程为Draft，追更。</td></tr>
+<tr><td>DesignCon 2027</td><td>02/02—04，Santa Clara（约73天）</td><td>15 tracks；SI/PI、连接器、224G/448G、PCIe、高速通道测试。</td></tr>
+<tr><td>OFC 2027</td><td>03/07—11（超出90天）</td><td>光器件/光网络/CPO/NPO，提前预警。</td></tr>
+<tr><td>NVIDIA GTC 2027</td><td>03/14—18（超出90天）</td><td>Rubin、Inference、Agent、AI Factory，提前预警。</td></tr></tbody></table>
+<p><strong>官方日程：</strong><a href="https://aws.amazon.com/events/reinvent/">re:Invent</a>；<a href="https://datacloudasia.com/agenda">Datacloud Asia</a>；<a href="https://www.digitalinfraworld.com/education/conference-tracks/">DIW/OCP Rack Track</a>；<a href="https://www.digitalinfraworld.com/education/agenda/">DIW/OCP Draft Agenda</a>；<a href="https://www.designcon.com/">DesignCon</a>；<a href="https://www.ofcconference.org/about">OFC</a>；<a href="https://www.nvidia.com/gtc/faq/">GTC</a>。</p>
+<p>OIF、UALink、UEC、AMD Advancing AI、Computex、ECOC、Hot Interconnects与云栖：本轮未核实到未来90天内官方会期/议程更新，不填推测日期。</p></section>
+<section><h2>四、阿里云栖2026 AL144/AL64/SNPO/ALink跟踪</h2><p>本轮未发现新的官方公开证据足以更新物理拓扑、端口映射、量产/FRU/MTTR、光源布局或成本基线。保留专项跟踪，不将旧会期或旧资料包装成最新动态。</p></section>
+<section><h2>五、RSS与任务健康检查</h2><ul>
+<li><strong>主Feed：</strong>发布前90条，最新11/20；本期新增11/21并删除最旧一条，维持90条。GUID唯一、CDATA配对；最新归档与全文回读验证。</li>
+<li><strong>技术预警：</strong>Feed最新10/27，任务已禁用，最近运行11/10。之后没有扫描，不能解释为条件无变化。</li>
+<li><strong>竞品与成本周报：</strong>Feed最新11/16，任务已禁用，最近运行11/15。尚未超过周期+36小时，但下一周期不会自动运行。</li>
+<li><strong>下一代架构专题：</strong>任务启用，下一次11/21 06:00。RSS顺序异常：11/07第一条、10/31第二条、11/14第三条；11/14归档存在，提示排序/写入一致性需检查，未擅自修改。</li>
+<li><strong>AI Memory：</strong>最新11/20 17:00，任务启用，下一次11/27 17:00；未逾期。</li>
+<li>五个RSS文件均可读取；本轮做了XML标签结构、GUID唯一、CDATA配对检查，并核验各源最新归档存在。当前环境无法读取Follow客户端缓存，不能据此判断缓存延迟或客户端订阅状态。</li>
+<li>主日报任务启用；状态面板上次运行时间为11/20 05:08（北京时间），当前轮最终运行状态尚未刷新。GitHub发布结果以本期远端回读为准。</li></ul></section>
+<footer><p><strong>本期结论：</strong>共享KV L2缓存已成为可部署的系统级资源层，能在高重复Prefix负载下释放GPU Prefill算力；1M上下文MoE模型进一步增加总权重与状态存储分层需求；异构Prefill/Decode和Vector ASIC检索说明Agent服务池可能按阶段拆分。超节点硬件应把状态迁移网络、缓存容量/命中率、分池比例、检索负载、Scale-Up域有效带宽、维护与故障恢复纳入架构指标，而不是只比较峰值算力和互联总带宽。</p></footer>
+</article>
