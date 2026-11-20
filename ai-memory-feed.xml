@@ -1,14 +1,21 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/">
   <channel>
+<item>
+      <title>AI Memory 周报｜2026-11-20</title>
+      <link>https://raw.githubusercontent.com/YanLiang518/ai-supernode-rss/main/ai-memory-archive/2026-11-20.html</link>
+      <guid isPermaLink="false">ai-memory-2026-11-20</guid>
+      <pubDate>Fri, 20 Nov 2026 17:00:00 +0800</pubDate>
+      <description><![CDATA[<article lang="zh-CN"><h2>本周长期架构认知</h2><ol><li><strong>Agent KV状态应按上下文分支与实际驻留状态管理：</strong>动态Prefill/Decode调度要与KV状态生命周期、实际缓存块和迁移成本解耦；跨会话持久Agent Memory与短生命周期推理KV分层。公开来源：<a href="https://arxiv.org/abs/2611.12304">Evolving Infra</a>、<a href="https://aws.amazon.com/about-aws/whats-new/2026/11/sagemaker-kv-cache-routing/">AWS KV-aware routing</a>、<a href="https://docs.min.io/aimem/">AIStor Memory</a>。</li><li><strong>448G电接口不能从224G简单倍速外推：</strong>OIF框架指出约90GHz通道与PAM4 112GHz Nyquist存在缺口；connector/package/PCB/cable、调制、FEC/BER、reach与互操作必须联合验证。公开来源：<a href="https://www.oiforum.com/wp-content/uploads/OIF-FD-CEI-448G-01.0.pdf">OIF CEI-448G Framework</a>。</li><li><strong>CPO评价需扩展至真实网络规模、作业性能和FRU：</strong>Lambda报告10,000+ GPU部署并给出rack-to-pod延迟、光温与外置光源数据；这些是厂商基准，需独立验证。公开来源：<a href="https://lambda.com/blog/worlds-first-large-scale-deployment-of-nvidia-photonics-switches-with-cpo">Lambda</a>、<a href="https://blogs.nvidia.com/blog/lambda-photonics/">NVIDIA</a>。</li><li><strong>CPX socket/removable不等于在线热插拔：</strong>Open CPX Specification 1.0明确CPX模块预期不支持hot plug/unplug；需验证系统隔离、冗余切换与FRU维护流程。公开来源：<a href="https://www.opencpxmsa.org/wp-content/uploads/OpenCPX-Specification-v1.0.pdf">Open CPX MSA</a>。</li></ol><p>私人Notion已更新。</p></article>]]></description>
+    </item>
 <item><title>AI Memory 周报｜2026-11-13</title><link>https://raw.githubusercontent.com/YanLiang518/ai-supernode-rss/main/ai-memory-archive/2026-11-13.html</link><guid isPermaLink="false">ai-memory-2026-11-13</guid><pubDate>Fri, 13 Nov 2026 17:01:00 +0800</pubDate><description><![CDATA[<article><h2>本周长期架构认知</h2><ol><li><strong>800VDC与54V按全链路比较：</strong>电流比14.81及等电阻局部铜损比219.5不能代替转换热耗、保护、冗余和维护的系统评价。<a href="https://raw.githubusercontent.com/YanLiang518/ai-supernode-rss/main/next-gen-architecture-archive/2026-11-07.html">公开来源</a></li><li><strong>异构Prefill/Decode应计入KV交接成本：</strong>跨芯片状态迁移、网络排队、调度和P99尾延迟决定真实收益。<a href="https://raw.githubusercontent.com/YanLiang518/ai-supernode-rss/main/archive/2026-11-07.html">公开来源</a></li><li><strong>Agent/GPU快照使恢复带宽成为容量变量：</strong>应同时核算快照存储、恢复P99、兼容性及并发恢复风暴。<a href="https://raw.githubusercontent.com/YanLiang518/ai-supernode-rss/main/archive/2026-11-12.html">公开来源</a></li><li><strong>高密存储应按有效容量和重建窗口评价：</strong>原始PB/柜不等于可用容量或可持续吞吐，需验证故障域与重建网络。<a href="https://raw.githubusercontent.com/YanLiang518/ai-supernode-rss/main/archive/2026-11-13.html">公开来源</a></li></ol><p>私人Notion已更新。公开规格和研究原型不等同于独立量产验收。</p></article>]]></description></item>
 
     <title>AI Memory 知识沉淀周报</title>
     <link>https://github.com/YanLiang518/ai-supernode-rss</link>
     <description>每周长期可复用知识的公开、脱敏摘要；涉及非公开信息的内容不会发布。</description>
     <language>zh-cn</language>
-    <pubDate>Fri, 06 Nov 2026 17:00:00 +0800</pubDate>
-    <lastBuildDate>Fri, 13 Nov 2026 17:01:00 +0800</lastBuildDate>
+    <pubDate>Fri, 20 Nov 2026 17:00:00 +0800</pubDate>
+    <lastBuildDate>Fri, 20 Nov 2026 17:00:00 +0800</lastBuildDate>
     <ttl>15</ttl>
     <atom:link href="https://raw.githubusercontent.com/YanLiang518/ai-supernode-rss/main/ai-memory-feed.xml" rel="self" type="application/rss+xml"/>
     <item>
