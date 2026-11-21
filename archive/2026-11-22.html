@@ -1,0 +1,58 @@
+<article lang="zh-CN">
+<header><h1>AI算力架构前沿简报｜2026年11月22日</h1>
+<p><strong>观察窗口：</strong>北京时间2026-11-21 05:00—2026-11-22 05:00；24小时内未检索到足以改变架构基线的新重大公开事件，回溯7天补充3项；OCP 2026为专项会后补扫，不计作最新会期。</p>
+<p><strong>本期判断：</strong>Agent/HPC工作流开始需要GPU之外的专用CPU、内存和存储资源池；800VDC电源转换链继续推进；MW级冷却从Rack规格向可演示的热交换与两相冷却原型推进。公开证据仍以厂商发布、厂商测试和Demo为主。</p>
+<p><strong>证据口径：</strong>区分正式发布/客户选型、厂商Benchmark、合作开发声明与现场原型；没有独立复测、完整量测或量产数据时不外推。</p></header>
+<section><h2>一、本期3项架构相关发现</h2>
+<h3>1. NVIDIA Vera CPU Rack：Agentic Science出现独立CPU/数据处理资源池</h3>
+<p><strong>发布日期：</strong>2026-11-16｜<strong>证据：</strong>官方平台发布、客户选型、厂商Benchmark</p>
+<p><strong>业务变化：</strong>Agent不只调用LLM，还需要规划、运行模拟/代码、整理大数据并检查结果。NVIDIA在SC26公布Vera CPU Rack用于科学模拟、气候/分子动力学与Agentic Science；德国气候计算中心DKRZ已选择Vera用于HLRE-5。</p>
+<p><strong>计算/数据特征：</strong>整Rack 192颗Vera CPU、Quantum-X800 InfiniBand、液冷；官方称聚合峰值内存带宽超过200TB/s、约300TB内存、1PB存储。每1U Tray 8颗CPU；单CPU 88核心、176线程、SOCAMM2 LPDDR5X，最高1.2TB/s带宽。Vera Rack复用NVL72机架、供电与冷却基础设施。</p>
+<p><strong>技术边界：</strong>以上是平台规格/峰值。NVIDIA自测OpenFOAM motorBike Large为相对x86 1.9×性能、2.4×性能/W；WRF为1.6×性能和2×能效的预测值。未见独立复测。DKRZ系统预计2028年初可用，客户选型不等于已交付运行。</p>
+<p><strong>硬件应对：</strong>对Agent与HPC混合任务，评估CPU执行/工具池与GPU推理/训练池分离：CPU核心数、DRAM带宽/容量、存储吞吐、IB/RoCE、任务编排、CPU-GPU数据局部性及共享Rack电源液冷。是否独立建CPU Rack取决于Agent执行占比、模拟任务、CPU/GPU利用率和数据搬运成本，不应仅按Agent数量推导。</p>
+<p><a href="https://nvidianews.nvidia.com/news/nvidia-expands-vera-cpu-platform-to-accelerate-scientific-discovery">NVIDIA官方平台公告（11/16）</a>｜<a href="https://blogs.nvidia.com/blog/ian-buck-sc26/">SC26 Agentic Science案例（11/17）</a></p>
+<h3>2. 800VDC电源链：SiC三相Power Shelf、PSU、IBC与SST协同开发</h3>
+<p><strong>发布日期：</strong>2026-11-19｜<strong>证据：</strong>厂商合作公告与开发声明</p>
+<p><strong>业务变化：</strong>AI Rack功率持续增长，厂商开始把800VDC电源系统与三相Power Shelf、服务器PSU、中间Bus Converter（IBC）和Solid-State Transformer（SST）作为整条转换链共同推进。</p>
+<p><strong>计算/数据特征：</strong>Infineon与Megmeet宣布合作；Megmeet三相AI Power Shelf采用Infineon CoolSiC MOSFET G2。Megmeet称已开发的Shelf系统效率高于80 PLUS Ruby峰值效率要求，但没有给出具体效率曲线/功率点。</p>
+<p><strong>技术边界：</strong>合作涉及800VDC架构开发，公告没有披露额定kW、输入/输出电压、转换级数、效率数值、隔离/保护方案、冗余、故障切除时间或现场部署规模；不能视作800VDC机柜已量产。</p>
+<p><strong>硬件应对：</strong>系统设计应明确HVDC母线与下游转换位置、DC保护/隔离、接地、Arc Flash安全、短路选择性、负载阶跃、母线瞬态、BBU/UPS边界、可维护性与故障域。54V/48V中间母线可作为候选，但不是本公告已披露的实现。</p>
+<p><a href="https://www.infineon.com/technology-news/2026/inftn202611-034">Infineon官方公告（11/19）</a></p>
+<h3>3. OCP 2026补扫：1MW热交换器与两相Direct-to-Die冷却原型</h3>
+<p><strong>会议：</strong>OCP Global Summit 2026，2026-10-12至10-15（超过过去30天，专项补扫）｜<strong>证据：</strong>官方Demo lineup</p>
+<p><strong>业务变化：</strong>MW级Rack热负载要求冷却系统从单CDU/单Rack容量，扩展到可模块化配置的Facility/Secondary loop、热交换与冷板/芯片热界面协同。</p>
+<p><strong>技术展示：</strong>OCP Innovation Village列出Phasic Energy 1MW（2×500kW）增材制造波纹板热交换器，按OCP Project Deschutes CDU架构设计；ZutaCore展示Blackwell GPU Direct-to-Die两相Matrix Flow Boiling，在AI工作负载下运行并实时监控温度、压力、负载、流量和GPU与沸腾冷却液温差。</p>
+<p><strong>技术边界：</strong>这些是原型/现场Demo说明，不是数据中心部署证明。未披露完整水温、流量、压降、热阻、热负载分布、长期可靠性、泵冗余或MTTR数据。</p>
+<p><strong>硬件应对：</strong>验证MW级热交换容量、CDU模块分割与冗余、Primary/Secondary loop隔离、冷板兼容、流量/压差窗口、两相控制、漏液告警、维护隔离与恢复。将冷却系统的测量点和故障注入纳入整Rack热验证，不仅比较名义kW容量。</p>
+<p><a href="https://www.opencompute.org/news/ocp-global-summit-2026-innovation-village-future-technologies-symposium-fts-demo-lineup/">OCP官方Demo清单</a>｜<a href="https://www.opencompute.org/news/explore-22-tracks-at-the-2026-ocp-global-summit/">OCP 2026技术Tracks</a></p>
+</section>
+<section><h2>二、OCP 2026专项证据矩阵（补扫，不作为新会期动态）</h2>
+<table><tr><th>主题</th><th>本轮可确认</th><th>仍缺关键证据</th></tr>
+<tr><td>Scale-Up 128/512/1000+ GPU</td><td>Tracks涉及Scale-Up/Scale-Out、102.4T液冷交换、ESUN/UALink-SAI等</td><td>未新增已验证的128/512/1000+ GPU域负载、拓扑、跳数、有效带宽、Collective和故障恢复数据</td></tr>
+<tr><td>NPO/CPO</td><td>Tracks覆盖XPO/NPO/CPO、可靠性/Resiliency、互操作</td><td>本轮未找到新的量产良率、FRU、MTTR、光源冗余、现场维修流程或LCC量化证据</td></tr>
+<tr><td>224G/448G</td><td>Tracks列出400G→800G networking与448G co-packaged copper</td><td>未新增可复核的通道损耗、BER、功耗、距离、FEC/MLSE与量产条件</td></tr>
+<tr><td>800VDC / 1MW Rack</td><td>Tracks包含800VDC、1MW+ Rack；本轮补到1MW热交换器原型</td><td>未新增整Rack电气部署、保护、效率、功率瞬态与长期现场数据</td></tr>
+<tr><td>可维护性</td><td>Tracks包含Validation；Innovation Village列出冷却/能源/机器人原型</td><td>没有新的可比较FRU边界、拆装步骤、MTTR、备件、维护中可用度或生命周期成本数据</td></tr></table>
+<p><a href="https://www.opencompute.org/events/ocp-summit/2026-ocp-global-summit/recorded-content/">OCP官方录播/PPT索引</a>仍是后续复核入口；部分资料下载/录播无法完整读取，本期不把未读材料写成结论。</p>
+</section>
+<section><h2>三、会议雷达</h2>
+<h3>过去30天</h3><ul><li><strong>SC26：</strong>2026-11-15至11-20，刚结束。继续跟踪Agentic Science、CPU/GPU分池、向量检索ASIC、KV/内存与网络演讲会后材料。</li></ul>
+<h3>未来90天</h3><ul>
+<li><strong>Datacloud Asia / ITW Asia：</strong>12/01–12/03，新加坡。官方议程含AI基础设施、容量/能源、设计工程、Neocloud与连接；重点看APAC time-to-power和液冷/电力可部署边界。<a href="https://datacloudasia.com/agenda">官网议程</a></li>
+<li><strong>CES 2027 Media Days：</strong>01/04–01/05；CES展期01/06–01/09，Las Vegas。Media Days已有官方发布会日程，AMD、LG、Bosch、Siemens等；重点关注Edge/PC/机器人与AI设备，不把消费新品自动纳入架构简报。<a href="https://www.ces.tech/media-guides/media-days/">官方Media Days</a></li>
+<li><strong>Digital Infrastructure World / OCP Tech Day：</strong>02/02–02/04；OCP Rack Track为02/03–02/04，San Jose。重点议题已明确：1MW Rack、Scale-Up Networking、液冷、800VDC、Cluster与能源。<a href="https://www.opencompute.org/events/ocp-tech-day/digital-infrastructure-world/">OCP官方会期与Track</a></li>
+<li><strong>DesignCon 2027：</strong>02/02–02/04，Santa Clara。15-track会议；重点SI/PI、224G/448G、连接器/线缆、PCIe与板级设计。<a href="https://www.designcon.com/">官网</a></li></ul>
+<h3>90天外提前预警</h3><ul><li><strong>OFC 2027：</strong>03/07–03/11，Los Angeles；光互联/CPO/NPO/数据中心光网络。<a href="https://www.ofcconference.org/about">官方会期</a></li><li><strong>NVIDIA GTC 2027：</strong>03/15–03/18，San Jose；AI Factory、Agent、Inference、Physical AI。<a href="https://www.nvidia.com/gtc/">官方会期</a></li></ul>
+<p>OIF、UALink、UEC、AMD Advancing AI、ECOC、Hot Interconnects、Computex及云栖：本轮未核实未来90天内官方会期/议程变更，不填推测日期。</p></section>
+<section><h2>四、阿里云栖2026跟踪</h2><p>本轮未发现新的官方公开资料更新AL144/AL64/SNPO/ALink的物理拓扑、端口映射、量产状态、NPO维护边界、FRU/MTTR或成本基线；继续保留历史对照，不将旧会期包装为新动态。</p></section>
+<section><h2>五、RSS与自动化健康自检</h2><ul>
+<li><strong>主Feed：</strong>发布前90条、90个唯一GUID；最新11/21归档存在且全文与RSS description一致。今天更新后继续保留90期。</li>
+<li><strong>技术预警：</strong>Feed最新10/27；对应任务已禁用。属于任务未运行，不代表条件预警无变化。</li>
+<li><strong>竞品与成本周报：</strong>Feed最新11/16；任务已禁用，11/23 04:00下一周期不会自动执行。</li>
+<li><strong>下一代架构专题：</strong>Feed最新11/21；任务已禁用，未按暂停状态继续运行。</li>
+<li><strong>AI Memory：</strong>Feed最新11/20 17:00；任务启用，下一周期11/27，未逾期。</li>
+<li><strong>主日报：</strong>任务启用；最新Feed在发布前为11/21 05:00，今天按05:00更新。</li>
+<li>五个RSS通过标签嵌套、CDATA配对、GUID唯一性与最新归档存在性检查。独立严格XML解析器本轮不可用，故不宣称外部解析器验证。Follow客户端缓存不可读取，无法判断客户端缓存延迟。</li></ul>
+<p><strong>系统告警：</strong>技术预警、竞品与成本周报、下一代架构专题3项任务目前处于禁用状态；已明确报告为暂停，不误报为GitHub发布失败或RSS无变化。本轮未修改其它任务或RSS。</p></section>
+<section><h2>本期结论</h2><p>Agent工作负载的架构边界正向CPU执行/数据池、GPU推理池、共享内存/存储与高速网络协同扩展；800VDC的关键不只是高压母线，而是整条转换与保护链；MW级液冷原型必须用流量、压差、温差、热阻、故障恢复和维护数据建立工程边界。当前公开资料还不足以替代真实负载下的有效带宽、效率、MTTR和TCO测量。</p></section>
+</article>
