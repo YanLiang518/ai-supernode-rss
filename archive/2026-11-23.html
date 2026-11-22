@@ -1,0 +1,72 @@
+<article lang="zh-CN">
+<header>
+<h1>AI算力架构前沿简报｜2026年11月23日</h1>
+<p><strong>观察窗口：</strong>北京时间2026-11-22 05:00—2026-11-23 05:00；过去24小时未发现足以单独改变架构基线的重大公开发布，回溯7天补入SC26会后量化资料与OIF正式规范更新。</p>
+<p><strong>本期判断：</strong>长上下文推理的瓶颈开始从GPU算力转移到KV状态的持久化与恢复；多千瓦芯片冷却的上限越来越由界面热阻和流量控制决定；224G电气接口从项目讨论进入正式实施协议，板级距离、连接器数和误码目标将直接约束NPO/LPO/CPO的系统分工。</p>
+<p><strong>证据口径：</strong>“实测”仅指公开实验设置内的结果；厂商目标、投影片规划和本文推断分别标注，不把实验室投影、会议标语或标准项目意图等同于量产规格。</p>
+</header>
+<section>
+<h2>一、本期3项架构相关发现</h2>
+<h3>1. 400GiB级KV缓存恢复：GPU扩容无效，存储层把TTFT从17–18秒压到约1秒</h3>
+<p><strong>发生/发布日期：</strong>2026-11-18（SC26 Exhibitor Forum）｜<strong>证据等级：</strong>厂商受控实测，尚无独立复测</p>
+<p><strong>业务变化：</strong>长上下文、多用户Agent与会话恢复让推理服务反复面对巨大的KV状态。DDN在SC26公布一项基于NVIDIA GH200的受控研究：约400GiB多用户KV工作集无法全部常驻GPU时，GPU-only与主机内存层都会回退到重新计算，首Token延迟约17–18秒；共享存储恢复上下文约1秒。增加GPU并未消除该延迟，说明瓶颈已落在状态I/O而非矩阵计算。</p>
+<p><strong>计算/数据特征：</strong>Prefill产生大块、会话相关且可复用的KV对象；Decode阶段计算密度较低，却对恢复时延与尾部抖动敏感。多租户并发会造成突发读、目录/对象元数据压力，以及HBM—主存—共享存储之间的带宽争用。</p>
+<p><strong>技术边界：</strong>“把更多GPU加入服务即可缩短TTFT”的假设在KV工作集超过HBM/主存容量后失效。关键边界转为缓存命中率、恢复带宽、单会话P99、存储网络拥塞与模型/会话版本一致性。DDN结果没有公开完整并发度、对象尺寸分布、存储配置和成本，因此不能外推为通用1秒SLA。</p>
+<p><strong>硬件架构应对：</strong>高概率形成HBM热层、CXL/主存温层、本地NVMe与共享高性能存储冷层；Prefill/Decode分池的调度器需同时感知KV位置、恢复代价与租户优先级。DPU/智能NIC可承担分层搬运、压缩、加密与限速，存储Fabric需要与Scale-Out集合通信隔离或提供明确QoS。</p>
+<p><strong>采购/验证问题：</strong>要求按上下文长度与并发度披露TTFT P50/P99、有效恢复GB/s、重算率、缓存命中、恢复期间网络拥塞及每完成任务成本，而不是只报顺序峰值带宽。</p>
+<p><strong>原始来源：</strong><a href="https://sc26.conference-program.com/presentation/?id=exforum191&amp;sess=sess487">SC26官方议程与演讲摘要</a></p>
+
+<h3>2. 单芯片6.41kW冷却投影：界面热阻与流量控制成为封装级上限</h3>
+<p><strong>发生/发布日期：</strong>2026-11-15（SC26 Energy-Efficient Supercomputing Workshop）｜<strong>证据等级：</strong>实验室热测试与模型投影，不是产品量产认证</p>
+<p><strong>业务变化：</strong>高功率加速器与3D封装把冷却问题从“机柜能否供足流量”推进到“芯片—冷板界面能否稳定跨越高热流密度”。EMCOOL与Georgia Tech团队报告入口温度参考热阻0.0383K/W；在平均加热器100°C限制下，5L/min基线对应3.04kW，受控薄层液态金属界面投影可达6.41kW。3kW条件下将流量从4.61降到0.92L/min，同时给出40.5°C更高的允许入口温度裕量。</p>
+<p><strong>计算/数据特征：</strong>更高单封装功率把热量集中到更小面积；功率随训练/推理阶段快速变化，冷却系统既要处理稳态热阻，也要处理瞬态热点。降低单芯片流量可缓解泵功、歧管压降与机柜配水压力，但会提高局部沸腾、材料迁移和控制失配风险。</p>
+<p><strong>技术边界：</strong>传统导热材料厚度、公差与接触压力开始主导结温，继续增加流量的边际收益下降。公开数据仍缺少长期泵循环、腐蚀/润湿、液态金属迁移、泄漏、震动、重复装配和现场维修测试；6.41kW是特定边界条件下的投影，不等于可部署TDP。</p>
+<p><strong>硬件架构应对：</strong>冷板、TIM、封装盖板和歧管必须联合设计；控制器应按芯片功率与入口温度动态分配流量。若采用液态金属或其他高性能界面，FRU边界、密封、材料兼容、检漏与回收流程必须前置到机柜设计，而非留给现场维护补救。</p>
+<p><strong>采购/验证问题：</strong>至少要求热阻随时间漂移、泵功、压降、供回水温、流量P99、失流保护、重复拆装和数千小时材料兼容性数据。</p>
+<p><strong>原始来源：</strong><a href="https://sc26.conference-program.com/presentation/?id=ws_eesp133&amp;sess=sess125">SC26官方Workshop议程与论文摘要</a></p>
+
+<h3>3. OIF-CEI-06.0正式发布：224G电气I/O开始固化板级距离与连接器预算</h3>
+<p><strong>发布日期：</strong>2026年11月（OIF实施协议清单）｜<strong>证据等级：</strong>正式标准发布；448G仍是后续工作方向</p>
+<p><strong>业务变化：</strong>OIF实施协议页面已列出OIF-CEI-06.0，明确把224G及以上电气接口纳入正式CEI规范。此前OIF官方224G项目框架给出的应用包络包括：XSR约50mm封装到封装、VSR约200mm主板加20mm模块且一个连接器、MR约500mm且一个连接器、LR约1000mm主板/子卡且两个连接器，目标BER为1e-15或更低并允许FEC；Linear路径以光模块内不放DSP/SerDes为目标。</p>
+<p><strong>计算/数据特征：</strong>单通道速率翻倍后，Nyquist频率、插损、串扰、反射和时钟抖动预算同步收紧。交换ASIC到可插拔光模块、NPO光引擎或板上光学器件的实际距离与连接器数量，直接决定是否需要重定时器/DSP，以及功耗、时延和可维护性落在哪一侧。</p>
+<p><strong>技术边界：</strong>“同一PCB/连接器拓扑只需更换高速SerDes即可升级”的假设失效。XSR/VSR/MR/LR不是营销名称，而是不同通道损耗与维护边界；448G的Retimed/Linear Reach工作仍在推进，不能把224G协议发布写成448G已定稿。</p>
+<p><strong>硬件架构应对：</strong>Scale-Up交换板、NIC、NPO/LPO/CPO需按真实通道包络重新划分光电边界。短距XSR有利于封装附近光引擎，VSR/MR保留模块化FRU空间，LR则允许更远的板/子卡连接但需要更严谨的FEC和功耗预算。系统验证应把BER、FEC余量、连接器老化、温度漂移和模块更换纳入整机测试。</p>
+<p><strong>待确认：</strong>本轮核实了CEI-06.0正式列入OIF清单；上述距离/连接器参数来自OIF此前官方项目框架，最终协议逐条条款与测试方法仍应以完整CEI-06.0 PDF为准。</p>
+<p><strong>原始来源：</strong><a href="https://www.oiforum.com/technical-work/implementation-agreements-ias/">OIF实施协议清单</a>｜<a href="https://www.oiforum.com/wp-content/uploads/OIF-CEI-06.0.pdf">OIF-CEI-06.0完整协议</a>｜<a href="https://www.oiforum.com/wp-content/uploads/OIF-224G-Framework-01.0.pdf">OIF 224G官方框架</a></p>
+</section>
+
+<section>
+<h2>二、会议雷达与OCP专项补扫</h2>
+<ul>
+<li><strong>SC26会后：</strong>会议已于11月20日结束。本期新增的KV存储层与多千瓦冷却数据来自官方会后可检索演讲页面，后续继续追踪完整PPT、论文、测试拓扑和会后修订。</li>
+<li><strong>OCP Global Summit 2026补扫：</strong>本轮未发现新的官方量化资料足以更新Scale-Up域128/512/1000+的负载边界、NPO量产/FRU/MTTR/全生命周期成本、448G或800VDC维护基线。既有展台标语不升级为硬件实证。</li>
+<li><strong>未来90天：</strong>重点观察Datacloud Asia（12/01–12/03）、CES 2027 Media Days与展期（01/04–01/09）、Digital Infrastructure World/OCP Tech Day及OCP Rack Track（02/02–02/04）、DesignCon 2027（02/02–02/04）。本轮未核实到上述官网议程发生需要进入正文的重大变更。</li>
+<li><strong>90天外提前预警：</strong>OFC 2027（03/07–03/11）与NVIDIA GTC 2027（03/15–03/18）继续列为光互联、AI Factory与推理架构的重点观察点。</li>
+</ul>
+<p><strong>会议来源：</strong><a href="https://www.opencompute.org/summit/global-summit">OCP Global Summit</a>｜<a href="https://sc26.supercomputing.org/">SC26</a>｜<a href="https://www.opencompute.org/events/ocp-tech-day/digital-infrastructure-world/">OCP Tech Day</a>｜<a href="https://www.designcon.com/">DesignCon</a>｜<a href="https://www.ofcconference.org/about">OFC</a>｜<a href="https://www.nvidia.com/gtc/">NVIDIA GTC</a></p>
+</section>
+
+<section>
+<h2>三、阿里云栖2026持续跟踪</h2>
+<p>本轮未发现阿里云或大会官方新增AL144、AL64分布式NPO、SNPO/ALink的GPU—交换拓扑、HBD规模、单卡Scale-Up带宽、光源位置、正交互连、液冷供电、量产状态或FRU/MTTR参数。继续保留历史对照，不把过期会期、展台文案或未署名转述包装成最新动态。</p>
+</section>
+
+<section>
+<h2>四、RSS与任务健康自检</h2>
+<ul>
+<li><strong>主Feed：</strong>写前90期，最新为11/22；RSS结构、ttl=15、GUID唯一，11/22归档可达。本次按90期上限滚动更新。</li>
+<li><strong>技术预警：</strong>XML可读，最新10/27归档可达；对应任务已禁用，因此属于任务未运行，不能解释为“条件无变化所以未发”。</li>
+<li><strong>竞品与成本周报：</strong>XML可读，最新11/16归档可达；对应任务已禁用，下一周期不会自动执行。</li>
+<li><strong>下一代架构专题：</strong>XML可读，最新11/21归档可达；对应任务已禁用。</li>
+<li><strong>AI Memory：</strong>XML可读，最新11/20 17:00归档可达；任务启用，下一周期11/27，未逾期。</li>
+<li><strong>主日报任务：</strong>启用，最近一次已完成周期对应11/22，本次正在更新。</li>
+<li>五个RSS均通过标签嵌套、CDATA配对、最新归档存在性与GUID检查；Follow客户端缓存不可读取，无法判断客户端缓存延迟。</li>
+</ul>
+<p><strong>系统告警：</strong>技术预警、竞品与成本周报、下一代架构专题三项任务处于禁用状态。此处明确归类为暂停，不误报为GitHub失败或“无变化”。本轮未修改这些任务或其它RSS。</p>
+</section>
+
+<section>
+<h2>本期架构结论</h2>
+<p>三条信号指向同一个变化：AI系统的性能边界正在从芯片峰值算力外移到状态搬运、物理界面和通道预算。KV恢复需要把存储纳入推理调度；多千瓦封装需要把TIM、冷板和FRU共同设计；224G接口需要在拓扑设计早期就确定连接器、距离、FEC与光电边界。采购与架构评审应围绕真实工作负载的P99、长期可靠性和维护成本，而不是单点峰值。</p>
+</section>
+</article>
