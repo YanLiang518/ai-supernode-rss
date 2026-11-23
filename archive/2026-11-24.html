@@ -1,0 +1,65 @@
+<article lang="zh-CN">
+<header>
+<h1>AI算力架构前沿简报｜2026年11月24日</h1>
+<p><strong>观察窗口：</strong>北京时间2026-11-23 05:00—2026-11-24 05:00；收录1项24小时内新增验证进展，并回溯7天补入1项此前未覆盖的生产推理控制面变化。</p>
+<p><strong>本期判断：</strong>整柜AI系统的竞争正在从发布规格进入客户验证；推理控制面也从“把请求发给空闲GPU”升级为同时理解KV位置、Prefill/Decode角色、集群容量、区域距离与故障状态。硬件峰值不再足以判断可交付服务能力。</p>
+<p><strong>证据口径：</strong>微软Helios信息属于厂商确认的早期负载验证，不等于Azure正式商用或规模部署；AWS功能属于已发布产品能力与厂商Beta案例，不把架构能力外推为所有模型的性能收益。</p>
+</header>
+
+<section>
+<h2>一、本期2项架构相关发现</h2>
+
+<h3>1. 微软首次给AMD Helios整柜上真实早期负载：开放Scale-Up路线进入客户验证阶段</h3>
+<p><strong>发生/发布日期：</strong>2026-11-23｜<strong>证据等级：</strong>客户实验室上电与早期负载验证；规模部署仍是计划</p>
+<p><strong>业务变化：</strong>AMD确认微软已在研究实验室上电首套Helios Rackscale系统，秋季收货后正在运行早期验证负载。Azure计划后续规模部署，用于前沿模型和客户推理。整柜包含MI455X、六代EPYC、Pensando网络与ROCm。相比此前的产品发布和采购承诺，这次新增的是客户侧整柜已经进入软硬件联调与工作负载验证。</p>
+<p><strong>计算/数据特征：</strong>推理验证不只是单GPU算子测试，还要覆盖模型切分、权重加载、KV容量、集合通信、网络拥塞、节点故障、功率限制和长期运行稳定性。MI455X、主机CPU、Pensando数据面与ROCm的性能只有在整柜调度、通信和故障恢复共同工作时才可兑现。</p>
+<p><strong>技术边界：</strong>“芯片可用即等于整柜可交付”的假设失效。真正边界包括ROCm模型覆盖率、跨节点通信效率、训练/推理框架兼容、节点替换与恢复、液冷和供电稳定性，以及Azure现有控制面能否同时管理多种加速器架构。公开材料没有给出GPU数量、拓扑、功率、冷却、有效带宽、TTFT或吞吐结果，因此不能据此认定性能目标已验收。</p>
+<p><strong>硬件架构应对：</strong>云厂商需要把GPU Tray、CPU主机、Pensando网络、存储和机柜控制器作为一个版本化系统验证；测试矩阵应覆盖不同模型大小、上下文、Batch、并行策略和故障注入。多供应商推理资源池还需要统一模型制品、遥测、调度与SLA接口，避免每种加速器形成独立运营孤岛。</p>
+<p><strong>应继续追踪：</strong>Azure正式可用时间、单Rack GPU规模与Scale-Up拓扑、HBM与单卡带宽、网络有效带宽、机柜功率/冷却、故障域、ROCm软件版本及相同模型下的任务完成成本。</p>
+<p><strong>原始来源：</strong><a href="https://newsroom.amd.com/news/microsoft-running-workload-validation-amd-helios-rackscale-solution/">AMD Newsroom：Microsoft Running Workload Validation with AMD Helios（2026-11-23）</a></p>
+
+<h3>2. AWS形成两级推理路由：KV位置、P/D角色、集群容量与区域故障被纳入同一控制面</h3>
+<p><strong>发生/发布日期：</strong>2026-11-17至11-20｜<strong>证据等级：</strong>正式产品能力、官方架构说明与Beta客户案例；性能收益依负载而变</p>
+<p><strong>业务变化：</strong>AWS在一周内把三类能力连成完整路径：SageMaker实时端点按KV缓存位置选择实例；HyperPod托管NVIDIA Dynamo，支持多节点模型、Prefill/Decode分池与KV感知路由；Global Inference Gateway再在集群和区域之间选择目标并自动故障转移。请求不再只经过一个负载均衡器，而是先选区域/集群，再选集群内持有合适KV的Pod。</p>
+<p><strong>计算/数据特征：</strong>模型权重可能超过单实例GPU内存，长Prompt使Prefill计算与Decode内存带宽需求冲突；会话KV则分散在不同Worker。AWS的端点维护只含截断哈希和位置指针的缓存索引，不保存Prompt、Token或KV张量；路由同时比较Prefix匹配和Worker负载。跨集群层默认评分包含区域距离、队列深度、KV/GPU内存余量及近期错误率。</p>
+<p><strong>技术边界：</strong>传统Round-Robin或“选择最近区域”无法同时优化缓存命中、排队、数据驻留、网络时延和故障恢复。两级路由也引入新的控制面一致性问题：缓存事件延迟会导致错误放置；扩容或滚动升级后的新实例缓存为空；跨区域溢出可能增加TTFT、流量费用和合规风险。Prefill/Decode分池还要求同可用区EFA与GPUDirect RDMA，表明KV搬运本身已成为硬件拓扑约束。</p>
+<p><strong>硬件架构应对：</strong>推理超节点需要独立的Prefill与Decode资源池、高带宽GPU直连网络、可观测的KV目录及跨层缓存。集群控制面应暴露队列、KV余量、错误率和区域位置；跨区域层必须同时执行数据驻留、成本和SLA策略。DPU/智能NIC可承担PrivateLink、加密、租户隔离和状态搬运，但不能替代缓存索引一致性与故障恢复逻辑。</p>
+<p><strong>应继续追踪：</strong>按上下文长度拆分的命中率、TTFT P50/P99、KV事件到索引的传播延迟、跨区域比例、故障转移时间、缓存冷启动代价，以及Global Gateway在区域故障和网络分区下的行为。</p>
+<p><strong>原始来源：</strong><a href="https://aws.amazon.com/blogs/machine-learning/amazon-sagemaker-ai-real-time-endpoints-now-support-kv-cache-aware-routing/">AWS：KV cache-aware routing（2026-11-17）</a>｜<a href="https://aws.amazon.com/blogs/machine-learning/managed-nvidia-dynamo-on-amazon-sagemaker-hyperpod-inference/">AWS：Managed NVIDIA Dynamo on HyperPod（2026-11-17）</a>｜<a href="https://aws.amazon.com/blogs/machine-learning/introducing-amazon-sagemaker-hyperpod-global-inference-gateway-one-endpoint-across-regions-and-clusters/">AWS：Global Inference Gateway（2026-11-20）</a></p>
+</section>
+
+<section>
+<h2>二、会议雷达</h2>
+<ul>
+<li><strong>AWS re:Invent 2026会前：</strong>11月30日至12月4日在Las Vegas举行，11月29日起提供直播内容；12月1日CEO Keynote明确覆盖AI基础设施与Agent。重点问题：下一代Trainium/网络、HyperPod推理控制面是否给出真实P99和故障恢复数据、AI Factory机柜的功率/冷却/维护边界，以及跨区域推理的成本和数据驻留策略。</li>
+<li><strong>DesignCon 2027会前：</strong>2月2日至4日。官网公开的技术方向继续覆盖224/448Gb/s、全双工/双向链路、PCIe 7.0；2026获奖论文目录中新出现400G铜通道、448Gbps Scale-Up/Scale-Out挑战、PCIe 7.0 PCB/Top-side互连和2000A核心供电轨等低曝光高价值线索。当前只有题目与作者的项目不进入本期正文，等待论文或量化演讲资料。</li>
+<li><strong>OCP Tech Day 2027：</strong>2月3日至4日Rack Track继续指向1MW Rack、异构加速器、Scale-Up网络、液冷与800VDC；本轮未见新增演讲参数。</li>
+<li><strong>SC26会后：</strong>继续追踪完整PPT和论文；本轮没有发现比11月23日已发布KV存储层和多千瓦冷却数据更强的新量化证据。</li>
+</ul>
+<p><strong>会议来源：</strong><a href="https://reinvent.awsevents.com/">AWS re:Invent 2026</a>｜<a href="https://aws.amazon.com/events/reinvent/livestream/">re:Invent直播议程</a>｜<a href="https://www.designcon.com/expo/awards/best-paper-awards/">DesignCon Best Paper目录</a>｜<a href="https://www.opencompute.org/events/ocp-tech-day/digital-infrastructure-world/">OCP Tech Day / Digital Infrastructure World</a></p>
+</section>
+
+<section>
+<h2>三、OCP与云栖专项跟踪</h2>
+<p><strong>OCP 2026：</strong>本轮未检索到新的官方量化资料足以更新Scale-Up域128/512/1000+的负载与拓扑边界、NPO量产/FRU/MTTR/生命周期成本、448G或800VDC维护基线。</p>
+<p><strong>阿里云栖2026：</strong>未发现阿里云官方新增AL144、AL64、SNPO/ALink的GPU—交换拓扑、HBD规模、单卡Scale-Up带宽、光源位置、液冷供电、量产状态或FRU/MTTR参数。继续保留历史对照，不把旧会期或展台文案包装成最新动态。</p>
+</section>
+
+<section>
+<h2>四、RSS与任务健康自检</h2>
+<ul>
+<li><strong>主Feed：</strong>写前90期，最新11月23日，归档可达；任务启用且按周期运行。本次继续滚动保留90期。</li>
+<li><strong>技术预警：</strong>XML可读，最新10月27日归档可达；任务已禁用，属于任务没有运行，不是“条件无变化”。</li>
+<li><strong>竞品与成本周报：</strong>XML可读，最新11月16日归档可达；已超过周周期加36小时，但任务已禁用，属于明确暂停而非GitHub发布失败。</li>
+<li><strong>下一代架构专题：</strong>XML可读，最新11月21日归档可达；任务已禁用。</li>
+<li><strong>AI Memory：</strong>XML可读，最新11月20日归档可达；任务启用，下一周期11月27日，未逾期。</li>
+<li>五个RSS均通过标签嵌套、CDATA配对、GUID与最新归档存在性检查。Follow客户端缓存不可读取，无法判断客户端缓存延迟。</li>
+</ul>
+<p><strong>系统告警：</strong>技术预警、竞品与成本周报、下一代架构专题三项任务处于禁用状态；其中竞品周报已错过11月23日周期。已明确归类为任务暂停，本轮未自行修改任务或其它RSS。</p>
+</section>
+
+<section>
+<h2>本期架构结论</h2>
+<p>Helios验证与AWS两级推理路由共同说明，AI系统的生产能力取决于“整柜可验证”与“状态可调度”。前者要求计算、主机、网络、软件、供电和冷却以统一版本进入验证；后者要求请求跟随KV、容量和故障状态移动。下一代超节点的关键KPI应从峰值FLOPS扩展到任务完成率、缓存命中、TTFT P99、故障恢复、跨域流量和每个完成任务的成本。</p>
+</section>
+</article>
