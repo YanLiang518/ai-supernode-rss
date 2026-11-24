@@ -1,0 +1,65 @@
+<article lang="zh-CN">
+<header>
+<h1>AI算力架构前沿简报｜2026年11月25日</h1>
+<p><strong>观察窗口：</strong>北京时间2026-11-24 05:00—2026-11-25 05:00。过去24小时没有发现足以单独改变架构基线的重大新品；回溯7天，从SC26官方会后页面补入2项此前未覆盖的量化技术边界。</p>
+<p><strong>本期判断：</strong>推理状态搬运正在从RDMA网络问题扩展为共享内存与一致性问题；高密光学和多千瓦计算的冷却也开始共享同一组机械、流体和维护约束。内存互联与液冷不再只是加速器外围配套，而在直接决定可部署的推理拓扑和物理密度。</p>
+<p><strong>证据口径：</strong>两项结果均来自SC26 Exhibitor Forum厂商演讲摘要，属于受控实验或厂商验证，不是独立Benchmark，也没有完整公开测试配置。量化结果仅用于识别边界，不直接外推为通用产品规格。</p>
+</header>
+
+<section>
+<h2>一、本期2项架构相关发现</h2>
+
+<h3>1. CXL共享内存用于跨Worker KV：厂商报告TTFT降低2.6倍、P99降低3倍</h3>
+<p><strong>发生/发布日期：</strong>2026-11-17（SC26会后资料本轮补扫）｜<strong>证据等级：</strong>SK hynix厂商受控测试；完整配置和独立复现待补充</p>
+<p><strong>业务变化：</strong>SK hynix在SC26展示面向分离式LLM Serving的CXL共享内存方案。系统让多个推理Worker通过共享内存访问KV状态，并配合锁与一致性协议；厂商称相对标准RDMA基线，TTFT降低2.6倍、P99延迟降低3倍、吞吐提高1.9倍。</p>
+<p><strong>计算/数据特征：</strong>Prefill/Decode分离、Worker迁移和长程Agent都需要频繁转移或复用KV。RDMA通常把KV作为消息或对象在节点间复制，涉及源端读取、网络传输、目标端写入和缓存目录更新；CXL共享内存则把KV变为多个Worker可寻址的状态池，减少显式复制，但增加共享内存访问、锁、目录和一致性流量。</p>
+<p><strong>技术边界：</strong>“KV只需用更快网络复制”的假设开始失效。当KV规模和Worker切换频率持续增长时，网络带宽之外，一致性、地址空间、故障恢复和内存尾延迟会成为新瓶颈。厂商没有公开GPU型号、CXL代际、交换拓扑、共享池容量、KV块大小、并发会话数、RDMA链路速率或功耗，因此不能把2.6倍结果推广到所有推理负载。</p>
+<p><strong>硬件架构应对：</strong>高概率形成GPU HBM热层、CXL共享内存温层、NVMe/共享存储冷层。CXL交换机和内存扩展设备需成为可管理故障域；调度器应依据KV位置、共享池拥塞和恢复代价放置Prefill/Decode Worker。锁和一致性协议需要硬件加速或至少提供细粒度遥测，否则共享状态池可能把网络拥塞转换为锁竞争和内存尾延迟。</p>
+<p><strong>采购/验证问题：</strong>要求披露CXL链路与交换级数、共享容量、有效GB/s、远端内存P50/P99、锁竞争、Worker故障后的KV恢复、每次迁移字节数、功耗和相同RDMA配置下的对照。</p>
+<p><strong>原始来源：</strong><a href="https://sc26.conference-program.com/presentation/?id=exforum151&amp;sess=sess493">SC26：Enabling Agentic AI Serving with Disaggregated Memory Pools</a></p>
+
+<h3>2. 液冷同时进入1.6T光模块和17.6kW晶圆级计算：热接口的可维护性成为共同边界</h3>
+<p><strong>发生/发布日期：</strong>2026-11-17（SC26会后资料本轮补扫）｜<strong>证据等级：</strong>TeraCule厂商验证与设计框架；长期可靠性和量产维护数据待确认</p>
+<p><strong>业务变化：</strong>TeraCule公布两类冷却架构：一类面向1.6T OSFP与近封装光学，把稳定的流体分配与每个光学器件的局部热接口解耦，以分别处理接触压力、Z向公差、翘曲和维护；另一类用“point–body–point”框架联合设计芯片边界层和分级流体传输。厂商称该方案已在17.6kW AI晶圆级设备上验证，热阻降低55%、压降降低67%，并扩展到250W/cm²。</p>
+<p><strong>计算/数据特征：</strong>高速光模块与交换ASIC持续靠近，光引擎自身功耗上升且对温度漂移敏感；晶圆级或多Die计算则形成大面积、非均匀高热流。两者都要求局部界面适配器件翘曲和装配公差，同时让上层流体网络保持稳定流量和可预测压降。</p>
+<p><strong>技术边界：</strong>“同一刚性冷板依靠更高夹紧力覆盖所有器件”的假设开始失效。对光学器件，过大接触力、Z向公差和重复拆装会影响光口维护；对大面积计算面，流量分布与边界层厚度决定热点。摘要没有披露冷却介质、入口温度、流量、泵功、热负载均匀性、器件结温、失流保护和耐久周期，55%与67%只能视为厂商特定基线下结果。</p>
+<p><strong>硬件架构应对：</strong>交换ASIC、NPO/CPO/LPO光引擎与冷板必须共同定义机械基准、独立顺应机构、UQD/阀门和FRU边界。分级歧管应把机柜级稳定供液与器件级自适应接触分开；局部冷却单元需要可盲插、可检漏并支持单光模块或单计算模块维护，避免一次维修打开整个流体域。</p>
+<p><strong>采购/验证问题：</strong>要求按光模块与计算器件分别给出热阻、压降、流量分配、Z向容差、接触力、插拔循环、泄漏率、泵功、入口温度范围、失流降额和长期材料兼容性。</p>
+<p><strong>原始来源：</strong><a href="https://sc26.conference-program.com/presentation/?id=exforum120&amp;sess=sess561">SC26：New Concept Liquid Cooling for Networking and Computing</a></p>
+</section>
+
+<section>
+<h2>二、会议雷达</h2>
+<ul>
+<li><strong>AWS re:Invent 2026会前：</strong>11月30日至12月4日，距离开幕不足一周。继续优先跟踪Trainium、EFA/HyperPod推理、AI Factory机柜、电源液冷和跨区域推理控制面；需要厂商回答的核心问题是P99、故障恢复、真实网络占用和每任务成本，而非仅报峰值吞吐。</li>
+<li><strong>SC26会后：</strong>本期新增的CXL共享KV和光学/晶圆级冷却均来自低曝光Exhibitor Forum。后续重点寻找完整PPT、论文、演示拓扑和测试条件，避免只保留摘要中的倍率。</li>
+<li><strong>DesignCon 2027：</strong>2月2日至4日；继续追踪224/448Gb/s、PCIe 7.0、400G铜通道、Top-side互连及2000A核心供电轨的完整论文。</li>
+<li><strong>OCP Tech Day / Digital Infrastructure World：</strong>2月3日至4日；1MW Rack、Scale-Up、液冷和800VDC议题未见新增量化参数。</li>
+</ul>
+<p><strong>会议来源：</strong><a href="https://reinvent.awsevents.com/">AWS re:Invent</a>｜<a href="https://sc26.supercomputing.org/">SC26</a>｜<a href="https://www.designcon.com/">DesignCon</a>｜<a href="https://www.opencompute.org/events/ocp-tech-day/digital-infrastructure-world/">OCP Tech Day</a></p>
+</section>
+
+<section>
+<h2>三、OCP与云栖专项跟踪</h2>
+<p><strong>OCP 2026：</strong>本轮仍未获得足以更新Scale-Up域128/512/1000+边界、NPO量产/FRU/MTTR/生命周期成本、448G或800VDC维护基线的新官方量化材料。</p>
+<p><strong>阿里云栖2026：</strong>没有发现阿里云官方新增AL144、AL64、SNPO/ALink的GPU—交换拓扑、HBD规模、单卡Scale-Up带宽、NPO光源、液冷供电、量产或FRU/MTTR参数。旧会期和展台文案不作为最新动态。</p>
+</section>
+
+<section>
+<h2>四、RSS与任务健康自检</h2>
+<ul>
+<li><strong>主Feed：</strong>写前90期，最新11月24日，归档可达；任务启用并按周期运行。本次继续保留90期。</li>
+<li><strong>技术预警：</strong>XML可读，最新10月27日归档可达；任务处于禁用状态，不解释为“没有条件变化”。</li>
+<li><strong>竞品与成本周报：</strong>XML可读，最新11月16日归档可达；已超过周周期加36小时，任务禁用，属于暂停而非GitHub失败。</li>
+<li><strong>下一代架构专题：</strong>XML可读，最新11月21日归档可达；任务处于禁用状态。</li>
+<li><strong>AI Memory：</strong>XML可读，最新11月20日归档可达；任务启用，下一周期11月27日，未逾期。</li>
+<li>五个RSS均通过标签嵌套、CDATA配对、GUID及最新归档存在性检查。Follow客户端状态不可读取，无法判断客户端缓存延迟。</li>
+</ul>
+<p><strong>系统告警：</strong>技术预警、竞品与成本周报、下一代架构专题三项任务仍为禁用；其中竞品周报已错过11月23日周期。本轮未自行修改任何任务或其它RSS。</p>
+</section>
+
+<section>
+<h2>本期架构结论</h2>
+<p>CXL共享KV和解耦式液冷共同反映出一个趋势：超节点正在把过去隐藏在“互联”和“散热”后的状态与机械边界显式化。逻辑层需要知道KV位于何处、由谁共享以及故障后如何恢复；物理层需要知道每个光学或计算器件的接触、公差、流量和FRU边界。下一代系统不能只把高速网络和冷板作为通用公共资源，而需要把它们设计成可感知、可隔离、可恢复的分层资源池。</p>
+</section>
+</article>
