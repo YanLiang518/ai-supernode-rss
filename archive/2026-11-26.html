@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>AI算力架构前沿简报｜2026年11月26日</title>
+<style>
+:root{color-scheme:light dark}body{max-width:920px;margin:0 auto;padding:24px;line-height:1.75;font-family:system-ui,-apple-system,"Segoe UI",sans-serif}h1,h2,h3{line-height:1.35}section{margin:2rem 0}a{overflow-wrap:anywhere}ul{padding-left:1.4rem}@media(max-width:640px){body{padding:16px}h1{font-size:1.7rem}}
+</style>
+</head>
+<body>
+<article lang="zh-CN">
+<header>
+<h1>AI算力架构前沿简报｜2026年11月26日</h1>
+<p><strong>观察窗口：</strong>北京时间2026-11-25 05:00—2026-11-26 05:00。过去24小时没有发现足以单独改变架构基线的重大新品；回溯7天，从SC26正式论文与厂商/学术联合实验中补入2项此前未覆盖的量化证据。</p>
+<p><strong>本期判断：</strong>训练通信与主机内存都不再适合用单一峰值指标设计。通信压缩只有在压缩算子、集合通信算法和网络层级共同匹配时才能把链路节省转化为训练时间；CXL扩展内存也只有在NUMA、页级交织和DDR/CXL比例正确时，才可能从“更大容量”变成“更多有效带宽”。</p>
+<p><strong>证据口径：</strong>第一项为SC26同行评审论文摘要披露的10,240 GPU结果；第二项为Intel、Micron联合实机研究并在SC26 HMEM Workshop发表。两者均比产品宣称更接近系统实验，但公开摘要不足以重建全部配置，倍率仅适用于其测试条件。</p>
+</header>
+
+<section>
+<h2>一、本期2项架构相关发现</h2>
+
+<h3>1. 10,240 GPU通信压缩：通信阶段最高加速5.87倍，端到端训练仅1.73倍</h3>
+<p><strong>发生/发布日期：</strong>2026-11-18（SC26论文报告；会后Proceedings本轮补扫）｜<strong>证据等级：</strong>同行评审论文与10,240 GPU实验；完整模型、网络与压缩参数仍需论文正文复核</p>
+<p><strong>业务变化：</strong>中科院计算所等团队在SC26公布面向万卡LLM训练的通信压缩系统研究。论文称，普通压缩在极端规模下会受到带宽层级、通信扩展性和资源感知不足的限制；其分层协同方法重构压缩路径、按规模调整集合通信算法并分配网络资源，在Llama 3、10,240 GPU条件下实现通信阶段最高5.87倍、端到端训练最高1.73倍加速，同时保持精度。</p>
+<p><strong>计算/数据特征：</strong>数据并行和专家并行产生不同大小、不同频率的All-Reduce、All-to-All与点对点流量。压缩能减少字节数，却额外消耗GPU算力、显存、量化/反量化和同步；在节点内Scale-Up、机架内网络与跨机架Scale-Out之间，瓶颈位置会随规模移动。10K GPU下，单一压缩比不能描述收益，必须同时知道消息大小、压缩算子占用、拓扑层级和集合通信调度。</p>
+<p><strong>技术边界：</strong>“通信字节减少X倍，训练时间也会近似减少X倍”的假设被直接否定。5.87倍通信收益最后只形成1.73倍端到端收益，说明Amdahl定律、压缩开销以及计算—通信重叠决定最终价值。论文摘要未披露所有基线、网络带宽、拓扑、精度曲线、功耗和不同压缩算法结果，不能把峰值倍率外推到其他模型或集群。</p>
+<p><strong>硬件架构应对：</strong>压缩应进入集合通信运行时和Fabric控制面的联合调度：节点内保留高精度高速路径，跨层级或跨Pod链路按消息与拥塞状态选择压缩率；GPU/交换/DPU需要暴露拓扑、队列和压缩算子占用。若压缩长期占用Tensor/Core或HBM带宽，独立压缩引擎、智能NIC或交换侧聚合可能有价值，但必须用端到端训练时间和精度验证，而不是用链路字节数验收。</p>
+<p><strong>建议验证：</strong>逐层记录节点内/跨节点/跨Pod带宽、压缩与反压缩时间、GPU占用、消息尺寸分布、精度变化和功耗；同时比较无压缩、固定压缩与拓扑感知压缩的Step Time P50/P99和故障重试开销。</p>
+<p><strong>原始来源：</strong><a href="https://sc26.supercomputing.org/proceedings/papers/paper_pages/pap224.html">SC26 Proceedings：Evaluation and Optimization of Communication Compression for 10K-GPU LLM Training</a>｜<a href="https://sc26.conference-program.com/presentation/?id=pap224&amp;sess=sess233">SC26官方报告页（2026-11-18）</a></p>
+
+<h3>2. CXL混合内存首次在Xeon 6上同时扩容与扩带宽：读带宽+24%，混合读写最高+39%</h3>
+<p><strong>发生/发布日期：</strong>2026-11-16（SC26 HMEM Workshop；会后Proceedings本轮补扫）｜<strong>证据等级：</strong>Intel与Micron联合实机实验；供应商参与，尚非独立复现</p>
+<p><strong>业务变化：</strong>Intel与Micron以128核Xeon 6 6900P、12通道DDR5-6400和8块Micron CZ122 CXL Type-3 E3.S x8设备组成混合内存系统。8块CXL内存被配置为统一NUMA节点，Linux 6.9+使用页级交织在DDR5与CXL节点之间分配数据。研究报告称，相比仅DDR配置，读带宽提高24%，混合读写最高提高39%，一组HPC与AI负载的几何平均性能提高24%。</p>
+<p><strong>计算/数据特征：</strong>CPU侧数据预处理、Embedding/检索、Checkpoint处理、KV或参数暂存往往同时受容量与带宽约束。CXL Type-3设备通过PCIe增加独立内存通道；当页分布和访问模式匹配时，DDR与CXL可并行服务请求。代价是更复杂的NUMA距离、页迁移、交织比例和尾延迟，而不是所有访问都获得同样速度。</p>
+<p><strong>技术边界：</strong>“CXL扩展内存只能增加容量，必然拖慢系统”的绝对假设开始失效；但“插入CXL设备即可获得39%带宽”同样错误。收益依赖8块设备并行、12通道DDR5基线、软件页交织、DRAM:CXL比例和负载访问特征。公开摘要没有完整给出容量比例、延迟P99、NUMA策略、每块设备功耗、写放大、故障降级和AI子负载明细，不能直接外推到GPU直连CXL池或共享KV场景。</p>
+<p><strong>硬件架构应对：</strong>下一代CPU/数据节点可把本地DDR作为低延迟层，把多块CXL E3.S作为容量与并行带宽层；调度器和内存管理器必须按页面热度、读写比例与NUMA位置放置数据。机箱需要为多块CXL设备预留PCIe通道、散热、热插拔和故障隔离；CXL池化系统还要验证交换跳数、一致性目录和多主机争用是否吞噬单机直连收益。</p>
+<p><strong>建议验证：</strong>要求提供不同DRAM:CXL比例下的STREAM/实际负载带宽、P50/P99访问延迟、读写比例敏感性、CPU利用率、功耗、设备失效后的性能与页恢复；对GPU推理则另测GPU—CXL路径，不能用CPU实验代替。</p>
+<p><strong>原始来源：</strong><a href="https://sc26.supercomputing.org/proceedings/workshops/workshop_pages/ws_hmem103.html">SC26 Proceedings：Optimizing System Memory Bandwidth with Micron CXL Modules on Intel Xeon 6</a>｜<a href="https://www.intel.com/content/www/us/en/content-details/842211/optimizing-system-memory-bandwidth-with-micron-cxl-memory-expansion-modules-on-intel-xeon-6-processors.html">Intel官方论文页与系统配置</a>｜<a href="https://sc26.conference-program.com/presentation/?id=ws_hmem103&amp;sess=sess144">SC26官方报告页（2026-11-16）</a></p>
+</section>
+
+<section>
+<h2>二、会议雷达</h2>
+<ul>
+<li><strong>AWS re:Invent 2026会前：</strong>11月30日至12月4日，官网已列出超过2200场议程。重点核查Trainium/Inferentia、EFA/HyperPod推理、AI Factory、电源液冷及跨区域路由是否公布P99、故障恢复和每任务成本，而不只记录峰值吞吐。</li>
+<li><strong>OCP液冷Webinar：</strong>12月3日“Cleaner Coolant, Fewer Failures”已进入OCP活动列表。需要追问冷却液洁净度、过滤粒径、材料兼容、腐蚀/沉积、维护周期与高TDP器件故障率是否给出量化基线。</li>
+<li><strong>DesignCon 2027：</strong>2月2日至4日，100+场、15个Track；继续跟踪224/448Gb/s、PCIe 7.0、2.5D/3D、双向链路及3.2T光学论文的实测通道、功耗与误码数据。</li>
+<li><strong>OCP Tech Day / Digital Infrastructure World：</strong>2月3日至4日，Rack Track继续聚焦接近1MW机柜、Scale-Up、液冷与800VDC；本轮未见新增量化演讲参数。</li>
+<li><strong>SC26会后：</strong>本期两项均来自Proceedings而非新闻稿，说明会后论文索引仍有新增价值。后续继续补全论文正文和录播中的配置、误差条与失败案例。</li>
+</ul>
+<p><strong>会议来源：</strong><a href="https://reinvent.awsevents.com/">AWS re:Invent 2026</a>｜<a href="https://www.opencompute.org/events/">OCP活动目录</a>｜<a href="https://www.designcon.com/">DesignCon 2027</a>｜<a href="https://www.opencompute.org/events/ocp-tech-day/digital-infrastructure-world/">OCP Tech Day</a>｜<a href="https://sc26.supercomputing.org/proceedings/">SC26 Proceedings</a></p>
+</section>
+
+<section>
+<h2>三、OCP与云栖专项跟踪</h2>
+<p><strong>OCP 2026：</strong>本轮未找到足以更新Scale-Up域128/512/1000+拓扑边界、NPO量产/FRU/MTTR/生命周期成本、448G或800VDC维护基线的新官方量化材料。OIF于11月23日发布CEI-06.0的224G LR/MR规范已在此前简报跟踪，不重复包装为今日新增。</p>
+<p><strong>阿里云栖2026：</strong>未发现阿里云官方新增AL144、AL64、SNPO/ALink的GPU—交换拓扑、HBD规模、单卡Scale-Up带宽、NPO光源、液冷供电、量产或FRU/MTTR参数。继续保留历史对照，不把过期会期、展台文案或无来源转述视作最新动态。</p>
+</section>
+
+<section>
+<h2>四、RSS与任务健康自检</h2>
+<ul>
+<li><strong>主Feed：</strong>写前90期，最新11月25日，归档可达、XML/CDATA配对正常；任务启用，最近一次计划运行已记录。本次滚动保留90期。</li>
+<li><strong>技术预警：</strong>XML可读，最新10月27日归档可达；任务禁用，因此不能把长期未发解释为“没有条件变化”。</li>
+<li><strong>竞品与成本周报：</strong>XML可读，最新11月16日归档可达；已超过周周期加36小时，任务禁用，属于暂停疑点而非已证实的GitHub失败。</li>
+<li><strong>下一代架构专题：</strong>XML可读，最新11月21日归档可达；任务禁用。</li>
+<li><strong>AI Memory：</strong>XML可读，最新11月20日归档可达；任务启用，下一周期11月27日，未逾期。</li>
+<li>五个RSS的最新归档均可读取；Follow客户端状态不可访问，无法区分客户端缓存或订阅刷新延迟。</li>
+</ul>
+<p><strong>系统告警：</strong>技术预警、竞品与成本周报、下一代架构专题三项任务仍为禁用；其中竞品周报已错过11月23日周期。本轮仅只读检查，未修改其它任务或RSS。</p>
+</section>
+
+<section>
+<h2>本期架构结论</h2>
+<p>两项证据指向同一个设计方法：<strong>不能再把“减少字节”和“增加介质”直接等同于端到端性能。</strong>通信压缩要跨GPU算子、集合通信算法和多层Fabric联合优化；CXL混合内存要跨PCIe通道、NUMA、页面放置和访问模式联合优化。采购与验收应从峰值压缩比、CXL容量或理论GB/s，转向真实任务的Step Time/TTFT、P99、功耗、故障降级和可恢复进度。</p>
+</section>
+</article>
+</body>
+</html>
