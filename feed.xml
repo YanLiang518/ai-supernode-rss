@@ -5,11 +5,84 @@
     <link>https://github.com/YanLiang518/ai-supernode-rss</link>
     <description>聚焦 AI 超节点、GPU/加速芯片、Scale-up 互联、NPO/CPO、液冷、供电与头部厂商架构动态。</description>
     <language>zh-cn</language>
-    <pubDate>Wed, 25 Nov 2026 05:00:00 +0800</pubDate>
-    <lastBuildDate>Wed, 25 Nov 2026 05:00:00 +0800</lastBuildDate>
+    <pubDate>Thu, 26 Nov 2026 05:00:00 +0800</pubDate>
+    <lastBuildDate>Thu, 26 Nov 2026 05:00:00 +0800</lastBuildDate>
     <ttl>15</ttl>
     <atom:link href="https://raw.githubusercontent.com/YanLiang518/ai-supernode-rss/main/feed.xml" rel="self" type="application/rss+xml"/>
-    <item>
+        <item>
+      <title>AI算力架构前沿简报｜2026年11月26日</title>
+      <link>https://raw.githubusercontent.com/YanLiang518/ai-supernode-rss/main/archive/2026-11-26.html</link>
+      <guid isPermaLink="false">ai-supernode-brief-2026-11-26</guid>
+      <pubDate>Thu, 26 Nov 2026 05:00:00 +0800</pubDate>
+      <description><![CDATA[<article lang="zh-CN">
+<header>
+<h1>AI算力架构前沿简报｜2026年11月26日</h1>
+<p><strong>观察窗口：</strong>北京时间2026-11-25 05:00—2026-11-26 05:00。过去24小时没有发现足以单独改变架构基线的重大新品；回溯7天，从SC26正式论文与厂商/学术联合实验中补入2项此前未覆盖的量化证据。</p>
+<p><strong>本期判断：</strong>训练通信与主机内存都不再适合用单一峰值指标设计。通信压缩只有在压缩算子、集合通信算法和网络层级共同匹配时才能把链路节省转化为训练时间；CXL扩展内存也只有在NUMA、页级交织和DDR/CXL比例正确时，才可能从“更大容量”变成“更多有效带宽”。</p>
+<p><strong>证据口径：</strong>第一项为SC26同行评审论文摘要披露的10,240 GPU结果；第二项为Intel、Micron联合实机研究并在SC26 HMEM Workshop发表。两者均比产品宣称更接近系统实验，但公开摘要不足以重建全部配置，倍率仅适用于其测试条件。</p>
+</header>
+
+<section>
+<h2>一、本期2项架构相关发现</h2>
+
+<h3>1. 10,240 GPU通信压缩：通信阶段最高加速5.87倍，端到端训练仅1.73倍</h3>
+<p><strong>发生/发布日期：</strong>2026-11-18（SC26论文报告；会后Proceedings本轮补扫）｜<strong>证据等级：</strong>同行评审论文与10,240 GPU实验；完整模型、网络与压缩参数仍需论文正文复核</p>
+<p><strong>业务变化：</strong>中科院计算所等团队在SC26公布面向万卡LLM训练的通信压缩系统研究。论文称，普通压缩在极端规模下会受到带宽层级、通信扩展性和资源感知不足的限制；其分层协同方法重构压缩路径、按规模调整集合通信算法并分配网络资源，在Llama 3、10,240 GPU条件下实现通信阶段最高5.87倍、端到端训练最高1.73倍加速，同时保持精度。</p>
+<p><strong>计算/数据特征：</strong>数据并行和专家并行产生不同大小、不同频率的All-Reduce、All-to-All与点对点流量。压缩能减少字节数，却额外消耗GPU算力、显存、量化/反量化和同步；在节点内Scale-Up、机架内网络与跨机架Scale-Out之间，瓶颈位置会随规模移动。10K GPU下，单一压缩比不能描述收益，必须同时知道消息大小、压缩算子占用、拓扑层级和集合通信调度。</p>
+<p><strong>技术边界：</strong>“通信字节减少X倍，训练时间也会近似减少X倍”的假设被直接否定。5.87倍通信收益最后只形成1.73倍端到端收益，说明Amdahl定律、压缩开销以及计算—通信重叠决定最终价值。论文摘要未披露所有基线、网络带宽、拓扑、精度曲线、功耗和不同压缩算法结果，不能把峰值倍率外推到其他模型或集群。</p>
+<p><strong>硬件架构应对：</strong>压缩应进入集合通信运行时和Fabric控制面的联合调度：节点内保留高精度高速路径，跨层级或跨Pod链路按消息与拥塞状态选择压缩率；GPU/交换/DPU需要暴露拓扑、队列和压缩算子占用。若压缩长期占用Tensor/Core或HBM带宽，独立压缩引擎、智能NIC或交换侧聚合可能有价值，但必须用端到端训练时间和精度验证，而不是用链路字节数验收。</p>
+<p><strong>建议验证：</strong>逐层记录节点内/跨节点/跨Pod带宽、压缩与反压缩时间、GPU占用、消息尺寸分布、精度变化和功耗；同时比较无压缩、固定压缩与拓扑感知压缩的Step Time P50/P99和故障重试开销。</p>
+<p><strong>原始来源：</strong><a href="https://sc26.supercomputing.org/proceedings/papers/paper_pages/pap224.html">SC26 Proceedings：Evaluation and Optimization of Communication Compression for 10K-GPU LLM Training</a>｜<a href="https://sc26.conference-program.com/presentation/?id=pap224&amp;sess=sess233">SC26官方报告页（2026-11-18）</a></p>
+
+<h3>2. CXL混合内存首次在Xeon 6上同时扩容与扩带宽：读带宽+24%，混合读写最高+39%</h3>
+<p><strong>发生/发布日期：</strong>2026-11-16（SC26 HMEM Workshop；会后Proceedings本轮补扫）｜<strong>证据等级：</strong>Intel与Micron联合实机实验；供应商参与，尚非独立复现</p>
+<p><strong>业务变化：</strong>Intel与Micron以128核Xeon 6 6900P、12通道DDR5-6400和8块Micron CZ122 CXL Type-3 E3.S x8设备组成混合内存系统。8块CXL内存被配置为统一NUMA节点，Linux 6.9+使用页级交织在DDR5与CXL节点之间分配数据。研究报告称，相比仅DDR配置，读带宽提高24%，混合读写最高提高39%，一组HPC与AI负载的几何平均性能提高24%。</p>
+<p><strong>计算/数据特征：</strong>CPU侧数据预处理、Embedding/检索、Checkpoint处理、KV或参数暂存往往同时受容量与带宽约束。CXL Type-3设备通过PCIe增加独立内存通道；当页分布和访问模式匹配时，DDR与CXL可并行服务请求。代价是更复杂的NUMA距离、页迁移、交织比例和尾延迟，而不是所有访问都获得同样速度。</p>
+<p><strong>技术边界：</strong>“CXL扩展内存只能增加容量，必然拖慢系统”的绝对假设开始失效；但“插入CXL设备即可获得39%带宽”同样错误。收益依赖8块设备并行、12通道DDR5基线、软件页交织、DRAM:CXL比例和负载访问特征。公开摘要没有完整给出容量比例、延迟P99、NUMA策略、每块设备功耗、写放大、故障降级和AI子负载明细，不能直接外推到GPU直连CXL池或共享KV场景。</p>
+<p><strong>硬件架构应对：</strong>下一代CPU/数据节点可把本地DDR作为低延迟层，把多块CXL E3.S作为容量与并行带宽层；调度器和内存管理器必须按页面热度、读写比例与NUMA位置放置数据。机箱需要为多块CXL设备预留PCIe通道、散热、热插拔和故障隔离；CXL池化系统还要验证交换跳数、一致性目录和多主机争用是否吞噬单机直连收益。</p>
+<p><strong>建议验证：</strong>要求提供不同DRAM:CXL比例下的STREAM/实际负载带宽、P50/P99访问延迟、读写比例敏感性、CPU利用率、功耗、设备失效后的性能与页恢复；对GPU推理则另测GPU—CXL路径，不能用CPU实验代替。</p>
+<p><strong>原始来源：</strong><a href="https://sc26.supercomputing.org/proceedings/workshops/workshop_pages/ws_hmem103.html">SC26 Proceedings：Optimizing System Memory Bandwidth with Micron CXL Modules on Intel Xeon 6</a>｜<a href="https://www.intel.com/content/www/us/en/content-details/842211/optimizing-system-memory-bandwidth-with-micron-cxl-memory-expansion-modules-on-intel-xeon-6-processors.html">Intel官方论文页与系统配置</a>｜<a href="https://sc26.conference-program.com/presentation/?id=ws_hmem103&amp;sess=sess144">SC26官方报告页（2026-11-16）</a></p>
+</section>
+
+<section>
+<h2>二、会议雷达</h2>
+<ul>
+<li><strong>AWS re:Invent 2026会前：</strong>11月30日至12月4日，官网已列出超过2200场议程。重点核查Trainium/Inferentia、EFA/HyperPod推理、AI Factory、电源液冷及跨区域路由是否公布P99、故障恢复和每任务成本，而不只记录峰值吞吐。</li>
+<li><strong>OCP液冷Webinar：</strong>12月3日“Cleaner Coolant, Fewer Failures”已进入OCP活动列表。需要追问冷却液洁净度、过滤粒径、材料兼容、腐蚀/沉积、维护周期与高TDP器件故障率是否给出量化基线。</li>
+<li><strong>DesignCon 2027：</strong>2月2日至4日，100+场、15个Track；继续跟踪224/448Gb/s、PCIe 7.0、2.5D/3D、双向链路及3.2T光学论文的实测通道、功耗与误码数据。</li>
+<li><strong>OCP Tech Day / Digital Infrastructure World：</strong>2月3日至4日，Rack Track继续聚焦接近1MW机柜、Scale-Up、液冷与800VDC；本轮未见新增量化演讲参数。</li>
+<li><strong>SC26会后：</strong>本期两项均来自Proceedings而非新闻稿，说明会后论文索引仍有新增价值。后续继续补全论文正文和录播中的配置、误差条与失败案例。</li>
+</ul>
+<p><strong>会议来源：</strong><a href="https://reinvent.awsevents.com/">AWS re:Invent 2026</a>｜<a href="https://www.opencompute.org/events/">OCP活动目录</a>｜<a href="https://www.designcon.com/">DesignCon 2027</a>｜<a href="https://www.opencompute.org/events/ocp-tech-day/digital-infrastructure-world/">OCP Tech Day</a>｜<a href="https://sc26.supercomputing.org/proceedings/">SC26 Proceedings</a></p>
+</section>
+
+<section>
+<h2>三、OCP与云栖专项跟踪</h2>
+<p><strong>OCP 2026：</strong>本轮未找到足以更新Scale-Up域128/512/1000+拓扑边界、NPO量产/FRU/MTTR/生命周期成本、448G或800VDC维护基线的新官方量化材料。OIF于11月23日发布CEI-06.0的224G LR/MR规范已在此前简报跟踪，不重复包装为今日新增。</p>
+<p><strong>阿里云栖2026：</strong>未发现阿里云官方新增AL144、AL64、SNPO/ALink的GPU—交换拓扑、HBD规模、单卡Scale-Up带宽、NPO光源、液冷供电、量产或FRU/MTTR参数。继续保留历史对照，不把过期会期、展台文案或无来源转述视作最新动态。</p>
+</section>
+
+<section>
+<h2>四、RSS与任务健康自检</h2>
+<ul>
+<li><strong>主Feed：</strong>写前90期，最新11月25日，归档可达、XML/CDATA配对正常；任务启用，最近一次计划运行已记录。本次滚动保留90期。</li>
+<li><strong>技术预警：</strong>XML可读，最新10月27日归档可达；任务禁用，因此不能把长期未发解释为“没有条件变化”。</li>
+<li><strong>竞品与成本周报：</strong>XML可读，最新11月16日归档可达；已超过周周期加36小时，任务禁用，属于暂停疑点而非已证实的GitHub失败。</li>
+<li><strong>下一代架构专题：</strong>XML可读，最新11月21日归档可达；任务禁用。</li>
+<li><strong>AI Memory：</strong>XML可读，最新11月20日归档可达；任务启用，下一周期11月27日，未逾期。</li>
+<li>五个RSS的最新归档均可读取；Follow客户端状态不可访问，无法区分客户端缓存或订阅刷新延迟。</li>
+</ul>
+<p><strong>系统告警：</strong>技术预警、竞品与成本周报、下一代架构专题三项任务仍为禁用；其中竞品周报已错过11月23日周期。本轮仅只读检查，未修改其它任务或RSS。</p>
+</section>
+
+<section>
+<h2>本期架构结论</h2>
+<p>两项证据指向同一个设计方法：<strong>不能再把“减少字节”和“增加介质”直接等同于端到端性能。</strong>通信压缩要跨GPU算子、集合通信算法和多层Fabric联合优化；CXL混合内存要跨PCIe通道、NUMA、页面放置和访问模式联合优化。采购与验收应从峰值压缩比、CXL容量或理论GB/s，转向真实任务的Step Time/TTFT、P99、功耗、故障降级和可恢复进度。</p>
+</section>
+</article>]]></description>
+    </item>
+
+<item>
       <title>AI算力架构前沿简报｜2026年11月25日</title>
       <link>https://raw.githubusercontent.com/YanLiang518/ai-supernode-rss/main/archive/2026-11-25.html</link>
       <guid isPermaLink="false">ai-supernode-brief-2026-11-25</guid>
@@ -10863,143 +10936,7 @@
 </article>
       ]]></description>
     </item>
-<item>
-      <title>AI算力架构前沿简报｜2026年8月22日</title>
-      <link>https://raw.githubusercontent.com/YanLiang518/ai-supernode-rss/main/archive/2026-08-22.html</link>
-      <guid isPermaLink="false">ai-supernode-brief-2026-08-22</guid>
-      <pubDate>Sat, 22 Aug 2026 05:00:00 +0800</pubDate>
-      <description><![CDATA[
-<article>
-<h1>AI算力架构前沿简报｜2026年8月22日</h1>
 
-<blockquote>
-<h2>今日判断</h2>
-<p><strong>今天的共同主线是AI系统的“封闭一体化”假设受到三面挤压：</strong>开放模型追赶周期缩短，使客户更愿意把模型部署到自己的异构算力；主权国家开始主动采用中美双技术栈，拒绝单一供应源；NVIDIA则进一步向上游投资通电土地，并用DSX把场址、电力、冷却和计算提前绑定。</p>
-<p>互联侧，Avicena开始交付1Tb/s MicroLED并行光评估套件，提供一条不同于224G/448G高速SerDes与传统激光CPO的路线。总体含义是：<strong>未来超节点一方面要开放、可迁移，另一方面必须更早与长期电力资产共同定义。</strong></p>
-</blockquote>
-
-<h2>信号总览</h2>
-<ul>
-<li><strong>SemiAnalysis：开放模型追赶周期持续缩短</strong>｜模型/商业信号｜机构实测分析｜影响私有部署、异构推理、内存和软件可移植性</li>
-<li><strong>NVIDIA投资Cloverleaf并把DSX前移至场址开发</strong>｜资本/部署信号｜正式合作｜影响电力、液冷、结构接口和跨代基础设施</li>
-<li><strong>巴西用Huawei与NVIDIA双栈建设主权算力</strong>｜采购/政策信号｜政府投资及待招标项目｜影响多供应商软件、数据驻留和系统互操作</li>
-<li><strong>Avicena交付1Tb/s MicroLED并行光评估套件</strong>｜互联技术信号｜客户评估阶段｜影响Scale-up光链路、SerDes功耗和光纤连接形态</li>
-</ul>
-
-<hr>
-<h2>01｜开放模型追赶时间缩短：算力需求从“购买最好API”转向“部署最优模型—硬件组合”</h2>
-
-<h3>① 新变化是什么</h3>
-<p>事件及发布时间：SemiAnalysis于2026年8月21日发布《Are Open Models Catching Up?》；成熟度为机构基准分析，不是标准组织结论。其按早期Scaling、Reasoning和Agentic三个时代重新选择当时有效的基准，并称开放模型追赶首个闭源前沿模型所需时间在每一代大致减半；在其选定的Agent基准组合中，Kimi K2.6约4.8个月超过Opus 4.5基线，GLM-5.2约6个月超过GPT-5.2基线。</p>
-<p>文章进一步指出，GLM 5.3与Kimi K3已能完成许多具有经济价值的编码和Agent任务；Fireworks官方则称其每天处理超过40万亿Token，其中95%以上来自基于客户私有数据专门化的模型。上述基准不等于开放模型在真实产品体验、稳定性和所有任务上全面达到闭源前沿。</p>
-
-<h3>② 为什么发生</h3>
-<p>企业不必为所有任务购买最高价的通用智能：编码、搜索、分类和领域Agent可以通过开放权重、后训练、工具Harness与私有数据优化获得更低的单位成功任务成本。开放模型还能满足数据驻留、可审计、供应商议价及国产算力适配要求。SemiAnalysis的分析判断是，创新首先由闭源实验室拉开差距，随后研究复现、蒸馏和开源推理栈加速追赶。</p>
-
-<h3>③ 改变了什么计算或数据特征</h3>
-<p>模型选择从少数固定API变成大量模型、量化版本和专用后训练模型的持续切换。Kimi K3公开架构为2.8T参数、每Token激活约104B参数并支持100万Token上下文，说明“开放”并不意味着可以在少量服务器上运行；权重分发、专家并行、长上下文KV、缓存复用和动态路由仍需要大规模内存与网络。与此同时，专用模型会提高模型版本数量，降低单一模型的连续驻留时长，增加权重装载、缓存碎片和多租户调度开销。</p>
-
-<h3>④ 触碰了哪个技术边界</h3>
-<p><strong>开始失效的假设是：模型能力差异足以让客户长期绑定同一闭源API和同一硬件后端。</strong>开放模型追赶后，首要边界转向推理效率、HBM容量、专家通信、软件Kernel质量和跨硬件一致性，而非仅看模型分数。SemiAnalysis也明确承认基准不能完全代表真实工作，且模型加Harness的产品体验仍可能使闭源产品领先；追赶时间“减半”是其历史拟合，不是未来必然规律。</p>
-
-<h3>⑤ 可能催生什么硬件架构、新的技术需要</h3>
-<p><strong>已出现的解法：</strong>开放权重模型、vLLM等通用Serving、专用后训练、模型路由，以及Fireworks等大规模开放模型推理平台。</p>
-<p><strong>高概率方向：</strong>推理超节点形成多模型常驻池和弹性权重池；GPU、国产加速器及定制ASIC共享统一模型格式和调度控制面；大容量HBM、CXL/外部内存和分级KV存储用于降低换模成本。验收指标从单模型Token/s转向单位成功任务成本、模型切换时间和缓存命中率。</p>
-<p><strong>尚待验证：</strong>开放模型能否在高可靠企业Agent中维持闭源模型的长程一致性、安全性和工具调用成功率，以及2.8T级模型在非NVIDIA硬件上的实际效率。</p>
-
-<blockquote>
-<p><strong>架构师结论：</strong>模型层并未简单“商品化”，而是在快速形成“前沿闭源＋开放通用＋企业专用”三层市场。硬件价值将更多取决于能否低成本承载频繁变化的模型组合。</p>
-<p><strong>建议跟踪：</strong>真实任务而非公开基准的成功率；模型切换及权重加载时间；每任务Token、KV容量和成本；同一开放模型在NVIDIA、国产GPU和ASIC上的有效吞吐差异。</p>
-</blockquote>
-<p><strong>来源：</strong><a href="https://newsletter.semianalysis.com/p/are-open-models-catching-up">SemiAnalysis完整分析</a>｜<a href="https://fireworks.ai/blog/series-d-announcement">Fireworks规模与专用模型数据</a>｜<a href="https://github.com/MoonshotAI/Kimi-K3">Kimi K3官方模型仓库</a>｜<a href="https://z.ai/blog/glm-5.3">Z.ai GLM-5.3技术说明</a></p>
-
-<hr>
-<h2>02｜NVIDIA把DSX前移到“通电土地”：超节点设计开始早于具体GPU代际</h2>
-
-<h3>① 新变化是什么</h3>
-<p>事件及发布时间：2026年8月21日；成熟度为正式战略合作与少数股权投资。NVIDIA投资美国数据中心场址开发商Cloverleaf Infrastructure，双方将使用NVIDIA DSX，在场址开发阶段共同评估土地、电网、电力、冷却、计算和设施运营。Cloverleaf称其自2024年成立以来已交付多个GW级项目；交易金额、具体场址和首个上线时间未披露。</p>
-
-<h3>② 为什么发生</h3>
-<p>AI硬件的主要交付瓶颈已前移到“具备电力、许可和建设条件的土地”。如果数据中心在确定GPU后才设计变电、液冷和结构，场址审批与设备交期可能让硬件错过一个代际；NVIDIA通过投资场址开发商，把未来芯片销售所需的电力容量提前锁定，并以DSX让基础设施针对每MW有效AI产出优化。这延续了其近期对SB Energy等能源和园区项目的资本参与。</p>
-
-<h3>③ 改变了什么计算或数据特征</h3>
-<p>变化不直接修改模型，却改变算力供给的时间颗粒度：土地和电力在GPU型号确定前数年锁定，机房寿命覆盖多个加速器代际，而计算Tray可能两三年更换。规划单位从服务器数量变成可交付MW、Token/MW和上线时间；负载功率阶跃、冷却水温、网络出口及设备残值必须在早期场址模型中体现。</p>
-
-<h3>④ 触碰了哪个技术边界</h3>
-<p><strong>开始失效的假设是：数据中心是通用厂房，确定IT设备后再完成机电适配即可。</strong>数百千瓦至未来兆瓦级机柜使变电容量、母线、电缆、液冷水环、楼板承载和维护通道都具有平台专属性。边界已由多GW项目管线和持续投资行为验证，但DSX能提高多少Token/MW、减少多少工期仍没有公开实测；投资也不等于场址已经获得并网和建设许可。</p>
-
-<h3>⑤ 可能催生什么硬件架构、新的技术需要</h3>
-<p><strong>已出现的解法：</strong>DSX把计算、网络、电力、冷却和设施模型合并；NVIDIA通过股权向通电土地和能源开发层延伸。</p>
-<p><strong>高概率方向：</strong>园区先定义跨代稳定的中压输入、800VDC或高压交流边界、技术水窗口、光纤和结构模数，GPU/交换/存储Tray按代际替换；数字孪生在建设前模拟Token产出、热负载和电网约束。模块化电力Block、兆瓦级CDU与可更换计算舱将成为融资和交付单元。</p>
-<p><strong>尚待验证：</strong>DSX是否保持对AMD或定制ASIC的兼容，还是把长期土地和电力资产与NVIDIA平台绑定；场址实际PUE/WUE和跨代改造比例也未披露。</p>
-
-<blockquote>
-<p><strong>架构师结论：</strong>NVIDIA竞争边界已从整柜继续上移到“通电土地＋设计工具＋资本”。对系统厂商而言，未来需要同时提供跨代接口和场址级Token产能模型。</p>
-<p><strong>建议跟踪：</strong>首批项目MW和通电日期；DSX的设施侧计量边界；800V与液冷接口是否标准化；换代时保留的电力、液路、光纤和结构比例。</p>
-</blockquote>
-<p><strong>来源：</strong><a href="https://www.hpcwire.com/aiwire/2026/08/21/cloverleaf-partners-with-nvidia-to-accelerate-data-center-infrastructure-development/">Cloverleaf正式公告全文</a>｜<a href="https://www.reuters.com/technology/nvidia-invests-data-center-developer-cloverleaf-infrastructure-2026-08-21/">Reuters交叉核实</a></p>
-
-<hr>
-<h2>03｜巴西以中美双栈建设主权算力：国家级AI平台不再追求单一技术闭环</h2>
-
-<h3>① 新变化是什么</h3>
-<p>事件及发布时间：2026年8月20日21:07 UTC；成熟度为政府资金安排、合作框架和待招标项目，尚未交付。巴西宣布约23亿雷亚尔AI生态投资：13亿雷亚尔用于Rio de Janeiro的超算基础设施，并与Huawei和iFlytek合作开发通用及行业大模型；约10亿雷亚尔通过招标采购另一套AI超级计算机，政府官员预计NVIDIA可能中标，目标2027年底投入运行。巴西还宣布RISC-V芯片合作、国家云和算法透明中心。</p>
-
-<h3>② 为什么发生</h3>
-<p>巴西的明确目标是“不依赖单一公司、技术或国家”，同时保持与中国和美国的关系，并加强数据主权。单一国外云或硬件栈会形成供应、制裁、数据管辖及价格风险；双栈采购能增加议价和政策韧性，但也会引入软件与运维重复成本。这里的业务目标不是追求一个最大超节点，而是建立可由本国控制的长期AI公共基础设施。</p>
-
-<h3>③ 改变了什么计算或数据特征</h3>
-<p>同一国家平台将运行在不同加速器、网络、编译器和云管理栈上，模型权重、训练数据与推理服务需要跨平台迁移或分别维护。通用葡萄牙语模型与行业模型会产生不同数据治理和精度要求；国家云还需向高校、政府和企业多租户开放。负载因此更像联邦式资源池，而不是单一Scale-up Fabric内的同构作业。</p>
-
-<h3>④ 触碰了哪个技术边界</h3>
-<p><strong>开始失效的假设是：主权AI只需采购一套领先硬件和配套软件即可。</strong>多供应商环境首先触碰模型格式、集体通信、Kernel、精度一致性、作业调度和运维人才边界；数据能留在境内，并不自动意味着软件与固件可审计。当前已确认投资分配和合作方向，但NVIDIA仍只是预期供应商，7.2 ExaFLOPS等媒体参数也缺乏统一精度口径，不作为已确认系统规格。</p>
-
-<h3>⑤ 可能催生什么硬件架构、新的技术需要</h3>
-<p><strong>已出现的解法：</strong>Huawei/iFlytek合作栈、独立公开招标的第二套超算、RISC-V研发和国家云规划。</p>
-<p><strong>高概率方向：</strong>两套物理计算域通过统一数据湖、模型注册表、容器和作业编排连接；跨栈迁移以模型权重、Checkpoint和数据集为边界，而不是强求硬件级互联。DPU、安全根、国产密钥管理和可审计固件将承担主权控制面。</p>
-<p><strong>尚待验证：</strong>两个计算域能否共享同一训练任务、是否支持统一计费与调度，以及Huawei与NVIDIA栈之间的模型性能损失和重复运维成本。</p>
-
-<blockquote>
-<p><strong>架构师结论：</strong>主权算力的核心可能不是“全国产”或“单一最优”，而是具备退出能力的多栈架构。开放数据和模型边界会比统一硬件Fabric更重要。</p>
-<p><strong>建议跟踪：</strong>招标确定的芯片、网络与功耗；Huawei项目具体超节点形态；跨栈模型转换时间与精度差异；国家云的数据驻留、租户隔离和调度接口。</p>
-</blockquote>
-<p><strong>来源：</strong><a href="https://www.reuters.com/world/americas/brazil-launches-ai-supercomputer-push-splits-projects-between-chinese-us-firms-2026-08-20/">Reuters完整报道</a></p>
-
-<hr>
-<h2>04｜1Tb/s MicroLED并行光进入客户实验室：Scale-up光互联出现“低速多通道”实物路线</h2>
-
-<h3>① 新变化是什么</h3>
-<p>事件日期：2026年8月18日，8月21日进一步披露；成熟度为客户评估套件出货，并非量产互联产品。Avicena开始向客户与合作伙伴交付1Tb/s LightBundle eKit：最多335个MicroLED通道，每通道最高3Gb/s，通过多芯光纤连接335单元光探测器阵列，聚合原始带宽约1Tb/s。套件包含主机接口、诊断和图形工具，可测眼图、串扰、链路预算、功耗及BER。</p>
-
-<h3>② 为什么发生</h3>
-<p>传统电互联依靠提高SerDes速率延伸带宽，但224G/448G Lane需要更复杂均衡、Retimer和高功率模拟前端；传统激光光链路则面临激光器、DSP、温控和耦合成本。Avicena选择大量低速MicroLED并行通道，希望用通道数而非单Lane速率扩展带宽，并面向XPU—XPU、XPU—内存、XPU—CPU和XPU—交换芯片的短距Scale-in/Scale-up连接。</p>
-
-<h3>③ 改变了什么计算或数据特征</h3>
-<p>该路线把一个高速串行流拆成数百个低速并行光通道。聚合带宽可以随发光点数量扩展，但链路训练、条带化、偏斜校正、坏通道重映射和FEC需要处理更宽的并行数据面。它适合距离超出铜互联、又不一定需要传统长距可插拔模块的机柜内和跨机柜连接。</p>
-
-<h3>④ 触碰了哪个技术边界</h3>
-<p><strong>开始失效的假设是：光互联必须沿着更高速的单Lane SerDes与激光器路线扩展。</strong>MicroLED可降低单通道带宽和模拟复杂度，却把难题转移到数百通道阵列良率、多芯光纤连接、通道偏斜、光功率一致性及维修。1Tb/s只是335×3Gb/s的原始聚合值；官方尚未公布扣除编码/FEC后的有效带宽、完整链路pJ/bit、距离、BER和环境可靠性，因此不能与1.6T模块或NPO直接作等价比较。</p>
-
-<h3>⑤ 可能催生什么硬件架构、新的技术需要</h3>
-<p><strong>已出现的解法：</strong>激光器和传统高速SerDes之外的MicroLED阵列、多芯光纤及光探测器阵列评估平台。</p>
-<p><strong>高概率方向：</strong>在OAM/UBB边缘布置并行光Chiplet，通过短多芯光纤连接交换Tray或内存Tray；控制器进行坏通道隔离、Lane重映射和链路遥测。它更可能先作为特定板间互联出现，而非立即替换标准以太网或NVLink。</p>
-<p><strong>尚待验证：</strong>规模量产时335通道的良率、连接器清洁度、弯曲半径、现场维修和标准生态，以及是否能在高温冷板附近维持可靠性。</p>
-
-<blockquote>
-<p><strong>架构师结论：</strong>这不是MicroLED已经胜出，而是“低速多通道光”首次提供可由系统厂商实测的Tb/s级平台。它值得作为NPO/CPO之外的第三条短距光互联路线跟踪。</p>
-<p><strong>建议跟踪：</strong>有效净带宽与端到端pJ/bit；BER/FEC和通道偏斜；多芯光纤连接器尺寸与插损；85℃环境寿命、坏通道容忍和更换方式。</p>
-</blockquote>
-<p><strong>来源：</strong><a href="https://avicena.tech/avicena-ships-worlds-first-1tbps-evaluation-kits-extending-its-leadership-in-microled-optical-interconnects/">Avicena官方发布</a>｜<a href="https://thedatacenterengineer.com/news/avicena-ships-1-tbps-microled-optical-interconnect-evaluation-kits-for-ai-links/">评估套件技术细节</a></p>
-
-<h2>今日架构主线</h2>
-<p><strong>模型层越开放，基础设施层越需要可迁移；场址和电力越稀缺，物理系统又越倾向于提前锁定。</strong>开放模型与主权双栈要求超节点摆脱单一模型、单一加速器和单一供应商绑定；NVIDIA—Cloverleaf则显示长期电力资产会在GPU定型前决定平台边界；MicroLED并行光提供了跨机柜扩展的新候选。</p>
-<p>因此未来系统的关键设计不是在“开放”与“一体化”中二选一，而是<strong>把长期稳定层与快速变化层分开</strong>：土地、电力、液路、结构和光纤形成跨代稳定底座；计算Tray、模型、Kernel和路由策略快速迭代；模型权重、Checkpoint、遥测和安全证明成为跨栈接口。</p>
-
-<h2>未发现可信新增</h2>
-<p>本期确认SemiAnalysis于8月21日发布开放模型追赶分析，并已纳入正文；Avicena属于MicroLED并行光评估进展，不是传统NPO/CPO量产公告。除上述内容外，未发现新的独立超节点整机发布，也未发现可信的CPO/NPO/OCS量产规格，或240kW以上单柜液冷、供电的新工程参数。NVIDIA—Cloverleaf提及DSX和设施联合设计，但没有公开机柜功率、水温、流量或800V电气参数。</p>
-</article>
-      ]]></description>
-    </item>
 
 
 
