@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>AI算力架构前沿简报｜2026年11月27日</title><style>:root{color-scheme:light dark}body{max-width:920px;margin:0 auto;padding:24px;line-height:1.75;font-family:system-ui,-apple-system,"Segoe UI",sans-serif}h1,h2,h3{line-height:1.35}section{margin:2rem 0}a{overflow-wrap:anywhere}ul{padding-left:1.4rem}@media(max-width:640px){body{padding:16px}h1{font-size:1.7rem}}</style></head><body><article lang="zh-CN">
+<header>
+<h1>AI算力架构前沿简报｜2026年11月27日</h1>
+<p><strong>观察窗口：</strong>北京时间2026-11-26 05:00—2026-11-27 05:00。过去24小时未发现足以单独改变架构基线的重大新品；回溯7天及OCP会后原始资料，收录3项此前90期未覆盖的量化证据。</p>
+<p><strong>本期判断：</strong>固定的Prefill/Decode部署形态、把CXL共享内存等同于“远端DRAM”、以及仅按热性能选择液冷软管，这三种简化假设都开始失效。下一代推理、共享内存和液冷系统需要同时把SLO余量、同步语义和材料化学纳入控制面与FRU设计。</p>
+<p><strong>证据口径：</strong>前两项为SC26同行评审论文，其中CXL结果来自真实四主机平台；第三项为OCP官方录播中的厂商加速老化实验。它们提供了系统边界证据，但不是跨平台独立验收，所有倍率和现象均限定于公开测试条件。</p>
+</header>
+
+<section>
+<h2>一、本期3项架构相关发现</h2>
+
+<h3>1. Prefill/Decode不必固定聚合或分离：混合模式把SLO余量变成调度资源</h3>
+<p><strong>发生/发布日期：</strong>2026-11-18（SC26论文，会后Proceedings本轮补扫）｜<strong>证据等级：</strong>同行评审系统论文；跨模型、跨硬件复现待补充</p>
+<p><strong>业务变化：</strong>香港中文大学（深圳）、华为和中山大学团队系统比较Prefill/Decode聚合与分离：TTFT要求紧、TPOT较松时聚合更有利；TPOT紧、TTFT较松时分离更有利；当两类SLO相对均衡时，两种固定形态都不能充分利用延迟余量。其TaiChi系统以流动式Decode和按长度调度Prefill统一两种模式，论文报告goodput最高提高40%，P90 TTFT和TPOT最高分别改善5.3倍、1.6倍。</p>
+<p><strong>计算/数据特征：</strong>Prefill偏计算密集，Decode偏内存带宽和KV访问；请求的输入长度、输出长度与SLO组合高度不均。一部分请求提前完成并留下SLO余量，另一部分接近违约。混合模式允许请求或阶段在共享与独立资源池之间流动，把余量重新分配给更紧迫的请求，而不是永久绑定GPU池。</p>
+<p><strong>技术边界：</strong>“部署前只需在P/D聚合或分离之间二选一”的假设失效。固定分离会承担KV搬运、网络和资源碎片成本；固定聚合又会产生Prefill对Decode的干扰。论文的最高倍率依赖具体模型、请求分布、SLO和基线，公开摘要未列出所有GPU、网络、KV大小与迁移开销，不能直接视为通用收益。</p>
+<p><strong>硬件架构应对：</strong>推理超节点更适合建设可重构的统一GPU资源池：调度器实时决定哪些Worker聚合运行、哪些形成P/D分池，并把KV位置、互联带宽、队列和SLO余量纳入放置。GPU直连网络需要支持低开销KV迁移；DPU或智能NIC可承担数据搬运和隔离，但控制面必须保留请求级决策，不能把物理分池固化成不可变拓扑。</p>
+<p><strong>建议验证：</strong>按输入/输出长度、Batch和SLO组合测试goodput、TTFT/TPOT P50/P90/P99、KV搬运字节、网络占用、模式切换开销与故障恢复；尤其检查混合调度是否引入抖动或饥饿。</p>
+<p><strong>原始来源：</strong><a href="https://sc26.supercomputing.org/proceedings/papers/paper_pages/pap819.html">SC26 Proceedings：Prefill-Decode Aggregation or Disaggregation?</a>｜<a href="https://sc26.conference-program.com/presentation/?id=pap819&amp;sess=sess235">SC26官方报告页（2026-11-18）</a></p>
+
+<h3>2. 四主机CXL共享内存实测：可见性约1µs，但一次软件锁需3–5µs</h3>
+<p><strong>发生/发布日期：</strong>2026-11-19（SC26论文；会后资料本轮补扫）｜<strong>证据等级：</strong>真实四主机CXL平台实验，包含Intel作者；平台特定结果</p>
+<p><strong>业务变化：</strong>德州大学阿灵顿分校与Intel团队量化了多主机CXL共享内存的软件同步成本。当前平台提供跨主机、字节可寻址的共享内存，却没有跨主机硬件Cache Coherence和Atomic。实验中单向跨主机可见性约1µs，每次软件锁获取3–5µs，约为本地硬件Spin Lock的一个数量级。</p>
+<p><strong>计算/数据特征：</strong>远端主机写入后，其他主机必须通过显式Flush、轮询和发布/观察协议确认数据可见；共享数据结构的热元数据、锁和Barrier会产生大量细粒度往返。论文发现同步密集的BFS增加第二主机没有收益；以读取为主、同步较少的Triangle Counting从32线程扩展到两主机32+32线程则能加速。</p>
+<p><strong>技术边界：</strong>“CXL共享池具备普通共享内存语义，远端访问延迟是主要瓶颈”的假设不成立。真正边界可能是软件可见性、锁和一致性协议，而非介质本身。该结果也提醒昨天简报中的CXL扩带宽实验只适用于单主机页交织，不能直接推导多主机共享KV或共享元数据会线性扩展。</p>
+<p><strong>硬件架构应对：</strong>多主机CXL池应把热锁、队列头和目录保留在本地DRAM，通过分区所有权、批量发布、无锁数据结构或消息化同步减少跨主机Atomic需求。若共享KV用于Prefill/Decode或Worker迁移，硬件交换/内存设备需要考虑Atomic、目录或同步卸载；否则应把CXL定位为读多写少的数据层，而不是透明替代本地一致性内存。</p>
+<p><strong>建议验证：</strong>分别测裸读写、发布/观察、锁、Barrier和实际KV目录；记录远端写比例、同步频率、热点元数据位置、P99及主机故障后的锁恢复。采购时不能只比较CXL链路GB/s和容量。</p>
+<p><strong>原始来源：</strong><a href="https://sc26.supercomputing.org/proceedings/papers/paper_pages/pap281.html">SC26 Proceedings：Quantifying the Cost of Software-Managed Synchronization on Multi-Host CXL Memory</a>｜<a href="https://sc26.conference-program.com/presentation/?id=pap281&amp;sess=sess232">SC26官方报告页（2026-11-19）</a></p>
+
+<h3>3. OCP液冷软管加速老化：80°C、1,344小时后出现变色与悬浮颗粒信号</h3>
+<p><strong>发生/发布日期：</strong>2026-10-13（OCP Global Summit演讲；会后录播本轮补扫）｜<strong>证据等级：</strong>Gates厂商加速老化实验、OCP官方收录；尚无整机长期现场失效率</p>
+<p><strong>业务变化：</strong>Gates在OCP公开过氧化物硫化EPDM软管与冷却液的材料兼容性研究。试样依据修改后的ASTM D471方法，在80°C冷却液中老化1,344小时；通过质量变化和质谱识别渗透、蒸发、析出及吸附物。官方录播说明报告出现冷却液变色和悬浮颗粒等污染指示，表明添加剂迁移或材料退化可能在机柜可见故障前改变流体状态。</p>
+<p><strong>计算/数据特征：</strong>更高TDP、45°C级温水运行、细微通道冷板和高流速会提高材料—冷却液反应、颗粒迁移与堵塞风险。污染物不仅影响软管寿命，还可能进入UQD、阀、过滤器和微通道，表现为压降上升、流量不均和热点，而非立即漏液。</p>
+<p><strong>技术边界：</strong>“软管只要满足压力、弯曲半径和泄漏测试即可”的假设失效。液冷BOM必须把软管配方、硫化体系、冷却液添加剂、温度、氧化和清洁度作为组合验证。80°C×1,344小时是加速实验，不能未经寿命模型直接换算成现场年限；公开摘要也没有列出所有配方、颗粒尺寸、浓度和热性能退化。</p>
+<p><strong>硬件架构应对：</strong>Manifold、软管、UQD和冷板应按完整湿接触材料栈认证，而非逐件独立选型；机柜需要过滤压差、颗粒/浊度、电导率、pH和抑制剂状态监测，并定义采样、更换与冲洗周期。FRU设计应允许隔离单支路和更换软管组件，避免材料污染扩散为整柜或整排液路故障。</p>
+<p><strong>建议验证：</strong>要求供应商提供目标冷却液下的加速老化矩阵、析出物与颗粒分布、质量/体积变化、拉伸与爆破保持率、过滤负荷、压降变化及清洗后恢复；现场建立基线样品和趋势阈值，不能只靠漏液告警。</p>
+<p><strong>原始来源：</strong><a href="https://www.opencompute.org/events/ocp-summit/2026-ocp-global-summit/recorded-content/">OCP 2026 Global Summit Recorded Content</a>｜<a href="https://www.youtube.com/watch?v=vB2C0dTdVCQ">OCP官方录播：Characterization of Hose Material Effects on Coolant Chemistry During Accelerated Aging</a>｜<a href="https://www.gates.com/us/en/about-us/news/insights/gates-data-center-cooling-tech-in-ocp.html">Gates会议信息与Deschutes 5.0说明</a></p>
+</section>
+
+<section>
+<h2>二、会议雷达</h2>
+<ul>
+<li><strong>NVIDIA GTC Washington会前：</strong>11月30日Workshop、12月1日至3日会议与展览。优先核查AI Factory、Accelerated Networking、推理调度、机柜电力液冷是否给出真实拓扑、P99、故障恢复或能效数据；Spotlight仅作为线索，发布口径不等于交付规格。</li>
+<li><strong>AWS re:Invent 2026会前：</strong>11月30日至12月4日。继续追踪Trainium/Inferentia、EFA、HyperPod、跨区域推理、AI Factory电力液冷和存储层级。</li>
+<li><strong>OCP液冷Webinar：</strong>12月3日“Cleaner Coolant, Fewer Failures”明确覆盖PG25/水基冷却液、过滤等级、采样频率和湿接触材料兼容；与本期软管老化证据直接相关，重点等待颗粒尺寸、阈值和维护周期。</li>
+<li><strong>DesignCon 2027：</strong>2月2日至4日；持续跟踪224/448Gb/s、PCIe 7.0、同时双向链路与3.2T光学论文。</li>
+<li><strong>SC26会后：</strong>继续从Proceedings和录播补全真实硬件、工作负载分布、P99、功耗和失败案例；不把摘要峰值作为通用产品指标。</li>
+</ul>
+<p><strong>会议来源：</strong><a href="https://www.nvidia.com/gtc/dc/conference-schedule/">NVIDIA GTC Washington官方日程</a>｜<a href="https://reinvent.awsevents.com/">AWS re:Invent</a>｜<a href="https://www.opencompute.org/events/ocp-educational-webinar/ocp-educational-webinar-cleaner-coolant-fewer-failures-what-next-gen-high-tdp-chips-mean-for-liquid-cooling-requirements/">OCP液冷Webinar</a>｜<a href="https://www.designcon.com/education/education-overview/">DesignCon 2027技术方向</a></p>
+</section>
+
+<section>
+<h2>三、OCP与云栖专项跟踪</h2>
+<p><strong>OCP 2026：</strong>本期软管—冷却液加速老化实验已纳入正文，属于长期可靠性与维护边界的新增证据。其余录播尚未找到足以更新Scale-Up域128/512/1000+拓扑、NPO量产/FRU/MTTR、448G或800VDC工程基线的新定量结果。</p>
+<p><strong>阿里云栖2026：</strong>未发现阿里云官方新增AL144、AL64、SNPO/ALink的GPU—交换拓扑、HBD规模、单卡Scale-Up带宽、NPO光源、液冷供电、量产或FRU/MTTR参数。旧会期和展台材料继续仅作为历史基线。</p>
+</section>
+
+<section>
+<h2>四、RSS与任务健康自检</h2>
+<ul>
+<li><strong>主Feed：</strong>写前90期，最新11月26日，归档可达，XML/CDATA配对正常；任务启用且最近一次计划运行已记录。本次继续保留90期。</li>
+<li><strong>技术预警：</strong>XML可读，最新10月27日归档可达；任务禁用，不能解释为“条件无变化所以未发”。</li>
+<li><strong>竞品与成本周报：</strong>XML可读，最新11月16日归档可达；已超过周周期加36小时，任务禁用，属于暂停疑点而非已证实GitHub失败。</li>
+<li><strong>下一代架构专题：</strong>XML可读，最新11月21日归档可达；任务禁用，11月28日计划周期不会在禁用状态下执行。</li>
+<li><strong>AI Memory：</strong>XML可读，最新11月20日归档可达；任务启用，11月27日17:00为下一周期，当前未逾期。</li>
+<li>五个RSS最新归档均可读取；Follow客户端状态不可访问，无法判断客户端缓存延迟。</li>
+</ul>
+<p><strong>系统告警：</strong>技术预警、竞品与成本周报、下一代架构专题三项任务仍为禁用；竞品周报已漏过11月23日周期，专题任务若不恢复将漏过11月28日周期。本轮未自行修改任何任务或其它RSS。</p>
+</section>
+
+<section>
+<h2>本期架构结论</h2>
+<p>推理、内存和液冷的共同变化是：<strong>过去被隐藏的“余量、语义和化学状态”正在成为系统级资源。</strong>推理控制面要管理TTFT/TPOT余量而非固定分池；CXL控制面要管理可见性与同步而非只看容量带宽；液冷运维要管理材料析出和流体状态而非只看温度流量。下一代超节点的有效性能取决于这些跨层状态能否被测量、调度、隔离并在故障前维护。</p>
+</section>
+</article></body></html>
