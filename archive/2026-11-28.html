@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>AI算力架构前沿简报｜2026年11月28日</title><style>:root{color-scheme:light dark}body{max-width:920px;margin:0 auto;padding:24px;line-height:1.75;font-family:system-ui,-apple-system,"Segoe UI",sans-serif}h1,h2,h3{line-height:1.35}section{margin:2rem 0}a{overflow-wrap:anywhere}ul{padding-left:1.4rem}code{font-family:ui-monospace,SFMono-Regular,Consolas,monospace}@media(max-width:640px){body{padding:16px}h1{font-size:1.7rem}}</style></head><body><article lang="zh-CN">
+<header>
+<h1>AI算力架构前沿简报｜2026年11月28日</h1>
+<p><strong>观察窗口：</strong>北京时间2026-11-27 05:00—2026-11-28 05:00。过去24小时未发现足以单独改变架构基线的重大新品；本期按“宁缺毋滥”原则，回溯SC26会后Proceedings，收录3项此前90期尚未完整分析的同行评审证据。</p>
+<p><strong>本期判断：</strong>万卡MoE的显存、训练集群的功率以及异构推理的成本，都不再适合按静态峰值一次性配置。更有效的架构正在把“每批激活内存、每个训练阶段的功率、每类请求的Prefill/Decode/KV路径”变成可预测、可调度的运行时资源。</p>
+<p><strong>证据口径：</strong>三项均为SC26技术论文。BaGuaLu-2与PHANTOM给出论文实验结果，但公开摘要不足以替代跨平台复现；MIST的49.3%为经真实系统校准后的设计空间仿真结果，不是生产部署实测。下文严格区分论文实证、作者目标和本简报推断。</p>
+</header>
+
+<section>
+<h2>一、本期3项架构相关发现</h2>
+
+<h3>1. BaGuaLu-2：12,288张GPU上的MoE训练，把激活显存从静态预留改为逐批按需控制</h3>
+<p><strong>发生/发布日期：</strong>2026-11-17（SC26现场论文报告；会后Proceedings本轮补扫）｜<strong>证据等级：</strong>同行评审论文实验</p>
+<p><strong>业务变化：</strong>细粒度MoE继续把参数规模推向万亿，但专家负载不均使每个batch实际产生的激活量波动。BaGuaLu-2报告训练1,040B参数模型、跨12,288张GPU持续超过2 EFlops、MFU为35%；相对Megatron-Kwai与AdaPipe的平均吞吐分别提高1.14倍和1.13倍。公开证据支持这些论文测试结果，但未披露足以独立复现的完整硬件型号、网络拓扑、序列长度分布和故障恢复条件。</p>
+<p><strong>为什么发生：</strong>传统方案按最坏专家热点预留显存，会让常态batch留下大量空洞；按平均值配置又会在专家倾斜时触发OOM和人工回滚。规模扩大到万卡后，单卡一次内存峰值不再是局部事件：任何rank失败都可能让全局同步作业付出重启、重载和Checkpoint恢复成本。</p>
+<p><strong>计算/数据特征：</strong>MoE路由让token在专家间形成动态、长尾分布，激活内存随batch变化；参数和优化器状态相对稳定，激活则短生命周期且受路由即时决定。BaGuaLu-2把激活内存分配从一次性静态调参变成持续、细粒度控制，为每个训练batch精确提供所需容量，并以系统优化抵消管理开销。</p>
+<p><strong>触碰的技术边界：</strong>“显存容量只需在作业启动前按模型结构确定”的假设开始失效。运行时控制过慢会把分配、碎片整理或搬运开销暴露到step关键路径；控制过激又会与通信buffer、CUDA Graph、Checkpoint和容错空间争抢HBM。35% MFU说明系统已在超大规模上工作，但不能据此判断剩余65%全部来自内存或通信。</p>
+<p><strong>可能的硬件/架构应对：</strong>（已实证）逐batch激活显存按需管理能在论文平台维持万卡训练；（高概率推断）GPU运行时需要把HBM分成参数、KV/激活、通信、容错等可隔离池，并暴露低开销可重映射页、异步回收和碎片遥测；机架级设计会更重视HBM容量余量与Scale-Up/Scale-Out拓扑协同，而不只比较峰值FLOPS。CXL或主机DRAM可作为较冷状态的后备层，但其延迟与一致性成本决定它不能直接替代热激活HBM。</p>
+<p><strong>建议验证：</strong>要求给出不同专家倾斜度下的HBM峰值/P99、分配器开销、碎片率、OOM率、step time方差、故障恢复时间，以及在相同模型质量与相同GPU型号下的端到端tokens/千瓦时。</p>
+<p><strong>原始来源：</strong><a href="https://sc26.supercomputing.org/proceedings/papers/paper_pages/pap287.html">SC26 Proceedings：BaGuaLu-2</a>｜<a href="https://test.sc26.conference-program.com/presentation/?id=pap287&amp;sess=sess211">SC26现场议程（2026-11-17）</a></p>
+
+<h3>2. PHANTOM：训练迭代的细粒度阶段可以提前预测，GPU功率控制从“事后响应”转向“相变前调频”</h3>
+<p><strong>发生/发布日期：</strong>2026-11-17至19（SC26技术论文报告窗口；会后Proceedings本轮补扫）｜<strong>证据等级：</strong>同行评审多GPU实验，具体集群规模与机电边界仍需全文核验</p>
+<p><strong>业务变化：</strong>AI训练集群不仅受总能耗约束，也受毫秒级功率跃迁、机架供电余量和设施保护策略约束。PHANTOM在论文的多GPU LLM负载上，相对默认硬件DVFS将能耗降低15%—16%、归一化功率变化率降低9%—15%、能耗延迟积降低10%—11%。这些是作者实验结果，不等于任何模型、任何GPU或整座数据中心都能获得同样收益。</p>
+<p><strong>为什么发生：</strong>默认DVFS主要根据已经发生的利用率和温度变化作反应；训练迭代却包含可重复的计算、通信、内存和同步阶段。若频率调整落后于阶段切换，性能敏感阶段来不及升频，低敏感阶段又可能继续高功耗运行；大规模GPU同步还会把单卡的功率阶跃叠加成机架或供电域的瞬时斜率。</p>
+<p><strong>计算/数据特征：</strong>PHANTOM用同步硬件事件和阶段信号驱动轻量TCN，预测短时间窗GPU功率，再用Pareto多目标优化器在阶段切换前选择频率。控制对象不再只是平均利用率，而是“下一阶段对频率的性能敏感度、预期功率以及允许的跃迁速度”。</p>
+<p><strong>触碰的技术边界：</strong>“给每张GPU独立设置统一功率上限即可管理集群功率”的假设不够。多卡collective对最慢rank敏感，若预测误差或调频不同步制造straggler，局部节能可能被全局等待抵消；此外，GPU板卡功率降低不必然等比例降低PSU、母线、CDU和制冷的全系统能耗。论文摘要也未证明控制器能在作业混跑、故障重试和动态并行策略下保持稳定。</p>
+<p><strong>可能的硬件/架构应对：</strong>（已实证）阶段感知预测式DVFS在论文负载上同时改善能耗、功率斜率和EDP；（高概率推断）调度器将需要把训练step相位、collective边界、GPU功率状态和机架供电余量联动，形成机架级功率编排；PSU/BBU与800VDC母线设计仍按安全峰值和故障场景配置，但可用更精细的功率封顶与错峰降低保守余量。遥测路径需要亚毫秒至毫秒级时间同步，而不是只靠分钟级设施监控。</p>
+<p><strong>建议验证：</strong>测量预测误差、控制开销、单step P99、collective straggler、机架输入功率斜率、PSU/BBU效率、冷却能耗与训练完成时间；在混合模型、不同并行策略和节点失效下复测，避免只看GPU API能量计。</p>
+<p><strong>原始来源：</strong><a href="https://sc26.supercomputing.org/proceedings/papers/paper_pages/pap117.html">SC26 Proceedings：PHANTOM</a>｜<a href="https://sc26.supercomputing.org/program/papers/">SC26技术论文与报告日期说明</a></p>
+
+<h3>3. MIST：异构Prefill/Decode的价值来自全栈组合，但“最高49.3% tokens/$”仍是经校准仿真，不是采购结论</h3>
+<p><strong>发生/发布日期：</strong>2026-11-18（SC26现场论文报告；会后Proceedings本轮补扫）｜<strong>证据等级：</strong>同行评审仿真框架；真实系统端到端误差在作者测试中不超过6%</p>
+<p><strong>业务变化：</strong>LLM服务已从单一模型前向计算扩展到RAG检索、共享前缀/KV复用、Prefill/Decode分离和多级存储。跨AMD GPU、TPU或定制ASIC逐项实机穷举的云成本可能超过4万美元。MIST以事件驱动仿真统一工作负载、系统软件和硬件层，作者报告相对真实部署的端到端保真误差在6%以内；在其明示的价格与硬件假设下，找到的多厂商P/D分离方案相对单厂商方案最高提升49.3% tokens/$。</p>
+<p><strong>为什么发生：</strong>Prefill更偏计算密集，Decode更受HBM带宽与KV容量约束，RAG又引入CPU、网络和存储等待。同一种加速器同时服务所有阶段往往为其中一类需求过度配置；但简单混搭又会引入KV搬运、软件兼容、跨厂商通信和尾延迟风险，因此需要全栈而非单芯片比较。</p>
+<p><strong>计算/数据特征：</strong>关键变量包括输入/输出长度分布、并发、SLO、KV复用率、KV在HBM/主存/远端存储中的层次、P/D间传输量以及各加速器的计算、带宽和价格。MIST的意义是把这些变量放入同一个事件时间轴，观察某个局部优化怎样改变端到端P99和tokens/$。</p>
+<p><strong>触碰的技术边界：</strong>“用单卡tokens/s除以小时价格即可选择推理硬件”的假设失效。49.3%是设计空间案例的上限结果，依赖定价、负载和模型；6%保真度也只是已校准点附近的结果，不能保证对未来芯片、故障、热降频或网络拥塞同样准确。多厂商方案还会扩大编译器、量化格式、监控与备件边界。</p>
+<p><strong>可能的硬件/架构应对：</strong>（已实证）MIST能在作者验证集上以不超过6%的误差模拟真实系统；（作者案例目标）用异构P/D组合提升tokens/$；（本简报推断）推理Pod会进一步解耦计算型Prefill、带宽/容量型Decode、KV存储和RAG CPU服务，以高速以太网或专用Scale-Out传递状态。采购应把模型质量、SLO、KV迁移字节、网络端口、软件栈和故障域一起纳入，而不是把异构性当作免费收益。</p>
+<p><strong>建议验证：</strong>用自有请求trace校准模型；公开单厂商与多厂商方案的硬件数量、KV传输量、网络成本、P50/P99、失败重试、功耗及软件工程成本；在价格变化和负载漂移下做敏感性分析，再决定是否进入实机A/B。</p>
+<p><strong>原始来源：</strong><a href="https://sc26.supercomputing.org/proceedings/papers/paper_pages/pap744.html">SC26 Proceedings：MIST</a>｜<a href="https://sc26.conference-program.com/presentation/?id=pap744&amp;sess=sess210">SC26现场议程（2026-11-18）</a>｜<a href="https://github.com/MIST-Simulator/MIST">MIST开源仓库</a></p>
+</section>
+
+<section>
+<h2>二、今日架构主线</h2>
+<p><strong>静态峰值配置正在让位于“可预测的运行时弹性”。</strong></p>
+<ul>
+<li>BaGuaLu-2把动态专家路由造成的激活显存峰值转成逐batch分配问题；</li>
+<li>PHANTOM把迭代阶段造成的功率波形转成提前调频问题；</li>
+<li>MIST把请求结构、KV层次与异构芯片差异转成可校准的全栈设计空间问题。</li>
+</ul>
+<p>三者共同要求新的控制面同时理解短时间尺度状态与全局约束：显存管理器不能破坏通信和容错余量，功率控制不能制造collective慢卡，异构推理优化也不能忽略KV搬运与软件复杂度。评价指标应从单点MFU、TDP或单卡tokens/s，升级为<strong>在SLO、可靠性和设施约束下，每个有效训练/推理结果消耗的时间、能量与资本</strong>。</p>
+</section>
+
+<section>
+<h2>三、会议雷达与专项跟踪</h2>
+<ul>
+<li><strong>会前｜NVIDIA GTC Washington, D.C.：</strong>官方日程覆盖2026-11-30至12-03，包含AI factories、infrastructure、agents等主题。下轮重点核查是否出现Vera Rubin/Feynman机架功率、NVLink域、CPO/光互联、800VDC、液冷与可维护性的原始量化声明，而非只转述主题演讲口号。来源：<a href="https://www.nvidia.com/gtc/dc/conference-schedule/">官方日程</a>。</li>
+<li><strong>会前｜AWS re:Invent：</strong>2026-11-30至12-04。重点跟踪Trainium/Inferentia、EFA/以太、S3/FSx/缓存、Agent执行环境以及跨AZ推理架构的产品规格与可购边界。来源：<a href="https://reinvent.awsevents.com/">大会官网</a>。</li>
+<li><strong>会前｜OCP液冷专题：</strong>OCP将在2026-12-03举行高TDP芯片冷却液可靠性网络研讨会，议题明确包括45°C温水、微通道冷板、颗粒/腐蚀/生物污染、过滤与采样周期。待会后只在出现可复核的粒径、颗粒计数、压降、寿命或维护阈值时纳入正文。来源：<a href="https://www.opencompute.org/events/ocp-educational-webinar/ocp-educational-webinar-cleaner-coolant-fewer-failures-what-next-gen-high-tdp-chips-mean-for-liquid-cooling-requirements/">OCP官方页面</a>。</li>
+<li><strong>会前｜DesignCon 2027：</strong>2027-02-02至04议题已覆盖224/448Gb/s、PCIe 5/6/7、AI Scale-Up光互联、CPX/XPO/NPO/CPO、线性光与端到端电光协同仿真；后续需要追踪具体论文和测量方法，而非把征稿主题当成技术完成度。来源：<a href="https://www.designcon.com/education/education-overview/">官方技术议题</a>。</li>
+<li><strong>会后｜OCP 2026补扫：</strong>本轮未找到此前90期之外、足以改变Scale-Up 128/512/1000+拓扑、NPO量产FRU/MTTR/全生命周期成本、224G/448G或800VDC基线的新量化原始证据；不以重复厂商演示扩充篇幅。</li>
+<li><strong>会后｜云栖2026专项：</strong>截至本轮仍未发现新的阿里云正式规格、原始PPT或录播补充AL144/AL64、SNPO/ALink的GPU—交换拓扑、HBD规模、单卡Scale-Up带宽、NPO速率、光源位置、正交互连、液冷或供电参数。过期会期资料只作为历史待确认项，不视作今日新闻。</li>
+</ul>
+</section>
+
+<section>
+<h2>四、每日健康自检</h2>
+<ul>
+<li><strong>主日报 feed.xml：</strong>可达、RSS 2.0 XML解析有效、<code>ttl=15</code>；写入前保留90期，最新为2026-11-27，归档链接可达，未超过36小时阈值。</li>
+<li><strong>tech-alert-feed.xml：</strong>可达且XML有效，最新为2026-10-27，归档可达；对应条件预警任务当前处于暂停，不能仅凭“久未发”判断GitHub失败。</li>
+<li><strong>competitor-cost-feed.xml：</strong>可达且XML有效，最新为2026-11-16，归档可达；对应周期任务当前处于暂停，已错过最近计划周期，属于调度状态而非缓存延迟。</li>
+<li><strong>next-gen-architecture-feed.xml：</strong>可达且XML有效，最新为2026-11-21，归档可达；对应周期任务当前处于暂停，下一计划点不会执行，应视为明确的任务暂停提示。</li>
+<li><strong>ai-memory-feed.xml：</strong>可达且XML有效，最新为2026-11-20，归档可达。任务在2026-11-27实际运行，但运行结果明确记录“尚未完成Notion新增写入及RSS发布”；因此应归类为<strong>任务运行但发布流程未完成</strong>，不能归因为GitHub写入失败或Follow缓存延迟。</li>
+</ul>
+<p><strong>系统告警：</strong>AI Memory周报最近一次运行未完成其声明的Notion/RSS交付；next-gen、competitor-cost与tech-alert任务均处于暂停。这里只读报告，不自动变更其他任务。</p>
+</section>
+
+<footer>
+<p><strong>发布说明：</strong>仅使用公开来源；论文和厂商披露不外推为通用生产规格。所有架构推断均已显式标注，未使用任何用户、公司或客户非公开信息。</p>
+</footer>
+</article></body></html>
